@@ -5,7 +5,7 @@ export default function Marquee() {
 
   return (
     <aside
-      className="bg-[#0D1A11] text-[#C4C4C4] py-3 overflow-hidden border-y border-white/[0.06] select-none relative"
+      className="bg-[#0D1A11] text-[#C4C4C4] py-3 overflow-hidden border-y border-white/[0.06] select-none relative z-20"
       aria-label="Destaques do Loyolas Lanches"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-[#0A150D] via-transparent to-[#0A150D] pointer-events-none z-10" />

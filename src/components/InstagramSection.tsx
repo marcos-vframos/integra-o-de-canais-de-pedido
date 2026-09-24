@@ -51,10 +51,10 @@ export default function InstagramSection() {
   return (
     <section
       id="instagram"
-      className="py-24 lg:py-32 bg-[#0C170F] text-white relative overflow-hidden border-b border-white/[0.06]"
+      className="min-h-screen w-full bg-[#0C170F] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="instagram-heading"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div className="max-w-xl">
             <span className="editorial-tag block mb-3">04 / Redes Sociais</span>

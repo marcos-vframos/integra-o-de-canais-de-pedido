@@ -8,15 +8,30 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   useEffect(() => {
+    const container = document.getElementById('landing-container')
     const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400)
+      const top = container ? container.scrollTop : window.scrollY
+      setShowBackToTop(top > 400)
+    }
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll)
+      }
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const mainContainer = document.getElementById('landing-container')
+    if (mainContainer) {
+      mainContainer.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -29,11 +44,12 @@ export default function Footer() {
 
   return (
     <footer
-      className="bg-[#07100A] text-white border-t border-white/[0.08] pt-16 pb-12 relative"
+      id="rodape"
+      className="min-h-screen w-full bg-[#07100A] text-white border-t border-white/[0.08] py-20 lg:py-24 relative snap-start flex items-center"
       role="contentinfo"
       aria-label="Rodapé do Loyolas Lanches"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full my-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-12 border-b border-white/[0.06]">
           <div className="space-y-4">
             <div>

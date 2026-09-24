@@ -13,10 +13,10 @@ export default function OrderCTA() {
 
   return (
     <section
-      className="py-24 lg:py-32 bg-[#0A150D] text-white border-b border-white/[0.06]"
+      className="min-h-screen w-full bg-[#0A150D] text-white border-b border-white/[0.06] snap-start flex items-center justify-center py-20 lg:py-24"
       aria-labelledby="order-cta-heading"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 my-auto">
         <span className="editorial-tag block">05 / Pedidos & Delivery</span>
         <h2
           id="order-cta-heading"

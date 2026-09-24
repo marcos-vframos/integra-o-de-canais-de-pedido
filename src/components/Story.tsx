@@ -4,10 +4,10 @@ export default function Story() {
   return (
     <section
       id="historia"
-      className="py-24 lg:py-32 bg-[#0C170F] text-white relative overflow-hidden border-b border-white/[0.06]"
+      className="min-h-screen w-full bg-[#0C170F] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="historia-heading"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
           <div className="lg:col-span-5">
             <div className="relative rounded-lg overflow-hidden border border-white/[0.1] bg-[#0E1B11] shadow-xl">

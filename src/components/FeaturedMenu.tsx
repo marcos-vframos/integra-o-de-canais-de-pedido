@@ -7,10 +7,21 @@ import type { MenuItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 
 export default function FeaturedMenu() {
-  const [activeTab, setActiveTab] = useState<'todos' | 'lanches' | 'dogs' | 'porcoes'>('todos')
+  const [activeCategory, setActiveCategory] = useState<string>('')
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [isOpen, setIsOpen] = useState(true)
   const [loading, setLoading] = useState(true)
+
+  // As categorias vêm da coleção menu do PocketBase; filtramos "Todos" e "Complementos"
+  const availableCategories = Array.from(
+    new Set(menuItems.map((item) => String(item.category)).filter(Boolean)),
+  ).filter((cat) => cat !== 'Complementos' && cat !== 'Todos')
+
+  // Se nenhuma categoria estiver selecionada e existirem categorias, seleciona a primeira
+  const currentCategory: string =
+    activeCategory && availableCategories.includes(activeCategory)
+      ? activeCategory
+      : availableCategories[0] || ''
 
   const loadMenuAndSettings = () => {
     Promise.all([
@@ -54,22 +65,10 @@ export default function FeaturedMenu() {
     }
   })
 
-  // Mapeamento canônico para as tabs existentes da landing
-  // Hambúrgueres -> Carnes, Frango, Gourmet, Especial
-  // Hot Dogs -> Hot-Dog
-  // Porções -> Combos, Complementos, Bebidas
+  // Itens da categoria selecionada (excluindo Complementos do cardápio exibido)
   const filteredItems = menuItems.filter((item) => {
-    if (activeTab === 'todos') return true
-    if (activeTab === 'lanches') {
-      return ['Carnes', 'Frango', 'Gourmet', 'Especial'].includes(item.category)
-    }
-    if (activeTab === 'dogs') {
-      return item.category === 'Hot-Dog'
-    }
-    if (activeTab === 'porcoes') {
-      return ['Combos', 'Complementos', 'Bebidas'].includes(item.category)
-    }
-    return true
+    if (item.category === 'Complementos') return false
+    return item.category === currentCategory
   })
 
   // Imagens associadas por categoria ou nome para manter o visual premium
@@ -104,10 +103,10 @@ export default function FeaturedMenu() {
   return (
     <section
       id="cardapio"
-      className="py-24 lg:py-32 bg-[#0A150D] text-white relative overflow-hidden border-b border-white/[0.06]"
+      className="min-h-screen w-full bg-[#0A150D] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="cardapio-heading"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
           <span className="editorial-tag block mb-3">02 / Seleção da Casa</span>
           <h2
@@ -118,7 +117,7 @@ export default function FeaturedMenu() {
           </h2>
           <p className="text-base text-[#C4C4C4] leading-relaxed">
             Preparo artesanal na hora. Feito com carinho, muito sabor e os molhos exclusivos da
-            casa. Preços atualizados diretamente da nossa cozinha em tempo real.
+            casa.
           </p>
 
           {!isOpen && (
@@ -130,24 +129,19 @@ export default function FeaturedMenu() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-6 pt-6 border-b border-white/[0.08]">
-            {[
-              { id: 'todos', label: 'Todos' },
-              { id: 'lanches', label: 'Hambúrgueres' },
-              { id: 'dogs', label: 'Hot Dogs' },
-              { id: 'porcoes', label: 'Porções & Bebidas' },
-            ].map((tab) => {
-              const active = activeTab === tab.id
+          <div className="flex items-center gap-2 sm:gap-3 pt-6 border-b border-white/[0.08] overflow-x-auto pb-2 scrollbar-none">
+            {availableCategories.map((cat) => {
+              const active = currentCategory === cat
               return (
                 <button
-                  key={tab.id}
+                  key={cat}
                   type="button"
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`pb-3 text-xs tracking-wider uppercase font-semibold transition-colors relative cursor-pointer ${
-                    active ? 'text-white' : 'text-[#C4C4C4] hover:text-white'
+                  onClick={() => setActiveCategory(cat)}
+                  className={`pb-3 px-3 sm:px-4 text-xs tracking-wider uppercase font-semibold transition-colors relative whitespace-nowrap cursor-pointer rounded-t ${
+                    active ? 'text-white bg-white/[0.04]' : 'text-[#C4C4C4] hover:text-white'
                   }`}
                 >
-                  {tab.label}
+                  {cat}
                   {active && <span className="absolute bottom-0 inset-x-0 h-0.5 bg-[#8F0F1B]" />}
                 </button>
               )

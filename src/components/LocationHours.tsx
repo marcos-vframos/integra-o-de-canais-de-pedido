@@ -20,10 +20,10 @@ export default function LocationHours() {
   return (
     <section
       id="localizacao"
-      className="py-24 lg:py-32 bg-[#0A150D] text-white relative overflow-hidden"
+      className="min-h-screen w-full bg-[#0A150D] text-white relative overflow-y-auto overflow-x-hidden snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="localizacao-heading"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
           <span className="editorial-tag block mb-3">06 / Ponto & Atendimento</span>
           <h2

@@ -25,12 +25,22 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
   const [isOpenSetting, setIsOpenSetting] = useState<boolean>(true)
 
   useEffect(() => {
+    const container = document.getElementById('landing-container')
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40)
+      const top = container ? container.scrollTop : window.scrollY
+      setIsScrolled(top > 40)
     }
     handleScroll()
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true })
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll)
+      }
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   useEffect(() => {

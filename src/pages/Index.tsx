@@ -15,8 +15,10 @@ export default function Index() {
 
   useEffect(() => {
     const sectionIds = ['inicio', 'historia', 'cardapio', 'avaliacoes', 'instagram', 'localizacao']
+    const container = document.getElementById('landing-container')
+
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 220
+      const scrollPosition = (container ? container.scrollTop : window.scrollY) + 260
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const id = sectionIds[i]
         const element = document.getElementById(id)
@@ -29,37 +31,49 @@ export default function Index() {
         }
       }
     }
+
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true })
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll)
+      }
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   return (
-    <div className="landing-scope w-full overflow-x-hidden min-h-screen bg-[#07140B] text-[#F3F4F6]">
+    <div
+      id="landing-container"
+      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden snap-y snap-mandatory bg-[#07140B] text-[#F3F4F6] scroll-smooth"
+    >
       {/* 1. Header Fixo com status e botão para /loja */}
       <Header activeSection={activeSection} />
 
-      {/* 2. Hero 100vh com efeito fumaça & CTA para /loja */}
-      <main>
+      {/* 2. Hero 100vh com textos alternados e crossfade de imagens */}
+      <main className="w-full">
         <Hero />
-        {/* 3. Faixa Marquee contínua */}
+        {/* 3. Faixa Marquee contínua fixada entre o topo ou na transição da história */}
         <Marquee />
-        {/* 4. História e Tradição */}
+        {/* 4. História e Tradição (100vh) */}
         <Story />
-        {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real */}
+        {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
         <FeaturedMenu />
-        {/* 6. Avaliações dos Clientes & Prova Social */}
+        {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
         <Reviews />
-        {/* 7. Seção Instagram Oficial (@loyolass_lanches) */}
+        {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}
         <InstagramSection />
-        {/* 8. CTA de Conversão direto para /loja */}
+        {/* 8. CTA de Conversão direto para /loja (100vh) */}
         <OrderCTA />
-        {/* 9. Localização (Google Maps Embed) & Horários Dinâmicos */}
+        {/* 9. Localização (Google Maps Embed) & Horários Dinâmicos (100vh) */}
         <LocationHours />
+        {/* 10. Rodapé da Landing Page (100vh snap-start) */}
+        <Footer />
       </main>
-
-      {/* 10. Rodapé com link para painel de gestão */}
-      <Footer />
     </div>
   )
 }
