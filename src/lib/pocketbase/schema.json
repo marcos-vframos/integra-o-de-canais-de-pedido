@@ -1,0 +1,443 @@
+{
+  "generatedAt": "2026-09-24T21:31:25.404Z",
+  "collections": [
+    {
+      "name": "users",
+      "type": "auth",
+      "apiRules": {
+        "list": "id = @request.auth.id",
+        "view": "id = @request.auth.id",
+        "create": "",
+        "update": "id = @request.auth.id",
+        "delete": "id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "avatar",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
+        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
+      ]
+    },
+    {
+      "name": "menu",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Carnes",
+            "Frango",
+            "Hot-Dog",
+            "Gourmet",
+            "Especial",
+            "Combos",
+            "Bebidas",
+            "Complementos"
+          ]
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "recipe",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_menu_category ON menu (category)",
+        "CREATE INDEX idx_menu_active ON menu (active)",
+        "CREATE INDEX idx_menu_code ON menu (code)"
+      ]
+    },
+    {
+      "name": "inventory",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "unit",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["un", "porção", "fatia", "rolo", "g", "kg", "ml", "l"]
+        },
+        {
+          "name": "qty",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "group",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Ingrediente", "Operacional"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_inventory_group ON inventory (\"group\")",
+        "CREATE INDEX idx_inventory_qty ON inventory (qty)",
+        "CREATE INDEX idx_inventory_code ON inventory (code)"
+      ]
+    },
+    {
+      "name": "orders",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "ticketNumber",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "items",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "subtotal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "discount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deliveryFee",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "payment",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Dinheiro", "Pix", "Cartão"]
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origin",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["balcao", "online"]
+        },
+        {
+          "name": "customerName",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "customerPhone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deliveryType",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["retirada", "entrega"]
+        },
+        {
+          "name": "customerAddress",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_orders_ticketNumber ON orders (ticketNumber)",
+        "CREATE INDEX idx_orders_created ON orders (created DESC)",
+        "CREATE INDEX idx_orders_origin ON orders (origin)"
+      ]
+    },
+    {
+      "name": "closures",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "openedAt",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "closedAt",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dateLabel",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "grossTotal",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "discount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "netTotal",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "byPayment",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ordersCount",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "productBreakdown",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "byOriginCount",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "byOriginTotals",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_closures_closedAt ON closures (closedAt DESC)"]
+    },
+    {
+      "name": "settings",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "key",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_settings_key ON settings (\"key\")"]
+    }
+  ]
+}
