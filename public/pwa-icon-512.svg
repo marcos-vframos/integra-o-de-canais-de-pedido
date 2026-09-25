@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGlow512" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#1f1f22" />
+      <stop offset="100%" stop-color="#0b0b0c" />
+    </radialGradient>
+    <linearGradient id="redGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1a15" />
+      <stop offset="60%" stop-color="#e10600" />
+      <stop offset="100%" stop-color="#8a0300" />
+    </linearGradient>
+    <filter id="shadow512" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.8" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#e10600" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Fundo escuro -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGlow512)" />
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#27272a" stroke-width="4" opacity="0.8" />
+  <path d="M 60 48 L 452 48" stroke="url(#redGrad512)" stroke-width="3" stroke-linecap="round" opacity="0.4" />
+
+  <!-- L -->
+  <g filter="url(#shadow512)">
+    <path d="M 148 118 
+             L 218 118 
+             Q 224 118 224 124
+             L 224 330 
+             Q 224 338 232 338
+             L 364 338
+             Q 372 338 372 346
+             L 372 396
+             Q 372 402 364 402
+             L 148 402
+             Q 140 402 140 394
+             L 140 126
+             Q 140 118 148 118 Z" 
+          fill="url(#redGrad512)" />
+  </g>
+
+  <!-- Badge GESTÃO -->
+  <g>
+    <rect x="250" y="148" width="168" height="64" rx="16" fill="#151516" stroke="#e10600" stroke-width="2.5" />
+    <circle cx="276" cy="180" r="7" fill="#22c55e" />
+    <text x="296" y="186" fill="#f5f5f6" font-family="'Oswald', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="24" letter-spacing="2">GESTÃO</text>
+  </g>
+</svg>

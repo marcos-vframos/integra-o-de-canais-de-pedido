@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="maskGlow" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#1f1f22" />
+      <stop offset="100%" stop-color="#0b0b0c" />
+    </radialGradient>
+    <linearGradient id="maskRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1a15" />
+      <stop offset="60%" stop-color="#e10600" />
+      <stop offset="100%" stop-color="#8a0300" />
+    </linearGradient>
+    <filter id="maskShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.8" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#e10600" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Fundo plano sem cantos arredondados (para maskable icon em Android) -->
+  <rect width="512" height="512" fill="url(#maskGlow)" />
+  <rect x="0" y="0" width="512" height="512" fill="none" stroke="#27272a" stroke-width="8" />
+
+  <!-- Conteúdo concentrado dentro da safe-zone circular central (80% / raio ~180px) -->
+  <g filter="url(#maskShadow)" transform="translate(32, 28) scale(0.88)">
+    <!-- Barra vertical do L -->
+    <path d="M 148 118 
+             L 218 118 
+             Q 224 118 224 124
+             L 224 330 
+             Q 224 338 232 338
+             L 364 338
+             Q 372 338 372 346
+             L 372 396
+             Q 372 402 364 402
+             L 148 402
+             Q 140 402 140 394
+             L 140 126
+             Q 140 118 148 118 Z" 
+          fill="url(#maskRed)" />
+
+    <!-- Marcador de Gestão -->
+    <rect x="238" y="152" width="168" height="64" rx="16" fill="#151516" stroke="#e10600" stroke-width="3" />
+    <circle cx="264" cy="184" r="7" fill="#22c55e" />
+    <text x="284" y="190" fill="#f5f5f6" font-family="'Oswald', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="24" letter-spacing="2">GESTÃO</text>
+  </g>
+</svg>

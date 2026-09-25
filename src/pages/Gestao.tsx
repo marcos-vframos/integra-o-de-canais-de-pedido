@@ -30,6 +30,7 @@ import { ClosureModal } from '@/components/ClosureModal'
 import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { StoreCloseChoiceModal } from '@/components/StoreCloseChoiceModal'
 import { OfflineQueueModal } from '@/components/OfflineQueueModal'
+import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import type { OfflineOrderItem } from '@/types/offline'
 import {
@@ -1119,6 +1120,8 @@ export default function Gestao() {
             </div>
 
             <div className="flex items-center gap-2">
+              <PWAInstallBanner variant="header" />
+
               <ConnectionStatusBadge
                 isOnline={isOnline}
                 isSyncing={isSyncing}
@@ -1163,6 +1166,9 @@ export default function Gestao() {
             </div>
           </div>
         </div>
+
+        {/* Banner de Instalação do PWA (discreto, preto e vermelho) */}
+        <PWAInstallBanner variant="banner" />
 
         {/* Banner */}
         {banner && (
