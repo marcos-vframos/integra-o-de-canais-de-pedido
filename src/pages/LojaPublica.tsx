@@ -34,17 +34,7 @@ export interface CustomerCartLine {
   added: { ingredientId: string; qty: number }[]
 }
 
-const CATEGORIES = [
-  'Todos',
-  'Carnes',
-  'Frango',
-  'Hot-Dog',
-  'Gourmet',
-  'Especial',
-  'Combos',
-  'Bebidas',
-  'Complementos',
-]
+const CATEGORIES = ['Carnes', 'Frango', 'Hot-Dog', 'Gourmet', 'Especial', 'Combos', 'Bebidas']
 
 const CART_STORAGE_KEY = 'loyolas_customer_cart_v1'
 
@@ -55,7 +45,7 @@ export default function LojaPublica() {
   const [menu, setMenu] = useState<MenuItem[]>([])
   const [stock, setStock] = useState<InventoryItem[]>([])
 
-  const [activeCategory, setActiveCategory] = useState('Todos')
+  const [activeCategory, setActiveCategory] = useState<string>('Carnes')
   const [searchTerm, setSearchTerm] = useState('')
 
   // Carrinho com persistência localStorage
@@ -166,10 +156,34 @@ export default function LojaPublica() {
 
   const menuById = (id: string) => menu.find((m) => m.id === id || m.code === id)
 
-  // Filtro de itens
+  // Categorias disponíveis no cardápio canônico vindas do backend (excluindo Todos e Complementos)
+  const availableCategories = useMemo(() => {
+    const fromMenu = Array.from(
+      new Set(menu.map((item) => String(item.category)).filter(Boolean)),
+    ).filter((cat) => cat !== 'Complementos' && cat !== 'Todos')
+
+    if (fromMenu.length > 0) {
+      // Manter a ordem canônica pré-definida para as conhecidas, e adicionar novas no fim
+      const ordered = CATEGORIES.filter((c) => fromMenu.includes(c))
+      const others = fromMenu.filter((c) => !CATEGORIES.includes(c))
+      return [...ordered, ...others]
+    }
+    return CATEGORIES
+  }, [menu])
+
+  // Garantir que a categoria ativa seja válida dentro das disponíveis
+  const currentCategory = useMemo(() => {
+    if (activeCategory && availableCategories.includes(activeCategory)) {
+      return activeCategory
+    }
+    return availableCategories[0] || 'Carnes'
+  }, [activeCategory, availableCategories])
+
+  // Filtro de itens (excluindo 'Complementos' do cardápio público principal)
   const filteredMenu = useMemo(() => {
     return menu.filter((item) => {
-      const matchCat = activeCategory === 'Todos' || item.category === activeCategory
+      if (item.category === 'Complementos') return false
+      const matchCat = item.category === currentCategory
       const query = searchTerm.toLowerCase().trim()
       const matchSearch =
         !query ||
@@ -177,7 +191,7 @@ export default function LojaPublica() {
         item.category.toLowerCase().includes(query)
       return matchCat && matchSearch
     })
-  }, [menu, activeCategory, searchTerm])
+  }, [menu, currentCategory, searchTerm])
 
   const handleOpenCustomize = (item: MenuItem) => {
     setCustomizeItem(item)
@@ -507,8 +521,8 @@ export default function LojaPublica() {
 
         {/* Categorias (Pills horizontais) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
-          {CATEGORIES.map((cat) => {
-            const active = activeCategory === cat
+          {availableCategories.map((cat) => {
+            const active = currentCategory === cat
             return (
               <button
                 key={cat}
