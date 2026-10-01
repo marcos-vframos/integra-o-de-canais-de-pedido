@@ -9,7 +9,6 @@ import InstagramSection from '@/components/InstagramSection'
 import OrderCTA from '@/components/OrderCTA'
 import LocationHours from '@/components/LocationHours'
 import Footer from '@/components/Footer'
-import { LandingProvider } from '@/context/LandingContentContext'
 
 export default function Index() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -48,36 +47,34 @@ export default function Index() {
   }, [])
 
   return (
-    <LandingProvider>
-      <div
-        id="landing-container"
-        className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden snap-y snap-mandatory text-[#F3F4F6] scroll-smooth"
-        style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
-      >
-        {/* 1. Header Fixo com status e botão para /loja */}
-        <Header activeSection={activeSection} />
+    <div
+      id="landing-container"
+      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden snap-y snap-mandatory text-[#F3F4F6] scroll-smooth"
+      style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
+    >
+      {/* 1. Header Fixo com status e botão para /loja */}
+      <Header activeSection={activeSection} />
 
-        {/* 2. Hero 100vh com textos alternados e crossfade de imagens */}
-        <main className="w-full">
-          <Hero />
-          {/* 3. Faixa Marquee contínua fixada entre o topo ou na transição da história */}
-          <Marquee />
-          {/* 4. História e Tradição (100vh) */}
-          <Story />
-          {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
-          <FeaturedMenu />
-          {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
-          <Reviews />
-          {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}
-          <InstagramSection />
-          {/* 8. CTA de Conversão direto para /loja (100vh) */}
-          <OrderCTA />
-          {/* 9. Localização (Google Maps Embed) & Horários Dinâmicos (100vh) */}
-          <LocationHours />
-          {/* 10. Rodapé da Landing Page (100vh snap-start) */}
-          <Footer />
-        </main>
-      </div>
-    </LandingProvider>
+      {/* 2. Hero 100vh com textos alternados e crossfade de imagens */}
+      <main className="w-full">
+        <Hero />
+        {/* 3. Faixa Marquee contínua fixada entre o topo ou na transição da história */}
+        <Marquee />
+        {/* 4. História e Tradição (100vh) */}
+        <Story />
+        {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
+        <FeaturedMenu />
+        {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
+        <Reviews />
+        {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}
+        <InstagramSection />
+        {/* 8. CTA de Conversão direto para /loja (100vh) */}
+        <OrderCTA />
+        {/* 9. Localização (Google Maps Embed) & Horários Dinâmicos (100vh) */}
+        <LocationHours />
+        {/* 10. Rodapé da Landing Page (100vh snap-start) */}
+        <Footer />
+      </main>
+    </div>
   )
 }
