@@ -3,9 +3,17 @@ import { Link } from 'react-router-dom'
 import { ArrowUp } from 'lucide-react'
 import { BUSINESS_INFO } from '@/data/loyolasData'
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function Footer() {
+  const { content } = useLandingContent()
   const [showBackToTop, setShowBackToTop] = useState(false)
   const currentYear = new Date().getFullYear()
+  const footerDesc =
+    content.footerDesc ||
+    'O autêntico podrão brasileiro com mais de 18 anos de tradição. Fartura, saboroso, feito com carinho e ingredientes selecionados com capricho.'
+  const addressText = content.addressText || BUSINESS_INFO.address
+  const phoneText = content.phoneText || BUSINESS_INFO.phoneDisplay
 
   useEffect(() => {
     const container = document.getElementById('landing-container')
@@ -60,10 +68,7 @@ export default function Footer() {
                 Pindamonhangaba • SP
               </span>
             </div>
-            <p className="text-xs text-[#C4C4C4] leading-relaxed">
-              O autêntico podrão brasileiro com mais de 18 anos de tradição. Fartura, saboroso,
-              feito com carinho e ingredientes selecionados com capricho.
-            </p>
+            <p className="text-xs text-[#C4C4C4] leading-relaxed">{footerDesc}</p>
             <div className="flex items-center gap-4 text-xs">
               <a
                 href={BUSINESS_INFO.instagramUrl}
@@ -156,7 +161,7 @@ export default function Footer() {
 
           <div className="space-y-3 text-xs text-[#C4C4C4]">
             <span className="editorial-tag block text-white/90">Ponto de Atendimento</span>
-            <p className="leading-relaxed">{BUSINESS_INFO.address}</p>
+            <p className="leading-relaxed">{addressText}</p>
             <p className="pt-1">
               WhatsApp:{' '}
               <a
@@ -165,7 +170,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="text-white hover:underline"
               >
-                {BUSINESS_INFO.phoneDisplay}
+                {phoneText}
               </a>
             </p>
           </div>
@@ -187,6 +192,13 @@ export default function Footer() {
                 title="Acesso exclusivo ao painel do operador"
               >
                 ⚙ Painel de Gestão (Operador)
+              </Link>
+              <Link
+                to="/adm-landing"
+                className="block text-[#C4C4C4]/50 hover:text-white transition-colors text-[11px]"
+                title="Área Administrativa da Landing Page"
+              >
+                ✎ Editor da Landing Page (/adm-landing)
               </Link>
             </div>
           </div>

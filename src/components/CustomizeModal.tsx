@@ -16,6 +16,10 @@ interface CustomizeModalProps {
   setRemoved: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
   setAdded: React.Dispatch<React.SetStateAction<Record<string, number>>>
   resolveStockItem: (idOrCode: string) => InventoryItem | undefined
+  gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
+  setGourmetFreeChoice?: (choice: 'catupiry' | 'cheddar' | 'none') => void
+  catupiryExtraPrice?: number
+  cheddarExtraPrice?: number
 }
 
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
@@ -30,8 +34,14 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   setRemoved,
   setAdded,
   resolveStockItem,
+  gourmetFreeChoice = 'none',
+  setGourmetFreeChoice,
+  catupiryExtraPrice = 4,
+  cheddarExtraPrice = 3,
 }) => {
   if (!item) return null
+
+  const isGourmet = item.category === 'Gourmet'
 
   return (
     <div className="sc-modal-backdrop" onClick={onClose}>
@@ -58,6 +68,118 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* EXCEÇÃO GOURMET: Catupiry ou Cheddar grátis */}
+        {isGourmet && (
+          <div className="sc-field p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-white space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                ★ Exceção Gourmet — Cortesia da Casa
+              </span>
+              <span className="text-[11px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 font-semibold">
+                1 Grátis
+              </span>
+            </div>
+            <p className="text-[11.5px] text-[#C4C4C4] leading-relaxed">
+              Itens da linha <b>Gourmet</b> ganham <b>Catupiry</b> ou <b>Cheddar</b> gratuitamente.
+              Se desejar ambos, o primeiro sai grátis e o segundo é cobrado pelo valor padrão
+              cadastrado.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (setGourmetFreeChoice) {
+                    setGourmetFreeChoice('none')
+                  }
+                }}
+                className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center ${
+                  gourmetFreeChoice === 'none'
+                    ? 'bg-zinc-800 border-amber-400 text-amber-300 font-bold shadow-sm'
+                    : 'bg-[#18181b] border-zinc-700 text-zinc-400 hover:text-white'
+                }`}
+              >
+                Nenhum grátis
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (setGourmetFreeChoice) {
+                    setGourmetFreeChoice('catupiry')
+                  }
+                }}
+                className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex flex-col items-center justify-center ${
+                  gourmetFreeChoice === 'catupiry'
+                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-sm'
+                    : 'bg-[#18181b] border-zinc-700 text-zinc-300 hover:text-white'
+                }`}
+              >
+                <span>Catupiry</span>
+                <span className="text-[10px] text-emerald-400 font-bold">GRÁTIS</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (setGourmetFreeChoice) {
+                    setGourmetFreeChoice('cheddar')
+                  }
+                }}
+                className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex flex-col items-center justify-center ${
+                  gourmetFreeChoice === 'cheddar'
+                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold shadow-sm'
+                    : 'bg-[#18181b] border-zinc-700 text-zinc-300 hover:text-white'
+                }`}
+              >
+                <span>Cheddar</span>
+                <span className="text-[10px] text-emerald-400 font-bold">GRÁTIS</span>
+              </button>
+            </div>
+
+            {/* Opção de levar ambos */}
+            <div className="pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-xs text-[#C4C4C4]">
+                Deseja <b>Catupiry E Cheddar</b> juntos?
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Ambos com catupiry grátis e cheddar cobrado
+                    if (setGourmetFreeChoice) setGourmetFreeChoice('catupiry')
+                    const cheddarItem = resolveStockItem('ing-cheddar')
+                    const chKey = cheddarItem?.code || cheddarItem?.id || 'ing-cheddar'
+                    setAdded((prev) => ({
+                      ...prev,
+                      [chKey]: 1,
+                    }))
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#18181b] hover:bg-zinc-800 border border-zinc-700 text-[11px] text-amber-200 transition-colors"
+                >
+                  Ambos (+ {fmtBRL(cheddarExtraPrice)} Cheddar)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Ambos com cheddar grátis e catupiry cobrado
+                    if (setGourmetFreeChoice) setGourmetFreeChoice('cheddar')
+                    const catupiryItem = resolveStockItem('ing-catupiry')
+                    const catKey = catupiryItem?.code || catupiryItem?.id || 'ing-catupiry'
+                    setAdded((prev) => ({
+                      ...prev,
+                      [catKey]: 1,
+                    }))
+                  }}
+                  className="px-2.5 py-1 rounded bg-[#18181b] hover:bg-zinc-800 border border-zinc-700 text-[11px] text-amber-200 transition-colors"
+                >
+                  Ambos (+ {fmtBRL(catupiryExtraPrice)} Catupiry)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {item.recipe && item.recipe.length > 0 && (
           <div className="sc-field">

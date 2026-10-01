@@ -1,7 +1,17 @@
 import { Star, ArrowUpRight } from 'lucide-react'
 import { BUSINESS_INFO, VERIFIED_RATINGS } from '@/data/loyolasData'
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function Reviews() {
+  const { content } = useLandingContent()
+  const reviewsTag = content.reviewsTag || '03 / Prova Social'
+  const reviewsHeading = content.reviewsHeading || 'Avaliações Oficiais.'
+  const reviewsSubtitle =
+    content.reviewsSubtitle ||
+    'Sem depoimentos inventados. Dados reais e públicos registrados diretamente pelos clientes no Google Meu Negócio e no Facebook.'
+  const reviewsItems = content.reviewsItems?.length > 0 ? content.reviewsItems : VERIFIED_RATINGS
+
   return (
     <section
       id="avaliacoes"
@@ -10,21 +20,18 @@ export default function Reviews() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
-          <span className="editorial-tag block mb-3">03 / Prova Social</span>
+          <span className="editorial-tag block mb-3">{reviewsTag}</span>
           <h2
             id="avaliacoes-heading"
             className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white mb-4"
           >
-            Avaliações Oficiais.
+            {reviewsHeading}
           </h2>
-          <p className="text-base text-[#C4C4C4] leading-relaxed">
-            Sem depoimentos inventados. Dados reais e públicos registrados diretamente pelos
-            clientes no Google Meu Negócio e no Facebook.
-          </p>
+          <p className="text-base text-[#C4C4C4] leading-relaxed">{reviewsSubtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-          {VERIFIED_RATINGS.map((item) => (
+          {reviewsItems.map((item) => (
             <div
               key={item.platform}
               className="bg-[#0D1A11] p-7 sm:p-8 rounded-md border border-white/[0.08] flex flex-col justify-between"

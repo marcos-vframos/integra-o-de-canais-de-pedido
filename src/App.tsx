@@ -11,6 +11,7 @@ import Layout from '@/components/Layout'
 // Páginas dos 3 canais integrados
 import Index from '@/pages/Index'
 import LojaPublica from '@/pages/LojaPublica'
+import AdmLanding from '@/pages/AdmLanding'
 import Gestao from '@/pages/Gestao'
 import Config from '@/pages/Config'
 
@@ -36,6 +37,9 @@ const App = () => (
 
               {/* Canal 2: Loja do Cliente (App de pedidos online) */}
               <Route path="/loja" element={<LojaPublica />} />
+
+              {/* Canal 2.5: Área Administrativa da Landing Page */}
+              <Route path="/adm-landing" element={<AdmLanding />} />
 
               {/* Canal 3: App de Gestão Operacional / PDV (com abas e caixa) */}
               <Route

@@ -66,32 +66,48 @@ const HERO_HEADLINES = [
   },
 ]
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function Hero() {
+  const { content } = useLandingContent()
+  const headlines = content.headlines?.length > 0 ? content.headlines : HERO_HEADLINES
+  const slides = content.heroSlides?.length > 0 ? content.heroSlides : HERO_SLIDES
+  const chips =
+    content.heroSubtitleChips?.length > 0
+      ? content.heroSubtitleChips
+      : [
+          'Eleito melhor hamburgueria de Pindamonhangaba',
+          'Pão tostado na hora',
+          'Molho artesanal da casa',
+        ]
+
   const [slideIndex, setSlideIndex] = useState(0)
   const [headlineIndex, setHeadlineIndex] = useState(0)
   const [fadeState, setFadeState] = useState<'in' | 'out'>('in')
 
   // Alterna o headline com transição suave
   useEffect(() => {
+    if (headlines.length === 0) return
     const textInterval = setInterval(() => {
       setFadeState('out')
       setTimeout(() => {
-        setHeadlineIndex((prev) => (prev + 1) % HERO_HEADLINES.length)
+        setHeadlineIndex((prev) => (prev + 1) % headlines.length)
         setFadeState('in')
       }, 400)
     }, 5500)
 
     return () => clearInterval(textInterval)
-  }, [])
+  }, [headlines.length])
 
   // Alterna o slide de imagens com crossfade contínuo a cada 4.5s
   useEffect(() => {
+    if (slides.length === 0) return
     const slideInterval = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length)
+      setSlideIndex((prev) => (prev + 1) % slides.length)
     }, 4500)
 
     return () => clearInterval(slideInterval)
-  }, [])
+  }, [slides.length])
 
   const handleScrollToMenu = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
@@ -101,7 +117,9 @@ export default function Hero() {
     }
   }
 
-  const currentHeadline = HERO_HEADLINES[headlineIndex]
+  const safeHeadlineIndex = headlineIndex < headlines.length ? headlineIndex : 0
+  const currentHeadline = headlines[safeHeadlineIndex] || HERO_HEADLINES[0]
+  const traditionBadge = content.traditionBadge || 'TRADIÇÃO & ESSÊNCIA'
 
   return (
     <section
@@ -120,7 +138,7 @@ export default function Hero() {
             {/* Tag solicitada no item 3: TRADIÇÃO & ESSÊNCIA */}
             <div className="flex items-center gap-3 text-xs tracking-[0.22em] uppercase font-semibold text-[#C4C4C4]">
               <span className="w-8 h-px bg-[#8F0F1B]" />
-              <span className="text-[#E2E8F0] tracking-[0.24em]">TRADIÇÃO &amp; ESSÊNCIA</span>
+              <span className="text-[#E2E8F0] tracking-[0.24em]">{traditionBadge}</span>
               <span className="w-2 h-2 rounded-full bg-[#8F0F1B]/80 animate-pulse" />
             </div>
 
@@ -148,7 +166,7 @@ export default function Hero() {
 
             {/* Indicadores de frases alternadas */}
             <div className="flex items-center gap-2 pt-1">
-              {HERO_HEADLINES.map((_, i) => (
+              {headlines.map((_, i) => (
                 <button
                   key={i}
                   type="button"
@@ -161,25 +179,26 @@ export default function Hero() {
                   }}
                   aria-label={`Ver mensagem ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                    headlineIndex === i ? 'w-8 bg-[#8F0F1B]' : 'w-2 bg-white/20 hover:bg-white/40'
+                    safeHeadlineIndex === i
+                      ? 'w-8 bg-[#8F0F1B]'
+                      : 'w-2 bg-white/20 hover:bg-white/40'
                   }`}
                 />
               ))}
               <span className="ml-2 text-[11px] uppercase tracking-wider text-[#C4C4C4]/70 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-[#E2E8F0]" />
-                {currentHeadline.badge}
+                {currentHeadline?.badge}
               </span>
             </div>
 
             {/* Selos de destaque */}
             <div className="text-xs text-[#C4C4C4]/90 flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
-              <span className="text-white font-medium">
-                Eleito melhor hamburgueria de Pindamonhangaba
-              </span>
-              <span className="text-white/30">•</span>
-              <span>Pão tostado na hora</span>
-              <span className="text-white/30">•</span>
-              <span>Molho artesanal da casa</span>
+              {chips.map((chip, idx) => (
+                <React.Fragment key={idx}>
+                  {idx > 0 && <span className="text-white/30">•</span>}
+                  <span className={idx === 0 ? 'text-white font-medium' : ''}>{chip}</span>
+                </React.Fragment>
+              ))}
             </div>
 
             {/* Botões de Ação */}
@@ -220,7 +239,7 @@ export default function Hero() {
           {/* Lado Direito: Carrossel com CROSSFADE suave entre imagens em loop */}
           <div className="lg:col-span-5 relative">
             <div className="relative rounded-xl overflow-hidden border border-white/[0.12] bg-[#0E1B11] shadow-2xl h-[380px] sm:h-[460px] lg:h-[500px]">
-              {HERO_SLIDES.map((slide, idx) => {
+              {slides.map((slide, idx) => {
                 const isActive = slideIndex === idx
                 return (
                   <div
@@ -272,7 +291,7 @@ export default function Hero() {
 
               {/* Botões seletores de imagem na parte superior */}
               <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-[#0A150D]/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-                {HERO_SLIDES.map((_, i) => (
+                {slides.map((_, i) => (
                   <button
                     key={i}
                     type="button"

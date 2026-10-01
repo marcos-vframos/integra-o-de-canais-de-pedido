@@ -37,6 +37,7 @@ export interface OrderItem {
   qty: number
   removed?: string[]
   added?: { name: string; qty: number }[]
+  gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
 }
 
 export interface OrderRecord {
@@ -81,4 +82,5 @@ export interface CartLine {
   qty: number
   removed: string[] // ingredient codes/ids
   added: { ingredientId: string; qty: number }[]
+  gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
 }

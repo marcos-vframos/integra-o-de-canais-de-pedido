@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T16:55:02.288Z",
+  "generatedAt": "2026-10-01T14:25:41.575Z",
   "collections": [
     {
       "name": "users",
@@ -438,6 +438,52 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_settings_key ON settings (\"key\")"]
+    },
+    {
+      "name": "landing_content",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "section",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "image",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_landing_content_section ON landing_content (section)"]
     }
   ]
 }

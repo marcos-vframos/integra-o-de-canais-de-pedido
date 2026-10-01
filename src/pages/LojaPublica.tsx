@@ -32,6 +32,7 @@ export interface CustomerCartLine {
   qty: number
   removed: string[]
   added: { ingredientId: string; qty: number }[]
+  gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
 }
 
 const CATEGORIES = ['Carnes', 'Frango', 'Hot-Dog', 'Gourmet', 'Especial', 'Combos', 'Bebidas']
@@ -64,6 +65,9 @@ export default function LojaPublica() {
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
+  const [customizeGourmetChoice, setCustomizeGourmetChoice] = useState<
+    'catupiry' | 'cheddar' | 'none'
+  >('none')
   const [customizeEditingLineId, setCustomizeEditingLineId] = useState<string | null>(null)
 
   // Checkout dados
@@ -111,8 +115,17 @@ export default function LojaPublica() {
         if (!mounted) return
         const nameSetting = settingsList.find((s) => s.key === 'store_name')
         const openSetting = settingsList.find((s) => s.key === 'is_open')
+        const forceOpen = settingsList.find((s) => s.key === 'force_open')?.value === 'true'
+        const forceClosed = settingsList.find((s) => s.key === 'force_closed')?.value === 'true'
+
         if (nameSetting?.value) setStoreName(nameSetting.value)
-        if (openSetting) setIsOpen(openSetting.value === 'true')
+        if (forceOpen) {
+          setIsOpen(true)
+        } else if (forceClosed) {
+          setIsOpen(false)
+        } else if (openSetting) {
+          setIsOpen(openSetting.value === 'true')
+        }
 
         setMenu(menuList)
         setStock(stockList)
@@ -124,19 +137,41 @@ export default function LojaPublica() {
     }
 
     loadStore()
+
+    // Verificação contínua reativa a cada 30s e ao focar no app
+    const interval = setInterval(loadStore, 30000)
+    const handleFocus = () => loadStore()
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleFocus)
+
     return () => {
       mounted = false
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleFocus)
     }
   }, [])
 
   // Assinaturas realtime com useRealtime
-  useRealtime('settings', (e) => {
-    if (e.record && (e.record as any).key === 'is_open') {
-      setIsOpen((e.record as any).value === 'true')
-    }
-    if (e.record && (e.record as any).key === 'store_name') {
-      setStoreName((e.record as any).value)
-    }
+  useRealtime('settings', () => {
+    pb.collection('settings')
+      .getFullList()
+      .then((records) => {
+        const nameSetting = records.find((s) => s.key === 'store_name')
+        const openSetting = records.find((s) => s.key === 'is_open')
+        const forceOpen = records.find((s) => s.key === 'force_open')?.value === 'true'
+        const forceClosed = records.find((s) => s.key === 'force_closed')?.value === 'true'
+
+        if (nameSetting?.value) setStoreName(nameSetting.value)
+        if (forceOpen) {
+          setIsOpen(true)
+        } else if (forceClosed) {
+          setIsOpen(false)
+        } else if (openSetting) {
+          setIsOpen(openSetting.value === 'true')
+        }
+      })
+      .catch(() => {})
   })
 
   useRealtime('menu', () => {
@@ -193,11 +228,27 @@ export default function LojaPublica() {
     })
   }, [menu, currentCategory, searchTerm])
 
+  // Preços cadastrados dos complementos de Catupiry e Cheddar
+  const catupiryAddPrice = useMemo(() => {
+    const m = menu.find(
+      (it) => it.code === 'x-catupiry' || it.name.toLowerCase().includes('catupiry (adicional)'),
+    )
+    return m ? m.price : 4
+  }, [menu])
+
+  const cheddarAddPrice = useMemo(() => {
+    const m = menu.find(
+      (it) => it.code === 'x-cheddar' || it.name.toLowerCase().includes('cheddar (adicional)'),
+    )
+    return m ? m.price : 3
+  }, [menu])
+
   const handleOpenCustomize = (item: MenuItem) => {
     setCustomizeItem(item)
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
+    setCustomizeGourmetChoice('none')
     setCustomizeEditingLineId(null)
   }
 
@@ -216,6 +267,7 @@ export default function LojaPublica() {
       addedMap[a.ingredientId] = a.qty
     })
     setCustomizeAdded(addedMap)
+    setCustomizeGourmetChoice(line.gourmetFreeChoice || 'none')
     setCustomizeEditingLineId(line.cartLineId)
   }
 
@@ -226,10 +278,15 @@ export default function LojaPublica() {
       .filter(([, q]) => Number(q) > 0)
       .map(([ingredientId, qty]) => ({ ingredientId, qty: Number(qty) }))
 
+    const gourmetFreeChoice =
+      customizeItem.category === 'Gourmet' ? customizeGourmetChoice : undefined
+
     if (customizeEditingLineId) {
       setCart((prev) =>
         prev.map((l) =>
-          l.cartLineId === customizeEditingLineId ? { ...l, qty: customizeQty, removed, added } : l,
+          l.cartLineId === customizeEditingLineId
+            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice }
+            : l,
         ),
       )
     } else {
@@ -241,6 +298,7 @@ export default function LojaPublica() {
           qty: customizeQty,
           removed,
           added,
+          gourmetFreeChoice,
         },
       ])
     }
@@ -291,11 +349,36 @@ export default function LojaPublica() {
     setCart((prev) => prev.filter((l) => l.cartLineId !== cartLineId))
   }
 
-  // Totais
-  const subtotal = cart.reduce((sum, line) => {
+  // Totais incluindo adicionais cobrados
+  const calculateLineTotal = (line: CustomerCartLine) => {
     const item = menuById(line.itemId)
-    return sum + (item ? item.price * line.qty : 0)
-  }, 0)
+    if (!item) return 0
+    let lineBase = item.price
+
+    // Soma adicionais
+    ;(line.added || []).forEach((a) => {
+      const stockItem = stockById(a.ingredientId)
+      const ingKey = stockItem?.code || a.ingredientId
+      let addPrice = 0
+      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
+        addPrice = catupiryAddPrice
+      } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
+        addPrice = cheddarAddPrice
+      } else {
+        const comp = menu.find(
+          (m) =>
+            m.category === 'Complementos' &&
+            m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
+        )
+        addPrice = comp ? comp.price : 3
+      }
+      lineBase += addPrice * a.qty
+    })
+
+    return lineBase * line.qty
+  }
+
+  const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
 
   const totalItemsCount = cart.reduce((sum, line) => sum + line.qty, 0)
 
@@ -333,19 +416,51 @@ export default function LojaPublica() {
 
     setSubmitting(true)
 
-    // Formatar itens para backend
+    // Formatar itens para backend com indicação da cortesia gourmet
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
+      const baseItemPrice = item?.price || 0
+      let unitExtra = 0
+
+      ;(l.added || []).forEach((a) => {
+        const stockItem = stockById(a.ingredientId)
+        const ingKey = stockItem?.code || a.ingredientId
+        let addPrice = 0
+        if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
+          addPrice = catupiryAddPrice
+        } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
+          addPrice = cheddarAddPrice
+        } else {
+          const comp = menu.find(
+            (m) =>
+              m.category === 'Complementos' &&
+              m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
+          )
+          addPrice = comp ? comp.price : 3
+        }
+        unitExtra += addPrice * a.qty
+      })
+
+      const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
+        name: stockById(a.ingredientId)?.name || a.ingredientId,
+        qty: a.qty,
+      }))
+
+      if (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none') {
+        addedList.unshift({
+          name: `${l.gourmetFreeChoice === 'catupiry' ? 'Catupiry' : 'Cheddar'} (cortesia Gourmet grátis)`,
+          qty: 1,
+        })
+      }
+
       return {
         itemId: l.itemId,
         name: item?.name || 'Item',
-        price: item?.price || 0,
+        price: baseItemPrice + unitExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
-        added: (l.added || []).map((a) => ({
-          name: stockById(a.ingredientId)?.name || a.ingredientId,
-          qty: a.qty,
-        })),
+        added: addedList,
+        gourmetFreeChoice: l.gourmetFreeChoice,
       }
     })
 
@@ -365,6 +480,10 @@ export default function LojaPublica() {
         const ingKey = ingMatch?.code || ingMatch?.id || a.ingredientId
         deductions[ingKey] = (deductions[ingKey] || 0) + a.qty * l.qty
       })
+      if (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none') {
+        const freeIngKey = l.gourmetFreeChoice === 'catupiry' ? 'ing-catupiry' : 'ing-cheddar'
+        deductions[freeIngKey] = (deductions[freeIngKey] || 0) + l.qty
+      }
     })
 
     const payload = {
@@ -701,7 +820,7 @@ export default function LojaPublica() {
                               {item?.name || 'Item'}
                             </div>
                             <div className="text-xs text-[#C0C0C0] font-mono">
-                              {fmtBRL((item?.price || 0) * line.qty)}
+                              {fmtBRL(calculateLineTotal(line))}
                             </div>
                           </div>
 
@@ -726,6 +845,14 @@ export default function LojaPublica() {
                           </div>
                         </div>
 
+                        {line.gourmetFreeChoice && line.gourmetFreeChoice !== 'none' && (
+                          <div className="text-[11px] text-amber-300 font-semibold leading-tight">
+                            ★ Cortesia Gourmet:{' '}
+                            {line.gourmetFreeChoice === 'catupiry'
+                              ? 'Catupiry (Grátis)'
+                              : 'Cheddar (Grátis)'}
+                          </div>
+                        )}
                         {line.removed && line.removed.length > 0 && (
                           <div className="text-[11px] text-red-400/90 leading-tight">
                             Sem: {line.removed.join(', ')}
@@ -733,7 +860,7 @@ export default function LojaPublica() {
                         )}
                         {line.added && line.added.length > 0 && (
                           <div className="text-[11px] text-emerald-400/90 leading-tight">
-                            Adicionais:{' '}
+                            Adicionais extras:{' '}
                             {line.added
                               .map(
                                 (a) =>
@@ -1046,6 +1173,10 @@ export default function LojaPublica() {
         setRemoved={setCustomizeRemoved}
         setAdded={setCustomizeAdded}
         resolveStockItem={stockById}
+        gourmetFreeChoice={customizeGourmetChoice}
+        setGourmetFreeChoice={setCustomizeGourmetChoice}
+        catupiryExtraPrice={catupiryAddPrice}
+        cheddarExtraPrice={cheddarAddPrice}
       />
     </div>
   )

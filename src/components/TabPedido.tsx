@@ -191,8 +191,18 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                 <div className="sc-cart-line-name">
                   {item.name}
                   <div className="sc-cart-line-price sc-tabular">{fmtBRL(item.price)} un.</div>
-                  {(l.removed?.length > 0 || l.added?.length > 0) && (
+                  {(l.removed?.length > 0 ||
+                    l.added?.length > 0 ||
+                    (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none')) && (
                     <div className="sc-cart-tags">
+                      {l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none' && (
+                        <div className="text-[10px] text-amber-300 font-bold">
+                          ★ Cortesia:{' '}
+                          {l.gourmetFreeChoice === 'catupiry'
+                            ? 'Catupiry (Grátis)'
+                            : 'Cheddar (Grátis)'}
+                        </div>
+                      )}
                       {l.removed?.length > 0 && (
                         <div className="sc-cart-tag-removed">
                           sem: {l.removed.map((id) => resolveStockItem(id)?.name || id).join(', ')}

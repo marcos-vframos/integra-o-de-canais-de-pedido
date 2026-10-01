@@ -2,7 +2,10 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function OrderCTA() {
+  const { content } = useLandingContent()
   const handleScrollToMenu = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     const target = document.querySelector('#cardapio')
@@ -11,22 +14,28 @@ export default function OrderCTA() {
     }
   }
 
+  const ctaTag = content.ctaTag || '05 / Pedidos & Delivery'
+  const ctaHeading = content.ctaHeading || 'Pronto para provar o verdadeiro podrão?'
+  const ctaDescription =
+    content.ctaDescription ||
+    'Peça diretamente pelo nosso aplicativo de pedidos. Atendimento rápido, lanche chapeado na hora e entrega em Pindamonhangaba.'
+  const ctaButtonText = content.ctaButtonText || 'Fazer Pedido Agora'
+
   return (
     <section
       className="min-h-screen w-full bg-[#0A150D] text-white border-b border-white/[0.06] snap-start flex items-center justify-center py-20 lg:py-24"
       aria-labelledby="order-cta-heading"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 my-auto">
-        <span className="editorial-tag block">05 / Pedidos & Delivery</span>
+        <span className="editorial-tag block">{ctaTag}</span>
         <h2
           id="order-cta-heading"
           className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white leading-tight"
         >
-          Pronto para provar o verdadeiro podrão?
+          {ctaHeading}
         </h2>
         <p className="text-base sm:text-lg text-[#C4C4C4] max-w-xl mx-auto leading-relaxed font-normal">
-          Peça diretamente pelo nosso aplicativo de pedidos. Atendimento rápido, lanche chapeado na
-          hora e entrega em Pindamonhangaba.
+          {ctaDescription}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
@@ -34,7 +43,7 @@ export default function OrderCTA() {
             to="/loja"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-8 py-3.5 rounded-md transition-colors duration-200"
           >
-            <span>Fazer Pedido Agora</span>
+            <span>{ctaButtonText}</span>
             <ArrowUpRight className="w-4 h-4 text-white/80" />
           </Link>
 

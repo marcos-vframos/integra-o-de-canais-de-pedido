@@ -98,13 +98,22 @@
   }
 
   /* Scoped Landing Elements */
+  :root {
+    --landing-bg-primary: #07140b;
+    --landing-bg-secondary: #0a150d;
+    --landing-bg-card: #0d1a11;
+    --landing-vinho: #8f0f1b;
+    --landing-vinho-hover: #990000;
+    --landing-silver: #c4c4c4;
+  }
+
   .landing-scope {
     font-family:
       'Montserrat',
       system-ui,
       -apple-system,
       sans-serif;
-    background-color: #07140b;
+    background-color: var(--landing-bg-primary, #07140b);
     color: #f3f4f6;
   }
 

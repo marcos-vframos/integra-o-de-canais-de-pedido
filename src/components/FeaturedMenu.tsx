@@ -6,7 +6,10 @@ import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function FeaturedMenu() {
+  const { content } = useLandingContent()
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [isOpen, setIsOpen] = useState(true)
@@ -31,12 +34,20 @@ export default function FeaturedMenu() {
       }),
       pb
         .collection('settings')
-        .getFirstListItem('key="is_open"')
-        .catch(() => null),
+        .getFullList()
+        .catch(() => []),
     ])
-      .then(([items, openRec]) => {
+      .then(([items, settingsList]) => {
         setMenuItems(items)
-        if (openRec) {
+        const openRec = (settingsList as any[]).find((s) => s.key === 'is_open')
+        const forceOpenRec = (settingsList as any[]).find((s) => s.key === 'force_open')
+        const forceClosedRec = (settingsList as any[]).find((s) => s.key === 'force_closed')
+
+        if (forceOpenRec?.value === 'true') {
+          setIsOpen(true)
+        } else if (forceClosedRec?.value === 'true') {
+          setIsOpen(false)
+        } else if (openRec) {
           setIsOpen(openRec.value === 'true')
         }
       })
@@ -59,10 +70,8 @@ export default function FeaturedMenu() {
       .catch(() => {})
   })
 
-  useRealtime('settings', (e) => {
-    if (e.record && (e.record as any).key === 'is_open') {
-      setIsOpen((e.record as any).value === 'true')
-    }
+  useRealtime('settings', () => {
+    loadMenuAndSettings()
   })
 
   // Itens da categoria selecionada (excluindo Complementos do cardápio exibido)
@@ -108,16 +117,18 @@ export default function FeaturedMenu() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
-          <span className="editorial-tag block mb-3">02 / Seleção da Casa</span>
+          <span className="editorial-tag block mb-3">
+            {content.menuTag || '02 / Seleção da Casa'}
+          </span>
           <h2
             id="cardapio-heading"
             className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white mb-4"
           >
-            Cardápio em Destaque.
+            {content.menuHeading || 'Cardápio em Destaque.'}
           </h2>
           <p className="text-base text-[#C4C4C4] leading-relaxed">
-            Preparo artesanal na hora. Feito com carinho, muito sabor e os molhos exclusivos da
-            casa.
+            {content.menuSubtitle ||
+              'Preparo artesanal na hora. Feito com carinho, muito sabor e os molhos exclusivos da casa.'}
           </p>
 
           {!isOpen && (

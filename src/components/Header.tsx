@@ -23,6 +23,26 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [status, setStatus] = useState(() => checkIsOpenNow())
   const [isOpenSetting, setIsOpenSetting] = useState<boolean>(true)
+  const [forceOpen, setForceOpen] = useState<boolean>(false)
+  const [forceClosed, setForceClosed] = useState<boolean>(false)
+
+  const checkStatus = () => {
+    setStatus(checkIsOpenNow())
+  }
+
+  const loadSettings = () => {
+    pb.collection('settings')
+      .getFullList()
+      .then((records) => {
+        const openRec = records.find((r) => r.key === 'is_open')
+        const foRec = records.find((r) => r.key === 'force_open')
+        const fcRec = records.find((r) => r.key === 'force_closed')
+        if (openRec) setIsOpenSetting(openRec.value === 'true')
+        setForceOpen(foRec?.value === 'true')
+        setForceClosed(fcRec?.value === 'true')
+      })
+      .catch(() => {})
+  }
 
   useEffect(() => {
     const container = document.getElementById('landing-container')
@@ -44,25 +64,26 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStatus(checkIsOpenNow())
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [])
+    checkStatus()
+    loadSettings()
+    const interval = setInterval(checkStatus, 30000)
 
-  useEffect(() => {
-    pb.collection('settings')
-      .getFirstListItem('key="is_open"')
-      .then((rec) => {
-        setIsOpenSetting(rec.value === 'true')
-      })
-      .catch(() => {})
-  }, [])
-
-  useRealtime('settings', (e) => {
-    if (e.record && (e.record as any).key === 'is_open') {
-      setIsOpenSetting((e.record as any).value === 'true')
+    const handleFocus = () => {
+      checkStatus()
+      loadSettings()
     }
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleFocus)
+    }
+  }, [])
+
+  useRealtime('settings', () => {
+    loadSettings()
   })
 
   useEffect(() => {
@@ -85,7 +106,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
     }
   }
 
-  const actuallyOpen = status.isOpen && isOpenSetting
+  const actuallyOpen = forceOpen ? true : forceClosed ? false : status.isOpen && isOpenSetting
 
   return (
     <>

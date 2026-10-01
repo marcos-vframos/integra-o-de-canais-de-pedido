@@ -47,7 +47,17 @@ const FEED_POSTS: FeedPost[] = [
   },
 ]
 
+import { useLandingContent } from '@/context/LandingContentContext'
+
 export default function InstagramSection() {
+  const { content } = useLandingContent()
+  const instagramTag = content.instagramTag || '04 / Redes Sociais'
+  const instagramHeading = content.instagramHeading || '@loyolass_lanches'
+  const instagramSubtitle =
+    content.instagramSubtitle ||
+    'Acompanhe os bastidores da nossa cozinha, os lanches da noite e novidades no Instagram oficial.'
+  const posts = content.instagramPosts?.length > 0 ? content.instagramPosts : FEED_POSTS
+
   return (
     <section
       id="instagram"
@@ -57,17 +67,14 @@ export default function InstagramSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div className="max-w-xl">
-            <span className="editorial-tag block mb-3">04 / Redes Sociais</span>
+            <span className="editorial-tag block mb-3">{instagramTag}</span>
             <h2
               id="instagram-heading"
               className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white"
             >
-              @loyolass_lanches
+              {instagramHeading}
             </h2>
-            <p className="text-base text-[#C4C4C4] mt-3 leading-relaxed">
-              Acompanhe os bastidores da nossa cozinha, os lanches da noite e novidades no Instagram
-              oficial.
-            </p>
+            <p className="text-base text-[#C4C4C4] mt-3 leading-relaxed">{instagramSubtitle}</p>
           </div>
 
           <a
@@ -82,7 +89,7 @@ export default function InstagramSection() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {FEED_POSTS.map((post) => (
+          {posts.map((post) => (
             <a
               key={post.id}
               href={BUSINESS_INFO.instagramUrl}
