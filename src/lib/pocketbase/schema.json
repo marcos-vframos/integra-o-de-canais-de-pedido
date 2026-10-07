@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T04:03:04.480Z",
+  "generatedAt": "2026-10-07T12:42:41.422Z",
   "collections": [
     {
       "name": "users",
@@ -29,14 +29,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -90,14 +95,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "category",
@@ -140,7 +150,16 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["un", "porção", "fatia", "rolo", "g", "kg", "ml", "l"]
+          "selectValues": [
+            "un",
+            "porção",
+            "fatia",
+            "rolo",
+            "g",
+            "kg",
+            "ml",
+            "l"
+          ]
         },
         {
           "name": "qty",
@@ -159,21 +178,29 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["Ingrediente", "Operacional"]
+          "selectValues": [
+            "Ingrediente",
+            "Operacional"
+          ]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -234,7 +261,11 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["Dinheiro", "Pix", "Cartão"]
+          "selectValues": [
+            "Dinheiro",
+            "Pix",
+            "Cartão"
+          ]
         },
         {
           "name": "status",
@@ -247,7 +278,10 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["balcao", "online"]
+          "selectValues": [
+            "balcao",
+            "online"
+          ]
         },
         {
           "name": "customerName",
@@ -266,7 +300,10 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["retirada", "entrega"]
+          "selectValues": [
+            "retirada",
+            "entrega"
+          ]
         },
         {
           "name": "customerAddress",
@@ -279,14 +316,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "motoboyId",
@@ -413,14 +455,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "shoppingReport",
@@ -429,7 +476,9 @@
           "system": false
         }
       ],
-      "indexes": ["CREATE INDEX idx_closures_closedAt ON closures (closedAt DESC)"]
+      "indexes": [
+        "CREATE INDEX idx_closures_closedAt ON closures (closedAt DESC)"
+      ]
     },
     {
       "name": "settings",
@@ -459,17 +508,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_settings_key ON settings (\"key\")"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_settings_key ON settings (\"key\")"
+      ]
     },
     {
       "name": "landing_content",
@@ -505,17 +561,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_landing_content_section ON landing_content (section)"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_landing_content_section ON landing_content (section)"
+      ]
     },
     {
       "name": "categories",
@@ -551,14 +614,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "description",
@@ -567,7 +635,9 @@
           "system": false
         }
       ],
-      "indexes": ["CREATE INDEX idx_categories_order ON categories (\"order\")"]
+      "indexes": [
+        "CREATE INDEX idx_categories_order ON categories (\"order\")"
+      ]
     },
     {
       "name": "motoboys",
@@ -615,17 +685,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE INDEX idx_motoboys_active ON motoboys (active)"]
+      "indexes": [
+        "CREATE INDEX idx_motoboys_active ON motoboys (active)"
+      ]
     },
     {
       "name": "delivery_fees",
@@ -673,17 +750,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE INDEX idx_delivery_fees_fee ON delivery_fees (fee)"]
+      "indexes": [
+        "CREATE INDEX idx_delivery_fees_fee ON delivery_fees (fee)"
+      ]
     },
     {
       "name": "customers",
@@ -755,17 +839,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_customers_phone ON customers (phone)"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_customers_phone ON customers (phone)"
+      ]
     },
     {
       "name": "campaigns",
@@ -801,7 +892,11 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["voucher_10", "free_delivery", "product_discount"]
+          "selectValues": [
+            "voucher_10",
+            "free_delivery",
+            "product_discount"
+          ]
         },
         {
           "name": "title",
@@ -862,14 +957,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -953,17 +1053,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE INDEX idx_seasonal_active ON seasonal_campaigns (active)"]
+      "indexes": [
+        "CREATE INDEX idx_seasonal_active ON seasonal_campaigns (active)"
+      ]
     }
   ]
 }
