@@ -19,6 +19,8 @@ import {
 import {
   useLandingContent,
   LandingThemeColors,
+  LandingSlide,
+  LandingFeedPost,
   DEFAULT_THEME_COLORS,
   DEFAULT_THEME_PRESETS,
 } from '@/context/LandingContentContext'
