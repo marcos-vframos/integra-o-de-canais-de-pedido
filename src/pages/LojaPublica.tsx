@@ -31,6 +31,7 @@ import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
+import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 import {
   CustomerAuthDrawer,
   CustomerProfile,
@@ -112,6 +113,8 @@ export default function LojaPublica() {
   const [customerOrders, setCustomerOrders] = useState<OrderRecord[]>([])
   const [customerCampaigns, setCustomerCampaigns] = useState<CampaignVoucher[]>([])
   const [appliedCampaign, setAppliedCampaign] = useState<CampaignVoucher | null>(null)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherMessage, setVoucherMessage] = useState('')
 
   // Modal de Comprovante completo
   const [showReceiptModal, setShowReceiptModal] = useState(false)
@@ -584,6 +587,34 @@ export default function LojaPublica() {
     setAppliedCampaign(null)
   }
 
+  const handleApplyVoucherCode = async () => {
+    const code = voucherCode.trim().toUpperCase()
+    if (!code) return
+    try {
+      const camps = await pb.collection('campaigns').getFullList<CampaignVoucher>({ filter: 'active=true && used=false' })
+      const match = camps.find((camp: any) => {
+        const generated = `LOY-${String(camp.id).slice(0, 6).toUpperCase()}`
+        const belongs = !camp.customerPhone || camp.customerPhone === customerPhone.trim() || camp.customerPhone === currentCustomer?.phone
+        return generated === code && belongs
+      })
+      if (!match) return setVoucherMessage('Código inválido, já utilizado ou vinculado a outro cliente.')
+      setAppliedCampaign(match)
+      setVoucherMessage(`Voucher ${code} aplicado.`)
+    } catch { setVoucherMessage('Não foi possível validar o código agora.') }
+  }
+
+  const handleDeleteCustomerAccount = async () => {
+    if (!currentCustomer?.id) return
+    if (!confirm('Excluir seu cadastro? O histórico operacional dos pedidos permanece na loja, mas seu perfil e vouchers ativos serão removidos.')) return
+    try {
+      const related = await pb.collection('campaigns').getFullList({ filter: `customerId="${currentCustomer.id}"` }).catch(() => [])
+      await Promise.all(related.map((x:any) => pb.collection('campaigns').delete(x.id).catch(() => null)))
+      await pb.collection('customers').delete(currentCustomer.id)
+      handleCustomerLogout(); setCustomerName(''); setCustomerPhone(''); setCustomerAddress('')
+      setVoucherMessage('Cadastro excluído.')
+    } catch (err:any) { setVoucherMessage(err?.message || 'Não foi possível excluir o cadastro.') }
+  }
+
   // Checkout submit via endpoint /backend/v1/orders/finalize com origin: 'online'
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -877,6 +908,8 @@ export default function LojaPublica() {
             </button>
           )}
         </div>
+
+        <StorePromotionCarousel />
 
         {/* Categorias (Pills horizontais) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
@@ -1446,6 +1479,15 @@ export default function LojaPublica() {
             {/* Footer Carrinho / Botão Enviar */}
             {cart.length > 0 && (
               <div className="p-4 border-t border-[#27272A] bg-[#121215] space-y-3">
+                <div className="rounded-xl border border-[#27272A] bg-[#17171C] p-3 space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-400">Voucher, código ou cupom</label>
+                  <div className="flex gap-2">
+                    <input value={voucherCode} onChange={(e)=>setVoucherCode(e.target.value.toUpperCase())} placeholder="Ex.: LOY-A1B2C3" className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs uppercase text-white" />
+                    <button type="button" onClick={handleApplyVoucherCode} className="rounded-lg bg-[#E10600] px-3 py-2 text-xs font-bold text-white">Aplicar</button>
+                  </div>
+                  {voucherMessage && <p className="text-[11px] text-zinc-400">{voucherMessage}</p>}
+                </div>
+
                 <div className="flex items-center justify-between text-xs text-[#C0C0C0]">
                   <span>Subtotal</span>
                   <span className="font-bold text-white font-mono">{fmtBRL(subtotal)}</span>
@@ -1605,6 +1647,7 @@ export default function LojaPublica() {
         campaigns={customerCampaigns}
         onLogin={handleCustomerLogin}
         onLogout={handleCustomerLogout}
+        onDeleteAccount={handleDeleteCustomerAccount}
         onApplyCampaign={(c) => {
           setAppliedCampaign(c)
           setAuthDrawerOpen(false)
