@@ -400,7 +400,8 @@ export default function AdmLanding() {
       id: `preset_${Date.now()}`,
       name: newPresetName.trim(),
       colors: customColors,
-    }    const updatedPresets = [...content.themePresets, newPreset]
+    }
+    const updatedPresets = [...content.themePresets, newPreset]
     await saveTheme(newPreset.id, customColors, updatedPresets)
     setNewPresetName('')
   }
