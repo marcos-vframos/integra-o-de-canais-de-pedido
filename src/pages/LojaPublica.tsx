@@ -757,6 +757,7 @@ export default function LojaPublica() {
       subtotal,
       discount: discountAmount,
       deliveryFee: currentDeliveryFee,
+      deliveryFeeRegion: selectedFeeNeighborhood,
       total: finalTotal,
       payment: finalPaymentLabel,
       paymentDetails,
@@ -794,7 +795,7 @@ export default function LojaPublica() {
         if (!order) {
           order = await pb.collection('orders').create<OrderRecord>({
             ticketNumber: Number(String(Date.now()).slice(-6)),
-            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee,
+            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee, deliveryFeeRegion: selectedFeeNeighborhood,
             total: finalTotal, payment: finalPaymentLabel, paymentDetails,
             status: 'pendente', origin: 'online', customerName: cleanName, customerPhone: cleanPhone,
             deliveryType, customerAddress: payload.customerAddress,
