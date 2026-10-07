@@ -93,6 +93,8 @@ export default function LojaPublica() {
   const [payment, setPayment] = useState<'Dinheiro' | 'Pix' | 'Cartão'>('Pix')
   const [cardType, setCardType] = useState<'debito' | 'credito'>('debito')
   const [changeFor, setChangeFor] = useState('')
+  const [wantsInvoice, setWantsInvoice] = useState(false)
+  const [invoiceDocument, setInvoiceDocument] = useState('')
 
   // Pix real estático
   const [pixKey, setPixKey] = useState('12991591915')
@@ -798,6 +800,12 @@ export default function LojaPublica() {
             deliveryType, customerAddress: payload.customerAddress,
             deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng,
             campaignId: appliedCampaign?.id || '',
+            invoiceRequested: wantsInvoice,
+            invoiceDocument: invoiceDocument.trim(),
+            invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
+      invoiceRequested: wantsInvoice,
+      invoiceDocument: invoiceDocument.trim(),
+      invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
           })
           for (const [key, qty] of Object.entries(deductions)) {
             const inv = stockById(key)
@@ -1372,6 +1380,14 @@ export default function LojaPublica() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-white">
+                      <input type="checkbox" checked={wantsInvoice} onChange={e=>setWantsInvoice(e.target.checked)} />
+                      Desejo Nota Fiscal deste pedido
+                    </label>
+                    {wantsInvoice && <><input value={invoiceDocument} onChange={e=>setInvoiceDocument(e.target.value)} placeholder="CPF/CNPJ para a nota" className="w-full rounded-lg border border-zinc-700 bg-[#17171C] px-3 py-2 text-xs text-white"/><p className="text-[10px] text-zinc-500">A nota incluirá produtos, quantidades, adicionais, remoções, descontos e taxa de entrega. A autorização fiscal será processada pelo emissor fiscal conectado ao estabelecimento.</p></>}
                   </div>
 
                   {/* Forma de Pagamento */}
