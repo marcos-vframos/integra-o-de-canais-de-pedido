@@ -12,6 +12,7 @@ import {
   Inbox,
   Bike,
   Users,
+  Tag,
   Settings as SettingsIcon,
   Store as StoreIcon,
 } from 'lucide-react'
