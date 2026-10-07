@@ -16,6 +16,7 @@ import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
+import DeliveryFeeZones from '@/components/DeliveryFeeZones'
 
 export interface MotoboyItem {
   id: string
@@ -157,7 +158,7 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
       </div>
 
       {/* Cards de Resumo Geral do Dia */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-[#121215] border border-[#27272A] rounded-xl p-4">
           <span className="text-zinc-500 text-[11px] block uppercase font-semibold">
             Total de Entregas Hoje
@@ -182,6 +183,7 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
             {unassignedDeliveries.length}
           </div>
         </div>
+        <DeliveryFeeZones />
       </div>
 
       {/* Lista de Motoboys e Entregas do Dia */}
