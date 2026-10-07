@@ -497,8 +497,7 @@
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--text);
-  display: flex;
-  align-items: center;
+  display: flex;  align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.12s;
@@ -997,8 +996,7 @@
   border-bottom: 1px solid var(--surface-2);
   cursor: pointer;
 }
-.sc-check-row:last-child {
-  border-bottom: none;
+.sc-check-row:last-child {  border-bottom: none;
 }
 .sc-check-row input {
   width: 16px;
@@ -1176,3 +1174,19 @@ div:has(> a[href*='goskip.dev']) {
   pointer-events: none !important;
   visibility: hidden !important;
 }
+
+/* Landing theme runtime: traduz a paleta do CMS para os tokens legados dos componentes.
+   Mantém o isolamento visual em .landing-scope e permite campanhas sazonais sem reescrever o layout. */
+.landing-scope { background-color: var(--landing-bg-primary, #07140B) !important; }
+.landing-scope [class*="bg-[#07140B]"],
+.landing-scope [class*="bg-[#07100A]"] { background-color: var(--landing-bg-primary, #07140B) !important; }
+.landing-scope [class*="bg-[#0A150D]"] { background-color: var(--landing-bg-secondary, #0A150D) !important; }
+.landing-scope [class*="bg-[#0D1A11]"] { background-color: var(--landing-bg-card, #0D1A11) !important; }
+.landing-scope [class*="bg-[#8F0F1B]"] { background-color: var(--landing-vinho, #8F0F1B) !important; }
+.landing-scope [class*="border-[#8F0F1B]"] { border-color: var(--landing-vinho, #8F0F1B) !important; }
+.landing-scope [class*="text-[#8F0F1B]"] { color: var(--landing-vinho, #8F0F1B) !important; }
+.landing-scope [class*="text-[#C4C4C4]"] { color: var(--landing-silver, #C4C4C4) !important; }
+.landing-scope [class*="decoration-[#8F0F1B]"] { text-decoration-color: var(--landing-vinho, #8F0F1B) !important; }
+.landing-scope [class*="hover:bg-[#990000]"]:hover { background-color: var(--landing-vinho-hover, #990000) !important; }
+.landing-scope [class*="hover:border-[#990000]"]:hover { border-color: var(--landing-vinho-hover, #990000) !important; }
+.landing-scope .editorial-tag { color: var(--landing-silver, #C4C4C4); }

@@ -47,6 +47,7 @@ export interface OrderRecord {
   subtotal?: number
   discount?: number
   deliveryFee?: number
+  deliveryFeeRegion?: string
   total: number
   payment: 'Dinheiro' | 'Pix' | 'Cartão'
   status?: string
@@ -57,6 +58,9 @@ export interface OrderRecord {
   customerAddress?: string
   motoboyId?: string
   motoboyName?: string
+  invoiceRequested?: boolean
+  invoiceDocument?: string
+  invoiceStatus?: 'nao_solicitada' | 'pendente_emissao' | 'emitida' | 'erro'
   created?: string
   updated?: string
 }

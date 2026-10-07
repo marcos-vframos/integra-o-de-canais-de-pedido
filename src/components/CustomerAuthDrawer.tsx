@@ -43,6 +43,7 @@ interface CustomerAuthDrawerProps {
   campaigns: CampaignVoucher[]
   onLogin: (phone: string, name: string) => Promise<void>
   onLogout: () => void
+  onDeleteAccount?: () => Promise<void>
   onApplyCampaign?: (c: CampaignVoucher) => void
   onRepeatOrder?: (order: OrderRecord) => void
 }
@@ -55,6 +56,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
   campaigns,
   onLogin,
   onLogout,
+  onDeleteAccount,
   onApplyCampaign,
   onRepeatOrder,
 }) => {
@@ -267,6 +269,11 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
                     <LogOut size={14} />
                     <span>Sair desta conta</span>
                   </button>
+                  {onDeleteAccount && (
+                    <button type="button" onClick={onDeleteAccount} className="w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:border-red-500/50 hover:text-red-400 text-xs font-semibold">
+                      Excluir meu cadastro
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -348,6 +355,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
                             </button>
                           )}
                         </div>
+                        <div className="rounded bg-black/30 px-2 py-1 font-mono text-[11px] text-amber-300">Código: LOY-{camp.id.slice(0, 6).toUpperCase()}</div>
                         {camp.description && (
                           <p className="text-[11px] text-zinc-400">{camp.description}</p>
                         )}

@@ -12,6 +12,7 @@ import {
   Inbox,
   Bike,
   Users,
+  Tag,
   Settings as SettingsIcon,
   Store as StoreIcon,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ import { TabEstoque } from '@/components/TabEstoque'
 import { TabCaixa } from '@/components/TabCaixa'
 import { TabMotoboys } from '@/components/TabMotoboys'
 import { TabClientes } from '@/components/TabClientes'
+import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { TabPedidosOnline } from '@/components/TabPedidosOnline'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { ReceiptModal } from '@/components/ReceiptModal'
@@ -1243,6 +1245,7 @@ export default function Gestao() {
     { id: 'caixa', label: 'Caixa', icon: Wallet },
     { id: 'motoboys', label: 'Motoboys', icon: Bike },
     { id: 'clientes', label: 'Clientes', icon: Users },
+    { id: 'promocoes', label: 'Promoções', icon: Tag },
   ]
 
   return (
@@ -1424,7 +1427,9 @@ export default function Gestao() {
 
         {currentTab === 'motoboys' && <TabMotoboys orders={orders} />}
 
-        {currentTab === 'clientes' && <TabClientes />}
+        {currentTab === 'clientes' && <TabClientes menu={menu} />}
+
+        {currentTab === 'promocoes' && <SeasonalCampaignAdmin />}
 
         {/* Modal de Escolha de Fechamento de Loja */}
         <StoreCloseChoiceModal

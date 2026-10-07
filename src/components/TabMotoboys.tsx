@@ -16,6 +16,7 @@ import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
+import DeliveryFeeZones from '@/components/DeliveryFeeZones'
 
 export interface MotoboyItem {
   id: string
@@ -157,7 +158,7 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
       </div>
 
       {/* Cards de Resumo Geral do Dia */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-[#121215] border border-[#27272A] rounded-xl p-4">
           <span className="text-zinc-500 text-[11px] block uppercase font-semibold">
             Total de Entregas Hoje
@@ -182,6 +183,7 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
             {unassignedDeliveries.length}
           </div>
         </div>
+        <DeliveryFeeZones />
       </div>
 
       {/* Lista de Motoboys e Entregas do Dia */}
@@ -375,6 +377,21 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
                       </span>
                     </div>
                   </div>
+
+                  {(() => {
+                    const now = new Date()
+                    const months = Array.from({length:6},(_,i)=>{
+                      const d=new Date(now.getFullYear(),now.getMonth()-5+i,1)
+                      const count=histOrders.filter(o=>{const x=new Date(o.created||'');return x.getMonth()===d.getMonth()&&x.getFullYear()===d.getFullYear()}).length
+                      return {label:d.toLocaleDateString('pt-BR',{month:'short'}),count}
+                    })
+                    const max=Math.max(1,...months.map(x=>x.count))
+                    const thisMonth=months[months.length-1]?.count||0
+                    return <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4">
+                      <div className="flex justify-between text-xs"><strong className="text-zinc-300">Atividade — últimos 6 meses</strong><span className="text-emerald-400">{thisMonth} entregas neste mês</span></div>
+                      <div className="mt-4 flex h-28 items-end gap-3">{months.map(x=><div key={x.label} className="flex-1 text-center"><div className="mx-auto w-full max-w-10 rounded-t bg-[#E10600]" style={{height:`${Math.max(4,(x.count/max)*80)}px`}} title={`${x.count} entregas`}/><span className="mt-1 block text-[9px] text-zinc-500">{x.label}</span></div>)}</div>
+                    </div>
+                  })()}
 
                   <div className="space-y-1.5">
                     <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
