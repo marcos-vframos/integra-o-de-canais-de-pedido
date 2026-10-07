@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-
+import { AutoCarousel } from '@/components/AutoCarousel'
 import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function OrderCTA() {
@@ -23,10 +23,20 @@ export default function OrderCTA() {
 
   return (
     <section
-      className="min-h-screen w-full bg-[#0A150D] text-white border-b border-white/[0.06] snap-start flex items-center justify-center py-20 lg:py-24"
+      className="min-h-screen w-full bg-[#0A150D] text-white border-b border-white/[0.06] snap-start flex items-center justify-center py-20 lg:py-24 relative overflow-hidden"
       aria-labelledby="order-cta-heading"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 my-auto">
+      {content.ctaImages && content.ctaImages.length > 0 && (
+        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+          <AutoCarousel
+            images={content.ctaImages}
+            className="w-full h-full"
+            imageClassName="filter blur-[1px] brightness-75"
+            alt="Fundo Loyola's"
+          />
+        </div>
+      )}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 my-auto relative z-10">
         <span className="editorial-tag block">{ctaTag}</span>
         <h2
           id="order-cta-heading"

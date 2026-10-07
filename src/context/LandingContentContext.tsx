@@ -55,6 +55,7 @@ export interface LandingContentState {
   storyQuote: string
   storyQuoteAuthor: string
   storyImage: string
+  storyImages?: string[]
   storyCard1Title: string
   storyCard1Desc: string
   storyCard2Title: string
@@ -82,6 +83,7 @@ export interface LandingContentState {
   ctaHeading: string
   ctaDescription: string
   ctaButtonText: string
+  ctaImages?: string[]
 
   // Location / Hours
   locationTag: string
@@ -231,6 +233,10 @@ export const DEFAULT_LANDING_CONTENT: LandingContentState = {
     '“Com aquele sabor que faz você se sentir abraçado, reunimos gerações em torno do autêntico podrão de Pindamonhangaba.”',
   storyQuoteAuthor: '— Família Loyolas Lanches',
   storyImage: 'https://img.usecurling.com/p/800/1000?q=street+food+cart+grill',
+  storyImages: [
+    'https://img.usecurling.com/p/800/1000?q=street+food+cart+grill',
+    'https://img.usecurling.com/p/800/1000?q=grill+burger+flames',
+  ],
   storyCard1Title: 'Eleito Melhor Hamburgueria',
   storyCard1Desc: 'Reconhecido pela comunidade de Pindamonhangaba pelo sabor e fartura.',
   storyCard2Title: 'Classificação 5,0 Real',
@@ -299,6 +305,10 @@ export const DEFAULT_LANDING_CONTENT: LandingContentState = {
   ctaDescription:
     'Peça diretamente pelo nosso aplicativo de pedidos. Atendimento rápido, lanche chapeado na hora e entrega em Pindamonhangaba.',
   ctaButtonText: 'Fazer Pedido Agora',
+  ctaImages: [
+    'https://img.usecurling.com/p/800/600?q=juicy+cheeseburger+bacon',
+    'https://img.usecurling.com/p/800/600?q=french+fries+cheese+bacon',
+  ],
 
   // Location / Hours
   locationTag: '06 / Ponto & Atendimento',
@@ -385,6 +395,11 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             } else if (data.storyImage) {
               next.storyImage = data.storyImage
             }
+            if (Array.isArray(data.storyImages) && data.storyImages.length > 0) {
+              next.storyImages = data.storyImages
+            } else if (next.storyImage) {
+              next.storyImages = [next.storyImage]
+            }
             if (data.storyCard1Title) next.storyCard1Title = data.storyCard1Title
             if (data.storyCard1Desc) next.storyCard1Desc = data.storyCard1Desc
             if (data.storyCard2Title) next.storyCard2Title = data.storyCard2Title
@@ -409,6 +424,9 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             if (data.ctaHeading) next.ctaHeading = data.ctaHeading
             if (data.ctaDescription) next.ctaDescription = data.ctaDescription
             if (data.ctaButtonText) next.ctaButtonText = data.ctaButtonText
+            if (Array.isArray(data.ctaImages) && data.ctaImages.length > 0) {
+              next.ctaImages = data.ctaImages
+            }
           } else if (section === 'location_hours') {
             if (data.locationTag) next.locationTag = data.locationTag
             if (data.locationHeading) next.locationHeading = data.locationHeading

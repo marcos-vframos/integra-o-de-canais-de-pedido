@@ -15,10 +15,37 @@ export default function FeaturedMenu() {
   const [isOpen, setIsOpen] = useState(true)
   const [loading, setLoading] = useState(true)
 
-  // As categorias vêm da coleção menu do PocketBase; filtramos "Todos" e "Complementos"
-  const availableCategories = Array.from(
-    new Set(menuItems.map((item) => String(item.category)).filter(Boolean)),
-  ).filter((cat) => cat !== 'Complementos' && cat !== 'Todos')
+  // As categorias vêm da coleção categories ou menu do PocketBase
+  const [categoriesList, setCategoriesList] = useState<string[]>([])
+
+  const loadCategories = () => {
+    pb.collection('categories')
+      .getFullList({ filter: 'active = true', sort: 'order' })
+      .then((cats) => {
+        const names = cats
+          .map((c: any) => c.name)
+          .filter((n: string) => n !== 'Complementos' && n !== 'Todos')
+        if (names.length > 0) {
+          setCategoriesList(names)
+        }
+      })
+      .catch(() => {})
+  }
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  useRealtime('categories', () => {
+    loadCategories()
+  })
+
+  const availableCategories =
+    categoriesList.length > 0
+      ? categoriesList
+      : Array.from(new Set(menuItems.map((item) => String(item.category)).filter(Boolean))).filter(
+          (cat) => cat !== 'Complementos' && cat !== 'Todos',
+        )
 
   // Se nenhuma categoria estiver selecionada e existirem categorias, seleciona a primeira
   const currentCategory: string =

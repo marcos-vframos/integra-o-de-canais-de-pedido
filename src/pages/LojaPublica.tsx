@@ -19,12 +19,26 @@ import {
   SlidersHorizontal,
   ArrowLeft,
   Share2,
+  Copy,
+  Check,
+  Compass,
+  Tag,
+  History,
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
+import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
+import {
+  CustomerAuthDrawer,
+  CustomerProfile,
+  CampaignVoucher,
+} from '@/components/CustomerAuthDrawer'
+import { OrderReceiptModal } from '@/components/OrderReceiptModal'
+import { generatePixPayload } from '@/lib/pix'
+import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
 
 export interface CustomerCartLine {
   cartLineId: string
@@ -73,11 +87,34 @@ export default function LojaPublica() {
   // Checkout dados
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
-  const [deliveryType, setDeliveryType] = useState<'retirada' | 'entrega'>('retirada')
+  const [deliveryType, setDeliveryType] = useState<'entrega' | 'retirada'>('entrega')
   const [customerAddress, setCustomerAddress] = useState('')
   const [payment, setPayment] = useState<'Dinheiro' | 'Pix' | 'Cartão'>('Pix')
+  const [cardType, setCardType] = useState<'debito' | 'credito'>('debito')
   const [changeFor, setChangeFor] = useState('')
 
+  // Pix real estático
+  const [pixKey, setPixKey] = useState('12991591915')
+  const [pixCopied, setPixCopied] = useState(false)
+
+  // Entrega com mapa e taxas
+  const [deliveryFees, setDeliveryFees] = useState<DeliveryFeeItem[]>([])
+  const [selectedFeeNeighborhood, setSelectedFeeNeighborhood] = useState<string>('')
+  const [deliveryFeeValue, setDeliveryFeeValue] = useState<number>(0)
+  const [useMapLocation, setUseMapLocation] = useState(false)
+  const [deliveryLat, setDeliveryLat] = useState<number>(-22.9238)
+  const [deliveryLng, setDeliveryLng] = useState<number>(-45.474)
+  const [locatingUser, setLocatingUser] = useState(false)
+
+  // Auth do Cliente & CRM / Campanhas
+  const [authDrawerOpen, setAuthDrawerOpen] = useState(false)
+  const [currentCustomer, setCurrentCustomer] = useState<CustomerProfile | null>(null)
+  const [customerOrders, setCustomerOrders] = useState<OrderRecord[]>([])
+  const [customerCampaigns, setCustomerCampaigns] = useState<CampaignVoucher[]>([])
+  const [appliedCampaign, setAppliedCampaign] = useState<CampaignVoucher | null>(null)
+
+  // Modal de Comprovante completo
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
   // Submissão & Confirmação
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -97,7 +134,7 @@ export default function LojaPublica() {
     let mounted = true
     const loadStore = async () => {
       try {
-        const [settingsList, menuList, stockList] = await Promise.all([
+        const [settingsList, menuList, stockList, feesList] = await Promise.all([
           pb
             .collection('settings')
             .getFullList<{ key: string; value: string }>()
@@ -110,6 +147,10 @@ export default function LojaPublica() {
             .collection('inventory')
             .getFullList<InventoryItem>()
             .catch(() => []),
+          pb
+            .collection('delivery_fees')
+            .getFullList<DeliveryFeeItem>()
+            .catch(() => []),
         ])
 
         if (!mounted) return
@@ -117,8 +158,10 @@ export default function LojaPublica() {
         const openSetting = settingsList.find((s) => s.key === 'is_open')
         const forceOpen = settingsList.find((s) => s.key === 'force_open')?.value === 'true'
         const forceClosed = settingsList.find((s) => s.key === 'force_closed')?.value === 'true'
+        const pixSetting = settingsList.find((s) => s.key === 'pix_key')
 
         if (nameSetting?.value) setStoreName(nameSetting.value)
+        if (pixSetting?.value) setPixKey(pixSetting.value)
         if (forceOpen) {
           setIsOpen(true)
         } else if (forceClosed) {
@@ -129,6 +172,11 @@ export default function LojaPublica() {
 
         setMenu(menuList)
         setStock(stockList)
+        setDeliveryFees(feesList)
+        if (feesList.length > 0) {
+          setSelectedFeeNeighborhood(feesList[0].name)
+          setDeliveryFeeValue(feesList[0].fee)
+        }
       } catch (e) {
         console.error('Erro ao carregar cardápio da loja:', e)
       } finally {
@@ -178,6 +226,15 @@ export default function LojaPublica() {
     pb.collection('menu')
       .getFullList<MenuItem>({ filter: 'active = true', sort: 'name' })
       .then(setMenu)
+      .catch(() => {})
+  })
+
+  useRealtime('delivery_fees', () => {
+    pb.collection('delivery_fees')
+      .getFullList<DeliveryFeeItem>()
+      .then((fees) => {
+        setDeliveryFees(fees)
+      })
       .catch(() => {})
   })
 
@@ -378,9 +435,134 @@ export default function LojaPublica() {
     return lineBase * line.qty
   }
 
+  // Desconto calculado por campanhas / vouchers
+  const discountAmount = useMemo(() => {
+    if (!appliedCampaign) return 0
+    if (appliedCampaign.type === 'voucher_10') {
+      return Math.round(subtotal * 0.1 * 100) / 100
+    }
+    if (appliedCampaign.type === 'free_delivery') {
+      return deliveryType === 'entrega' ? deliveryFeeValue : 0
+    }
+    if (appliedCampaign.type === 'product_discount' && appliedCampaign.discountAmount) {
+      return Math.min(appliedCampaign.discountAmount, subtotal)
+    }
+    return 0
+  }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue])
+
   const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
+  const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
+  const finalTotal = Math.max(0, subtotal - discountAmount + currentDeliveryFee)
 
   const totalItemsCount = cart.reduce((sum, line) => sum + line.qty, 0)
+
+  // Pix Payload gerado em tempo real
+  const pixEMV = useMemo(() => {
+    return generatePixPayload({
+      key: pixKey,
+      merchantName: storeName,
+      merchantCity: 'Pindamonhangaba',
+      amount: finalTotal,
+      txid: `PED${Date.now().toString().slice(-6)}`,
+    })
+  }, [pixKey, storeName, finalTotal])
+
+  const pixQrCodeUrl = useMemo(() => {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixEMV)}`
+  }, [pixEMV])
+
+  // Geolocalização do navegador
+  const handleGetBrowserLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocalização não suportada no seu navegador.')
+      return
+    }
+    setLocatingUser(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        setDeliveryLat(lat)
+        setDeliveryLng(lng)
+        setUseMapLocation(true)
+        const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
+        setDeliveryFeeValue(resolved.fee)
+        setSelectedFeeNeighborhood(`${resolved.nearestName} (${resolved.distanceKm} km)`)
+        setLocatingUser(false)
+      },
+      (err) => {
+        setLocatingUser(false)
+        alert('Não foi possível obter sua localização: ' + err.message)
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
+  // Login e busca de histórico do cliente
+  const handleCustomerLogin = async (phone: string, name: string) => {
+    const raw = phone.trim()
+    try {
+      let cust = null
+      try {
+        cust = await pb.collection('customers').getFirstListItem(`phone="${raw}"`)
+      } catch {
+        /* intentionally ignored */
+      }
+
+      if (!cust) {
+        cust = await pb.collection('customers').create({
+          phone: raw,
+          name: name.trim(),
+          totalOrders: 0,
+          totalSpent: 0,
+        })
+      }
+
+      const prof: CustomerProfile = {
+        id: cust.id,
+        name: cust.name || name,
+        phone: cust.phone,
+        address: cust.address,
+        favoriteItems: cust.favoriteItems || [],
+      }
+      setCurrentCustomer(prof)
+      setCustomerName(prof.name)
+      setCustomerPhone(prof.phone)
+      if (prof.address && !customerAddress) {
+        setCustomerAddress(prof.address)
+      }
+
+      // Buscar pedidos anteriores
+      try {
+        const ords = await pb.collection('orders').getFullList<OrderRecord>({
+          filter: `customerPhone="${raw}"`,
+          sort: '-created',
+        })
+        setCustomerOrders(ords)
+      } catch {
+        /* intentionally ignored */
+      }
+
+      // Buscar vouchers
+      try {
+        const camps = await pb.collection('campaigns').getFullList<CampaignVoucher>({
+          filter: `customerPhone="${raw}" && active=true && used=false`,
+        })
+        setCustomerCampaigns(camps)
+      } catch {
+        /* intentionally ignored */
+      }
+    } catch (e: any) {
+      console.warn('Erro ao autenticar cliente:', e)
+    }
+  }
+
+  const handleCustomerLogout = () => {
+    setCurrentCustomer(null)
+    setCustomerOrders([])
+    setCustomerCampaigns([])
+    setAppliedCampaign(null)
+  }
 
   // Checkout submit via endpoint /backend/v1/orders/finalize com origin: 'online'
   const handleCheckout = async (e: React.FormEvent) => {
@@ -486,23 +668,45 @@ export default function LojaPublica() {
       }
     })
 
+    const finalPaymentLabel =
+      payment === 'Cartão' ? `Cartão (${cardType === 'credito' ? 'Crédito' : 'Débito'})` : payment
+
+    const paymentDetails = {
+      method: payment,
+      cardType: payment === 'Cartão' ? cardType : undefined,
+      changeFor: payment === 'Dinheiro' && changeFor ? Number(changeFor) : undefined,
+      changeDue:
+        payment === 'Dinheiro' && changeFor && Number(changeFor) > finalTotal
+          ? Math.round((Number(changeFor) - finalTotal) * 100) / 100
+          : 0,
+      pixKey: payment === 'Pix' ? pixKey : undefined,
+    }
+
     const payload = {
       origin: 'online',
       customerName: cleanName,
       customerPhone: cleanPhone,
       deliveryType,
+      deliveryLat: deliveryType === 'entrega' ? deliveryLat : undefined,
+      deliveryLng: deliveryType === 'entrega' ? deliveryLng : undefined,
+      campaignId: appliedCampaign?.id,
       customerAddress:
         deliveryType === 'entrega'
-          ? `${customerAddress.trim()}${payment === 'Dinheiro' && changeFor ? ` (Troco para R$ ${changeFor})` : ''}`
+          ? `${customerAddress.trim()}${
+              payment === 'Dinheiro' && changeFor
+                ? ` (Troco para R$ ${changeFor} - Devolver ${fmtBRL(paymentDetails.changeDue)})`
+                : ''
+            }`
           : payment === 'Dinheiro' && changeFor
-            ? `(Troco para R$ ${changeFor})`
+            ? `(Troco para R$ ${changeFor} - Devolver ${fmtBRL(paymentDetails.changeDue)})`
             : '',
       items,
       subtotal,
-      discount: 0,
-      deliveryFee: 0,
-      total: subtotal,
-      payment,
+      discount: discountAmount,
+      deliveryFee: currentDeliveryFee,
+      total: finalTotal,
+      payment: finalPaymentLabel,
+      paymentDetails,
       deductions,
     }
 
@@ -518,6 +722,7 @@ export default function LojaPublica() {
       if (res && res.order) {
         setConfirmedOrder(res.order)
         setCart([])
+        setAppliedCampaign(null)
         setCartOpen(false)
         localStorage.removeItem(CART_STORAGE_KEY)
       } else {
@@ -582,6 +787,21 @@ export default function LojaPublica() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAuthDrawerOpen(true)}
+              className="relative px-3 py-2 rounded-lg bg-[#17171C] hover:bg-[#27272A] border border-[#27272A] text-white flex items-center gap-1.5 transition-all text-xs font-semibold cursor-pointer"
+              title="Cadastro e Meus Pedidos"
+            >
+              <User size={15} className="text-[#E10600]" />
+              <span className="hidden sm:inline">
+                {currentCustomer ? currentCustomer.name.split(' ')[0] : 'Minha Conta'}
+              </span>
+              {customerCampaigns.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setCartOpen(true)}
@@ -985,18 +1205,92 @@ export default function LojaPublica() {
                     </div>
 
                     {deliveryType === 'entrega' && (
-                      <div className="mt-2.5">
-                        <label className="block text-xs font-semibold text-[#C0C0C0] mb-1">
-                          Endereço completo (Rua, Nº, Bairro, Ponto de ref.) *
-                        </label>
-                        <textarea
-                          rows={2}
-                          required
-                          placeholder="Ex: Av. Nicanor Ramos Nogueira, 120, Araretama"
-                          value={customerAddress}
-                          onChange={(e) => setCustomerAddress(e.target.value)}
-                          className="w-full p-2.5 bg-[#17171C] border border-[#27272A] rounded-lg text-xs text-white placeholder:text-[#9A9CA0] focus:outline-none focus:border-[#E10600]"
-                        />
+                      <div className="mt-3 space-y-3 p-3 bg-zinc-950/60 rounded-xl border border-zinc-800">
+                        {/* Seletor de Bairro / Taxa Cadastrada */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#C0C0C0] mb-1">
+                            Bairro para Entrega (Taxa Pré-cadastrada)
+                          </label>
+                          <select
+                            value={selectedFeeNeighborhood}
+                            onChange={(e) => {
+                              const chosen = deliveryFees.find((f) => f.name === e.target.value)
+                              if (chosen) {
+                                setSelectedFeeNeighborhood(chosen.name)
+                                setDeliveryFeeValue(chosen.fee)
+                                if (chosen.lat && chosen.lng) {
+                                  setDeliveryLat(chosen.lat)
+                                  setDeliveryLng(chosen.lng)
+                                }
+                              }
+                            }}
+                            className="w-full bg-[#17171C] border border-[#27272A] rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          >
+                            {deliveryFees.map((fee) => (
+                              <option key={fee.id} value={fee.name}>
+                                {fee.name} — {fmtBRL(fee.fee)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Botão de Compartilhar Localização com Mapa Real */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-zinc-400">Localização Precisa</span>
+                            <button
+                              type="button"
+                              onClick={handleGetBrowserLocation}
+                              disabled={locatingUser}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#E10600]/20 hover:bg-[#E10600]/30 text-[#E10600] border border-[#E10600]/40 text-[11px] font-bold cursor-pointer"
+                            >
+                              <Compass size={13} className={locatingUser ? 'animate-spin' : ''} />
+                              <span>
+                                {locatingUser ? 'Obtendo GPS...' : 'Compartilhar localização atual'}
+                              </span>
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setUseMapLocation(!useMapLocation)}
+                            className="text-[11px] text-zinc-400 hover:text-white underline cursor-pointer"
+                          >
+                            {useMapLocation
+                              ? 'Ocultar mapa do endereço'
+                              : 'Abrir mapa interativo de entrega'}
+                          </button>
+
+                          {useMapLocation && (
+                            <DeliveryMapPicker
+                              lat={deliveryLat}
+                              lng={deliveryLng}
+                              onChangeCoords={(lat, lng) => {
+                                setDeliveryLat(lat)
+                                setDeliveryLng(lng)
+                                const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
+                                setDeliveryFeeValue(resolved.fee)
+                                setSelectedFeeNeighborhood(
+                                  `${resolved.nearestName} (${resolved.distanceKm} km)`,
+                                )
+                              }}
+                            />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[#C0C0C0] mb-1">
+                            Endereço completo (Rua, Nº, Apto, Referência) *
+                          </label>
+                          <textarea
+                            rows={2}
+                            required
+                            placeholder="Ex: Av. Nicanor Ramos Nogueira, 120, Araretama"
+                            value={customerAddress}
+                            onChange={(e) => setCustomerAddress(e.target.value)}
+                            className="w-full p-2.5 bg-[#17171C] border border-[#27272A] rounded-lg text-xs text-white placeholder:text-[#9A9CA0] focus:outline-none focus:border-[#E10600]"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1032,18 +1326,96 @@ export default function LojaPublica() {
                       })}
                     </div>
 
-                    {payment === 'Dinheiro' && (
-                      <div className="mt-2.5">
-                        <label className="block text-xs font-semibold text-[#C0C0C0] mb-1">
-                          Precisa de troco para quanto? (opcional)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ex: 50 ou deixe em branco se não precisar"
-                          value={changeFor}
-                          onChange={(e) => setChangeFor(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#17171C] border border-[#27272A] rounded-lg text-xs text-white placeholder:text-[#9A9CA0] focus:outline-none focus:border-[#E10600]"
+                    {payment === 'Pix' && (
+                      <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-center">
+                        <div className="text-xs font-bold text-white flex items-center justify-center gap-1.5">
+                          <QrCode size={14} className="text-[#E10600]" />
+                          <span>Pague via Pix Copia e Cola / QR Code Real</span>
+                        </div>
+                        <img
+                          src={pixQrCodeUrl}
+                          alt="QR Code Pix"
+                          className="w-36 h-36 mx-auto bg-white p-1.5 rounded-lg border border-zinc-700 shadow"
                         />
+                        <div className="flex items-center gap-2 pt-1">
+                          <input
+                            type="text"
+                            readOnly
+                            value={pixEMV}
+                            className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-300 font-mono truncate"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(pixEMV)
+                              setPixCopied(true)
+                              setTimeout(() => setPixCopied(false), 2000)
+                            }}
+                            className="px-2.5 py-1 bg-[#E10600] hover:bg-[#9E0400] text-white text-[11px] font-bold rounded flex items-center gap-1 cursor-pointer"
+                          >
+                            {pixCopied ? <Check size={12} /> : <Copy size={12} />}
+                            <span>{pixCopied ? 'Copiado!' : 'Copiar'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-zinc-500">
+                          Chave Pix: {pixKey} • O operador confirmará o pagamento no painel ao
+                          despachar
+                        </p>
+                      </div>
+                    )}
+
+                    {payment === 'Dinheiro' && (
+                      <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                        <label className="block text-xs font-semibold text-[#C0C0C0]">
+                          Precisa de troco? Para quanto?
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            placeholder="Ex: 50 ou 100"
+                            value={changeFor}
+                            onChange={(e) => setChangeFor(e.target.value)}
+                            className="flex-1 px-3 py-2 bg-[#17171C] border border-[#27272A] rounded-lg text-xs text-white placeholder:text-[#9A9CA0] focus:outline-none focus:border-[#E10600]"
+                          />
+                        </div>
+                        {changeFor && Number(changeFor) > finalTotal && (
+                          <div className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                            Troco a ser devolvido pelo entregador:{' '}
+                            {fmtBRL(Number(changeFor) - finalTotal)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {payment === 'Cartão' && (
+                      <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                        <label className="block text-xs font-semibold text-[#C0C0C0]">
+                          Selecione a função do cartão para a maquininha:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCardType('debito')}
+                            className={`py-2 px-3 rounded-lg border text-xs font-bold transition-colors ${
+                              cardType === 'debito'
+                                ? 'bg-[#E10600] border-[#E10600] text-white'
+                                : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                            }`}
+                          >
+                            Cartão de Débito
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCardType('credito')}
+                            className={`py-2 px-3 rounded-lg border text-xs font-bold transition-colors ${
+                              cardType === 'credito'
+                                ? 'bg-[#E10600] border-[#E10600] text-white'
+                                : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                            }`}
+                          >
+                            Cartão de Crédito
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1054,13 +1426,30 @@ export default function LojaPublica() {
             {/* Footer Carrinho / Botão Enviar */}
             {cart.length > 0 && (
               <div className="p-4 border-t border-[#27272A] bg-[#121215] space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#C0C0C0]">Subtotal</span>
+                <div className="flex items-center justify-between text-xs text-[#C0C0C0]">
+                  <span>Subtotal</span>
                   <span className="font-bold text-white font-mono">{fmtBRL(subtotal)}</span>
                 </div>
-                <div className="flex items-center justify-between text-base font-bold">
+
+                {deliveryType === 'entrega' && (
+                  <div className="flex items-center justify-between text-xs text-zinc-400">
+                    <span>Taxa de Entrega ({selectedFeeNeighborhood || 'Padrão'})</span>
+                    <span className="font-bold text-white font-mono">
+                      {fmtBRL(deliveryFeeValue)}
+                    </span>
+                  </div>
+                )}
+
+                {appliedCampaign && discountAmount > 0 && (
+                  <div className="flex items-center justify-between text-xs text-emerald-400 font-semibold">
+                    <span>Voucher ({appliedCampaign.title})</span>
+                    <span>-{fmtBRL(discountAmount)}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-base font-bold pt-1 border-t border-zinc-800">
                   <span className="text-white">Total a Pagar</span>
-                  <span className="text-white font-mono text-lg">{fmtBRL(subtotal)}</span>
+                  <span className="text-white font-mono text-lg">{fmtBRL(finalTotal)}</span>
                 </div>
 
                 <button
@@ -1149,6 +1538,14 @@ export default function LojaPublica() {
 
               <button
                 type="button"
+                onClick={() => setShowReceiptModal(true)}
+                className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <span>Ver Comprovante Detalhado</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setConfirmedOrder(null)}
                 className="w-full py-2.5 rounded-xl bg-[#27272A] hover:bg-[#3f3f46] text-white font-bold text-xs transition-all cursor-pointer"
               >
@@ -1178,6 +1575,49 @@ export default function LojaPublica() {
         catupiryExtraPrice={catupiryAddPrice}
         cheddarExtraPrice={cheddarAddPrice}
       />
+
+      {/* 7. Drawer de Autenticação / CRM do Cliente */}
+      <CustomerAuthDrawer
+        isOpen={authDrawerOpen}
+        onClose={() => setAuthDrawerOpen(false)}
+        currentCustomer={currentCustomer}
+        orders={customerOrders}
+        campaigns={customerCampaigns}
+        onLogin={handleCustomerLogin}
+        onLogout={handleCustomerLogout}
+        onApplyCampaign={(c) => {
+          setAppliedCampaign(c)
+          setAuthDrawerOpen(false)
+          setCartOpen(true)
+        }}
+        onRepeatOrder={(pastOrder) => {
+          // Repete os itens do pedido anterior no carrinho atual
+          const newLines: CustomerCartLine[] = (pastOrder.items || []).map((it) => ({
+            cartLineId: `repeat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            itemId: it.itemId,
+            qty: it.qty,
+            removed: it.removed || [],
+            added: it.added
+              ? it.added.map((a: any) => ({ ingredientId: a.ingredientId || a.name, qty: a.qty }))
+              : [],
+            gourmetFreeChoice: it.gourmetFreeChoice,
+          }))
+          setCart((prev) => [...prev, ...newLines])
+          setAuthDrawerOpen(false)
+          setCartOpen(true)
+        }}
+      />
+
+      {/* 8. Modal de Comprovante Visual / Impressão */}
+      {confirmedOrder && showReceiptModal && (
+        <OrderReceiptModal
+          order={confirmedOrder}
+          onClose={() => setShowReceiptModal(false)}
+          storeName={storeName}
+          pixQrUrl={pixQrCodeUrl}
+          pixCode={pixEMV}
+        />
+      )}
     </div>
   )
 }

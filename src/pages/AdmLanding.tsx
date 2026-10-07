@@ -24,6 +24,7 @@ import {
 } from '@/context/LandingContentContext'
 import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
+import { MultiImageField } from '@/components/MultiImageField'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
@@ -103,8 +104,12 @@ export default function AdmLanding() {
   })
 
   // Slides hero e posts instagram
-  const [heroSlides, setHeroSlides] = useState(content.heroSlides)
-  const [instagramPosts, setInstagramPosts] = useState(content.instagramPosts)
+  const [heroSlides, setHeroSlides] = useState<LandingSlide[]>(content.heroSlides)
+  const [instagramPosts, setInstagramPosts] = useState<LandingFeedPost[]>(content.instagramPosts)
+  const [storyImages, setStoryImages] = useState<string[]>(
+    content.storyImages || (content.storyImage ? [content.storyImage] : []),
+  )
+  const [ctaImages, setCtaImages] = useState<string[]>(content.ctaImages || [])
 
   // Cores do tema ativo
   const [customColors, setCustomColors] = useState<LandingThemeColors>(
@@ -194,6 +199,8 @@ export default function AdmLanding() {
     })
     setHeroSlides(content.heroSlides)
     setInstagramPosts(content.instagramPosts)
+    setStoryImages(content.storyImages || (content.storyImage ? [content.storyImage] : []))
+    setCtaImages(content.ctaImages || [])
     setCustomColors(content.activeColors || DEFAULT_THEME_COLORS)
   }, [content])
 
@@ -241,6 +248,7 @@ export default function AdmLanding() {
         storyCard1Desc: formText.storyCard1Desc,
         storyCard2Title: formText.storyCard2Title,
         storyCard2Desc: formText.storyCard2Desc,
+        storyImages,
       })
 
       // 3. Menu header
@@ -271,6 +279,7 @@ export default function AdmLanding() {
         ctaHeading: formText.ctaHeading,
         ctaDescription: formText.ctaDescription,
         ctaButtonText: formText.ctaButtonText,
+        ctaImages,
       })
 
       // 7. Location & Hours
@@ -398,6 +407,36 @@ export default function AdmLanding() {
     if (id === 'padrao') return
     const updated = content.themePresets.filter((p) => p.id !== id)
     await saveTheme(content.activeThemeId, content.activeColors, updated)
+  }
+
+  // Adicionar / Remover slides do hero dinamicamente
+  const handleAddHeroSlide = () => {
+    const newSlide: LandingSlide = {
+      image: 'https://img.usecurling.com/p/800/850?q=gourmet+burger',
+      title: 'Novo Destaque da Casa',
+      price: 'R$ 28,00',
+      tag: 'Especial',
+      subtitle: 'Ingredientes selecionados preparados com carinho na chapa',
+    }
+    const updated = [...heroSlides, newSlide]
+    setHeroSlides(updated)
+  }
+
+  const handleRemoveHeroSlide = (idx: number) => {
+    if (heroSlides.length <= 1) {
+      alert('É necessário manter pelo menos 1 slide.')
+      return
+    }
+    const updated = heroSlides.filter((_, i) => i !== idx)
+    setHeroSlides(updated)
+  }
+
+  const handleUpdateSlideField = (idx: number, field: keyof LandingSlide, val: string) => {
+    const updated = [...heroSlides]
+    if (updated[idx]) {
+      updated[idx] = { ...updated[idx], [field]: val }
+      setHeroSlides(updated)
+    }
   }
 
   const isStoreCurrentlyOpen = forceOpen ? true : forceClosed ? false : autoStatus.isOpen
@@ -879,41 +918,169 @@ export default function AdmLanding() {
         {activeTab === 'imagens' && (
           <div className="space-y-8">
             <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl">
-              <div className="border-b border-white/10 pb-3 mb-6">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-amber-400" />
-                  Imagens da Seção Principal & História
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Clique em &quot;Carregar arquivo&quot; para enviar do seu computador diretamente
-                  para o banco de dados
-                </p>
+              <div className="border-b border-white/10 pb-3 mb-6 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    Hero: Slides & Fotos em Transição Contínua (Crossfade)
+                  </h2>
+                  <p className="text-xs text-zinc-400">
+                    Adicione, edite e remova os slides do topo da landing com fotos, título, preço e
+                    legenda
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddHeroSlide}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Novo Slide ao Hero</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <ImageUploadField
-                  label="Foto da Seção Nossa História (01)"
-                  currentUrl={content.storyImage}
-                  onUpload={handleUploadStoryImage}
-                  aspectRatio="h-56"
-                />
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {heroSlides.map((slide, idx) => (
-                  <ImageUploadField
+                  <div
                     key={idx}
-                    label={`Slide do Hero ${idx + 1}: ${slide.title}`}
-                    currentUrl={slide.image}
-                    onUpload={(file) => handleUploadSlideImage(idx, file)}
-                    aspectRatio="h-56"
-                  />
+                    className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white">Slide #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroSlide(idx)}
+                        className="text-zinc-500 hover:text-red-400 p-1 text-xs"
+                        title="Remover slide"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <ImageUploadField
+                      label={`Imagem do Slide #${idx + 1}`}
+                      currentUrl={slide.image}
+                      onUpload={(file) => handleUploadSlideImage(idx, file)}
+                      aspectRatio="h-44"
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] text-zinc-400 block mb-0.5">
+                          Título do Lanche
+                        </label>
+                        <input
+                          type="text"
+                          value={slide.title}
+                          onChange={(e) => handleUpdateSlideField(idx, 'title', e.target.value)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-zinc-400 block mb-0.5">
+                          Preço Exibido
+                        </label>
+                        <input
+                          type="text"
+                          value={slide.price}
+                          onChange={(e) => handleUpdateSlideField(idx, 'price', e.target.value)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] text-zinc-400 block mb-0.5">Selo / Tag</label>
+                        <input
+                          type="text"
+                          value={slide.tag}
+                          onChange={(e) => handleUpdateSlideField(idx, 'tag', e.target.value)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-zinc-400 block mb-0.5">
+                          Legenda / Ingredientes
+                        </label>
+                        <input
+                          type="text"
+                          value={slide.subtitle}
+                          onChange={(e) => handleUpdateSlideField(idx, 'subtitle', e.target.value)}
+                          className="w-full bg-zinc-950 border border-zinc-700 rounded px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
 
+            {/* Multi-imagem: Seção História */}
+            <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="border-b border-white/10 pb-3">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-amber-400" />
+                  01 / Galeria & Carrossel da Seção História
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Adicione mais fotos: quando houver 2 ou mais, a área vira um carrossel automático
+                  com transição suave.
+                </p>
+              </div>
+
+              <MultiImageField
+                label="Fotos da Seção Nossa História"
+                images={storyImages}
+                onChange={async (imgs) => {
+                  setStoryImages(imgs)
+                  await saveSection('story', {
+                    storyHeadingPrefix: formText.storyHeadingPrefix,
+                    storyHeadingHighlight: formText.storyHeadingHighlight,
+                    storyP1: formText.storyP1,
+                    storyP2: formText.storyP2,
+                    storyQuote: formText.storyQuote,
+                    storyQuoteAuthor: formText.storyQuoteAuthor,
+                    storyImage: imgs[0] || '',
+                    storyImages: imgs,
+                  })
+                }}
+              />
+            </div>
+
+            {/* Multi-imagem: CTA de Pedidos */}
+            <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="border-b border-white/10 pb-3">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-amber-400" />
+                  05 / Fundo Dinâmico do Banner de Pedidos (CTA)
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Imagens de fundo em transição suave para dar imersão ao bloco de pedidos.
+                </p>
+              </div>
+
+              <MultiImageField
+                label="Fotos de Fundo do CTA de Pedidos"
+                images={ctaImages}
+                onChange={async (imgs) => {
+                  setCtaImages(imgs)
+                  await saveSection('order_cta', {
+                    ctaTag: formText.ctaTag,
+                    ctaHeading: formText.ctaHeading,
+                    ctaDescription: formText.ctaDescription,
+                    ctaButtonText: formText.ctaButtonText,
+                    ctaImages: imgs,
+                  })
+                }}
+              />
+            </div>
+
+            {/* Fotos do Instagram */}
             <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl">
               <div className="border-b border-white/10 pb-3 mb-6">
                 <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                  04 / Fotos do Feed Instagram
+                  04 / Fotos do Feed Instagram (@loyolass_lanches)
                 </h2>
                 <p className="text-xs text-zinc-400">
                   Atualize as fotos da grade do Instagram diretamente
@@ -922,13 +1089,27 @@ export default function AdmLanding() {
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {instagramPosts.map((post, idx) => (
-                  <ImageUploadField
-                    key={post.id || idx}
-                    label={`Post #${idx + 1}`}
-                    currentUrl={post.image}
-                    onUpload={(file) => handleUploadInstagramImage(idx, file)}
-                    aspectRatio="aspect-square"
-                  />
+                  <div key={post.id || idx} className="space-y-1.5">
+                    <ImageUploadField
+                      label={`Post #${idx + 1}`}
+                      currentUrl={post.image}
+                      onUpload={(file) => handleUploadInstagramImage(idx, file)}
+                      aspectRatio="aspect-square"
+                    />
+                    <input
+                      type="text"
+                      value={post.caption || ''}
+                      placeholder="Legenda..."
+                      onChange={(e) => {
+                        const updated = [...instagramPosts]
+                        if (updated[idx]) {
+                          updated[idx] = { ...updated[idx], caption: e.target.value }
+                          setInstagramPosts(updated)
+                        }
+                      }}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] text-zinc-300"
+                    />
+                  </div>
                 ))}
               </div>
             </div>

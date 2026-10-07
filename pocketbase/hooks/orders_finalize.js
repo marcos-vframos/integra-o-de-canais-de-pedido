@@ -73,10 +73,91 @@ routerAdd('POST', '/backend/v1/orders/finalize', (e) => {
   if (data.customerAddress) {
     order.set('customerAddress', String(data.customerAddress).trim())
   }
+  if (data.deliveryLat) {
+    order.set('deliveryLat', Number(data.deliveryLat))
+  }
+  if (data.deliveryLng) {
+    order.set('deliveryLng', Number(data.deliveryLng))
+  }
+  if (data.campaignId) {
+    order.set('campaignId', String(data.campaignId))
+    // Marca voucher como utilizado se houver
+    try {
+      const camp = $app.findCollectionByNameOrId('campaigns')
+      const campRec = $app.findFirstRecordByData('campaigns', 'id', String(data.campaignId))
+      campRec.set('used', true)
+      campRec.set('active', false)
+      $app.save(campRec)
+    } catch (_) {}
+  }
+  if (data.paymentDetails) {
+    order.set('paymentDetails', data.paymentDetails)
+  }
 
   $app.save(order)
 
-  // 4. Stock deduction
+  // 4. Update or create Customer CRM profile
+  if (data.customerPhone) {
+    const rawPhone = String(data.customerPhone).trim()
+    const cleanPhone = rawPhone.replace(/\D/g, '')
+    if (cleanPhone.length >= 8) {
+      try {
+        let custRecord = null
+        try {
+          custRecord = $app.findFirstRecordByData('customers', 'phone', rawPhone)
+        } catch (_) {
+          try {
+            custRecord = $app.findFirstRecordByData('customers', 'phone', cleanPhone)
+          } catch (_) {}
+        }
+
+        const nowIso = new Date().toISOString()
+        const orderItemNames = (data.items || []).map((it) => it.name)
+
+        if (custRecord) {
+          const prevOrders = custRecord.getInt('totalOrders') || 0
+          const prevSpent = custRecord.getFloat('totalSpent') || 0
+          custRecord.set('totalOrders', prevOrders + 1)
+          custRecord.set('totalSpent', prevSpent + total)
+          custRecord.set('lastOrderAt', nowIso)
+          if (data.customerName && !custRecord.getString('name')) {
+            custRecord.set('name', String(data.customerName).trim())
+          }
+          if (data.customerAddress) {
+            custRecord.set('address', String(data.customerAddress).trim())
+          }
+          // Atualiza lista de favoritos
+          let favs = []
+          try {
+            favs = custRecord.get('favoriteItems') || []
+            if (!Array.isArray(favs)) favs = []
+          } catch (_) {
+            favs = []
+          }
+          orderItemNames.forEach((n) => {
+            if (n && !favs.includes(n)) favs.push(n)
+          })
+          custRecord.set('favoriteItems', favs.slice(0, 15))
+          $app.save(custRecord)
+        } else {
+          const custCol = $app.findCollectionByNameOrId('customers')
+          const newCust = new Record(custCol)
+          newCust.set('name', data.customerName ? String(data.customerName).trim() : 'Cliente')
+          newCust.set('phone', rawPhone)
+          newCust.set('address', data.customerAddress ? String(data.customerAddress).trim() : '')
+          newCust.set('totalOrders', 1)
+          newCust.set('totalSpent', total)
+          newCust.set('lastOrderAt', nowIso)
+          newCust.set('favoriteItems', orderItemNames.slice(0, 10))
+          $app.save(newCust)
+        }
+      } catch (custErr) {
+        console.warn('Erro ao atualizar perfil do cliente:', custErr)
+      }
+    }
+  }
+
+  // 5. Stock deduction
   const deductions = data.deductions || {}
   const lowStockWarnings = []
 
@@ -123,6 +204,8 @@ routerAdd('POST', '/backend/v1/orders/finalize', (e) => {
       customerPhone: order.getString('customerPhone'),
       deliveryType: order.getString('deliveryType'),
       customerAddress: order.getString('customerAddress'),
+      motoboyId: order.getString('motoboyId'),
+      motoboyName: order.getString('motoboyName'),
       created: order.getString('created'),
       createdAt: order.getString('created'),
     },

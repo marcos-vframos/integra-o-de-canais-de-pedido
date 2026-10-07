@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <radialGradient id="bgOliva192" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#0f2617" />
+      <stop offset="100%" stop-color="#07140B" />
+    </radialGradient>
+    <linearGradient id="vinhoGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b81d2c" />
+      <stop offset="100%" stop-color="#8F0F1B" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bgOliva192)" />
+  <rect x="3" y="3" width="186" height="186" rx="39" fill="none" stroke="#C4C4C4" stroke-width="1.5" opacity="0.4" />
+  <path d="M 56 44 
+           L 82 44 
+           Q 84 44 84 46
+           L 84 124 
+           Q 84 127 87 127
+           L 136 127
+           Q 139 127 139 130
+           L 139 148
+           Q 139 150 136 150
+           L 56 150
+           Q 53 150 53 147
+           L 53 47
+           Q 53 44 56 44 Z" 
+        fill="url(#vinhoGrad192)" />
+  <rect x="90" y="55" width="70" height="22" rx="5" fill="#0c1d11" stroke="#8F0F1B" stroke-width="1.2" />
+  <text x="125" y="70" text-anchor="middle" fill="#f1f5f9" font-family="'Montserrat', sans-serif" font-weight="700" font-size="9" letter-spacing="1">LANCHES</text>
+</svg>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-01T14:46:05.101Z",
+  "generatedAt": "2026-10-07T03:53:01.965Z",
   "collections": [
     {
       "name": "users",
@@ -297,6 +297,42 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "motoboyId",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "motoboyName",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deliveryLat",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deliveryLng",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "campaignId",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "paymentDetails",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -484,6 +520,448 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_landing_content_section ON landing_content (section)"]
+    },
+    {
+      "name": "categories",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_categories_order ON categories (\"order\")"]
+    },
+    {
+      "name": "motoboys",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "plate",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "feePerDelivery",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_motoboys_active ON motoboys (active)"]
+    },
+    {
+      "name": "delivery_fees",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "fee",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "lat",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lng",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_delivery_fees_fee ON delivery_fees (fee)"]
+    },
+    {
+      "name": "customers",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "passcode",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lastOrderAt",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "totalOrders",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "totalSpent",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "favoriteItems",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_customers_phone ON customers (phone)"]
+    },
+    {
+      "name": "campaigns",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "customerPhone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "customerName",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["voucher_10", "free_delivery", "product_discount"]
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "discountPercent",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "discountAmount",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "targetProductId",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "targetProductName",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "used",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "expiresAt",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_campaigns_customerPhone ON campaigns (customerPhone)",
+        "CREATE INDEX idx_campaigns_active ON campaigns (active)"
+      ]
+    },
+    {
+      "name": "seasonal_campaigns",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "badge",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "startDate",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "endDate",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ctaText",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ctaUrl",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "palette",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "images",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_seasonal_active ON seasonal_campaigns (active)"]
     }
   ]
 }

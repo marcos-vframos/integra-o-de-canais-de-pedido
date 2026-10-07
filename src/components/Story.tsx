@@ -1,12 +1,14 @@
 import { Award, CheckCircle2 } from 'lucide-react'
-
+import { AutoCarousel } from '@/components/AutoCarousel'
 import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function Story() {
   const { content } = useLandingContent()
 
-  const storyImage =
-    content.storyImage || 'https://img.usecurling.com/p/800/1000?q=street+food+cart+grill'
+  const storyImages =
+    content.storyImages && content.storyImages.length > 0
+      ? content.storyImages
+      : [content.storyImage || 'https://img.usecurling.com/p/800/1000?q=street+food+cart+grill']
   const storyHeadingPrefix = content.storyHeadingPrefix || 'A essência do lanche de carrinho,'
   const storyHeadingHighlight = content.storyHeadingHighlight || 'com o rigor que você merece.'
   const storyP1 =
@@ -36,13 +38,14 @@ export default function Story() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
           <div className="lg:col-span-5">
             <div className="relative rounded-lg overflow-hidden border border-white/[0.1] bg-[#0E1B11] shadow-xl">
-              <img
-                src={storyImage}
+              <AutoCarousel
+                images={storyImages}
+                className="w-full h-[460px] sm:h-[520px]"
+                imageClassName="filter contrast-[1.03]"
                 alt="Trajetória e dedicação no preparo do Loyolas Lanches em Araretama"
-                className="w-full h-[460px] sm:h-[520px] object-cover filter contrast-[1.03]"
-                loading="lazy"
+                fallbackUrl="https://img.usecurling.com/p/800/1000?q=street+food+cart+grill"
               />
-              <div className="p-4 bg-[#0A150D]/95 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#C4C4C4]">
+              <div className="p-4 bg-[#0A150D]/95 border-t border-white/[0.08] flex items-center justify-between text-xs text-[#C4C4C4] relative z-20">
                 <span className="font-medium text-white">Araretama, Pindamonhangaba</span>
                 <span>Mais de 18 anos de história</span>
               </div>
