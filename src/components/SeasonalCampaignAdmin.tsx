@@ -66,6 +66,17 @@ export default function SeasonalCampaignAdmin() {
     await load()
   }
 
+  const handleMediaUpload = (file?: File) => {
+    if (!file) return
+    if (file.size > 8 * 1024 * 1024) {
+      alert('Para esta etapa, envie arquivos de até 8 MB. Vídeos maiores serão tratados no armazenamento definitivo da infraestrutura.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setDraft((d) => ({ ...d, imageUrl: String(reader.result || '') }))
+    reader.readAsDataURL(file)
+  }
+
   const colorFields: Array<[keyof LandingThemeColors,string]> = [
     ['bgPrimary','Fundo principal'],['bgSecondary','Fundo secundário'],['bgCard','Cards'],
     ['accentVinho','Acento'],['accentVinhoHover','Acento hover'],['accentSilver','Acento claro'],
@@ -84,7 +95,10 @@ export default function SeasonalCampaignAdmin() {
         <input type="datetime-local" value={draft.endDate} onChange={e=>setDraft({...draft,endDate:e.target.value})} className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
         <input value={draft.ctaText} onChange={e=>setDraft({...draft,ctaText:e.target.value})} placeholder="Texto do CTA" className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
         <input value={draft.ctaUrl} onChange={e=>setDraft({...draft,ctaUrl:e.target.value})} placeholder="/loja" className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
-        <input value={draft.imageUrl} onChange={e=>setDraft({...draft,imageUrl:e.target.value})} placeholder="URL da imagem imersiva" className="md:col-span-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
+        <div className="md:col-span-2 grid gap-2 md:grid-cols-[1fr_auto]">
+          <input value={draft.imageUrl} onChange={e=>setDraft({...draft,imageUrl:e.target.value})} placeholder="URL da imagem, vídeo ou arquivo" className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
+          <label className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-center text-xs font-semibold text-white">Carregar arquivo<input type="file" accept="image/*,video/*,.pdf" className="hidden" onChange={e=>handleMediaUpload(e.target.files?.[0])}/></label>
+        </div>
         <textarea value={draft.description} onChange={e=>setDraft({...draft,description:e.target.value})} placeholder="Descrição" rows={3} className="md:col-span-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-white"/>
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
@@ -92,7 +106,7 @@ export default function SeasonalCampaignAdmin() {
       </div>
       <label className="flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.active} onChange={e=>setDraft({...draft,active:e.target.checked})}/>Campanha ativa</label>
       <button disabled={saving || !draft.title.trim()} onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Save className="h-4 w-4"/>{saving?'Salvando...':draft.id?'Atualizar campanha':'Criar campanha'}</button>
-      {items.length > 0 && <div className="grid gap-3 md:grid-cols-2">{items.map(row=><div key={row.id} className="rounded-xl border border-white/10 bg-zinc-900 p-4"><div className="flex justify-between gap-3"><button onClick={()=>edit(row)} className="text-left"><strong className="block text-sm text-white">{row.title}</strong><span className="text-[11px] text-zinc-400">{row.active?'Ativa':'Inativa'} • {row.startDate ? String(row.startDate).slice(0,10) : 'sem início'} → {row.endDate ? String(row.endDate).slice(0,10) : 'sem fim'}</span></button><button onClick={()=>remove(row.id)} className="text-zinc-500 hover:text-red-400"><Trash2 className="h-4 w-4"/></button></div></div>)}</div>}
+      {items.length > 0 && <div className="grid gap-3 md:grid-cols-2">{items.map(row=><div key={row.id} className="rounded-xl border border-white/10 bg-zinc-900 p-4"><div className="flex justify-between gap-3"><button onClick={()=>edit(row)} className="text-left"><strong className="block text-sm text-white">{row.title}</strong><span className="text-[11px] text-zinc-400">{row.active?'Ativa':'Inativa'} {row.startDate ? new Date(row.startDate).toLocaleDateString('pt-BR') : 'sem início'} até {row.endDate ? new Date(row.endDate).toLocaleDateString('pt-BR') : 'sem fim'}</span></button><button onClick={()=>remove(row.id)} className="text-zinc-500 hover:text-red-400"><Trash2 className="h-4 w-4"/></button></div></div>)}</div>}
     </div>
   )
 }
