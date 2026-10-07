@@ -10,6 +10,8 @@ import {
   Check,
   X,
   Inbox,
+  Bike,
+  Users,
   Settings as SettingsIcon,
   Store as StoreIcon,
 } from 'lucide-react'
@@ -23,6 +25,8 @@ import { TabPedido } from '@/components/TabPedido'
 import { TabCardapio } from '@/components/TabCardapio'
 import { TabEstoque } from '@/components/TabEstoque'
 import { TabCaixa } from '@/components/TabCaixa'
+import { TabMotoboys } from '@/components/TabMotoboys'
+import { TabClientes } from '@/components/TabClientes'
 import { TabPedidosOnline } from '@/components/TabPedidosOnline'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { ReceiptModal } from '@/components/ReceiptModal'
@@ -970,6 +974,45 @@ export default function Gestao() {
     const discount = Number(String(closingDiscount).replace(',', '.')) || 0
     const net = Math.max(0, openTotal - discount)
 
+    // Calcular consumo de ingredientes do período (shoppingReport)
+    const consumedMap: Record<string, number> = {}
+    openOrders.forEach((o) => {
+      ;(o.items || []).forEach((it) => {
+        const itemObj = menu.find((m) => m.name === it.name || m.id === it.itemId)
+        ;(itemObj?.recipe || []).forEach((r) => {
+          const isRemoved = (it.removed || []).some(
+            (rem) => rem === r.ingredientId || rem === stockById(r.ingredientId)?.name,
+          )
+          if (!isRemoved) {
+            consumedMap[r.ingredientId] = (consumedMap[r.ingredientId] || 0) + r.qty * it.qty
+          }
+        })
+        ;(it.added || []).forEach((a) => {
+          const ingObj = stock.find((s) => s.name === a.name || s.id === a.ingredientId)
+          const ingId = ingObj?.id || a.ingredientId
+          consumedMap[ingId] = (consumedMap[ingId] || 0) + a.qty * it.qty
+        })
+      })
+    })
+
+    const shoppingReport = Object.entries(consumedMap)
+      .map(([ingId, consumedQty]) => {
+        const sItem = stockById(ingId)
+        if (!sItem) return null
+        const currentStock = sItem.qty || 0
+        const minStock = sItem.min || 0
+        const suggestedBuy = Math.max(0, minStock - currentStock)
+        return {
+          ingredientName: sItem.name,
+          consumedQty: Math.round(consumedQty * 10) / 10,
+          unit: sItem.unit,
+          currentStock,
+          minStock,
+          suggestedBuy: Math.round(suggestedBuy * 10) / 10,
+        }
+      })
+      .filter(Boolean)
+
     const closurePayload = {
       closedAt: new Date().toISOString(),
       openedAt: openingTime ? new Date(openingTime).toISOString() : new Date().toISOString(),
@@ -988,6 +1031,7 @@ export default function Gestao() {
         balcao: openBalcaoTotal,
         online: openOnlineTotal,
       },
+      shoppingReport,
     }
 
     try {
@@ -1197,6 +1241,8 @@ export default function Gestao() {
     { id: 'cardapio', label: 'Cardápio', icon: UtensilsCrossed },
     { id: 'estoque', label: 'Estoque', icon: Package },
     { id: 'caixa', label: 'Caixa', icon: Wallet },
+    { id: 'motoboys', label: 'Motoboys', icon: Bike },
+    { id: 'clientes', label: 'Clientes', icon: Users },
   ]
 
   return (
@@ -1214,7 +1260,7 @@ export default function Gestao() {
                 aria-label="Nome da lanchonete"
               />
               <div className="sc-sub-line">
-                Gestão de pedidos, cardápio canônico, estoque e caixa
+                Gestão de pedidos, cardápio, estoque, caixa e motoboys
               </div>
             </div>
 
@@ -1375,6 +1421,10 @@ export default function Gestao() {
             onDeleteOrder={handleDeleteOrder}
           />
         )}
+
+        {currentTab === 'motoboys' && <TabMotoboys orders={orders} />}
+
+        {currentTab === 'clientes' && <TabClientes />}
 
         {/* Modal de Escolha de Fechamento de Loja */}
         <StoreCloseChoiceModal

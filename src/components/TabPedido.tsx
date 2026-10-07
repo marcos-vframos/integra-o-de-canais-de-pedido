@@ -70,7 +70,27 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
 
   const subtotal = cart.reduce((sum, l) => {
     const item = menuById(l.itemId)
-    return sum + (item ? item.price * l.qty : 0)
+    if (!item) return sum
+    let lineUnitPrice = item.price
+    ;(l.added || []).forEach((a) => {
+      const stockItem = resolveStockItem(a.ingredientId)
+      const ingKey = stockItem?.code || a.ingredientId
+      let addPrice = 3
+      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
+        addPrice = 6
+      } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
+        addPrice = 5
+      } else {
+        const comp = menu.find(
+          (m) =>
+            m.category === 'Complementos' &&
+            m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
+        )
+        if (comp) addPrice = comp.price
+      }
+      lineUnitPrice += addPrice * a.qty
+    })
+    return sum + lineUnitPrice * l.qty
   }, 0)
 
   const effectiveDiscount = Math.min(orderDiscount, subtotal)
@@ -190,7 +210,37 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
               <div className="sc-cart-line" key={l.cartLineId}>
                 <div className="sc-cart-line-name">
                   {item.name}
-                  <div className="sc-cart-line-price sc-tabular">{fmtBRL(item.price)} un.</div>
+                  {(() => {
+                    let unitTotal = item.price
+                    ;(l.added || []).forEach((a) => {
+                      const stockItem = resolveStockItem(a.ingredientId)
+                      const ingKey = stockItem?.code || a.ingredientId
+                      let addPrice = 3
+                      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) addPrice = 6
+                      else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) addPrice = 5
+                      else {
+                        const comp = menu.find(
+                          (m) =>
+                            m.category === 'Complementos' &&
+                            m.recipe?.some(
+                              (r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey,
+                            ),
+                        )
+                        if (comp) addPrice = comp.price
+                      }
+                      unitTotal += addPrice * a.qty
+                    })
+                    return (
+                      <div className="sc-cart-line-price sc-tabular">
+                        {fmtBRL(unitTotal)} un.{' '}
+                        {unitTotal > item.price && (
+                          <span className="text-[10px] text-zinc-400 font-normal">
+                            ({fmtBRL(item.price)} base)
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
                   {(l.removed?.length > 0 ||
                     l.added?.length > 0 ||
                     (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none')) && (

@@ -15,6 +15,14 @@ interface ClosureModalProps {
     productBreakdown: { name: string; qty: number; total: number }[]
     byOriginCount?: Record<string, number>
     byOriginTotals?: Record<string, number>
+    shoppingReport?: {
+      ingredientName: string
+      consumedQty: number
+      unit: string
+      currentStock: number
+      minStock: number
+      suggestedBuy: number
+    }[]
     dateLabel?: string
   }
   closingDiscount: string
@@ -206,6 +214,98 @@ export const ClosureModal: React.FC<ClosureModalProps> = ({
             <span>Total líquido</span>
             <span className="sc-tabular">{fmtBRL(view.netTotal)}</span>
           </div>
+
+          {/* LISTA DE COMPRAS SUGERIDA / CONSUMO DO PERÍODO */}
+          {view.shoppingReport && view.shoppingReport.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-[#ccc]">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-xs text-black uppercase tracking-wider">
+                  📋 Lista de Compras & Reposição ({view.shoppingReport.length} itens)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const printWin = window.open('', '_blank')
+                    if (!printWin) return
+                    const html = `
+                      <html>
+                        <head>
+                          <title>Lista de Compras Loyola's - ${view.dateLabel || ''}</title>
+                          <style>
+                            body { font-family: monospace; font-size: 12px; margin: 20px; color: black; }
+                            h2 { margin: 0 0 10px 0; font-size: 16px; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                            th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+                            th { background: #eee; }
+                          </style>
+                        </head>
+                        <body>
+                          <h2>LOYOLA'S LANCHES — LISTA DE REPOSIÇÃO / COMPRAS</h2>
+                          <p>Período: ${view.dateLabel || new Date(view.closedAt).toLocaleDateString('pt-BR')}</p>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Item</th>
+                                <th>Consumo</th>
+                                <th>Estoque Atual</th>
+                                <th>Mínimo</th>
+                                <th>Sugerido Comprar</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${view.shoppingReport
+                                .map(
+                                  (r) => `
+                                <tr>
+                                  <td><b>${r.ingredientName}</b></td>
+                                  <td>${r.consumedQty} ${r.unit}</td>
+                                  <td>${r.currentStock} ${r.unit}</td>
+                                  <td>${r.minStock} ${r.unit}</td>
+                                  <td style="color: ${r.suggestedBuy > 0 ? '#d11a2a' : '#000'}; font-weight: bold;">
+                                    ${r.suggestedBuy > 0 ? `${r.suggestedBuy} ${r.unit}` : 'OK'}
+                                  </td>
+                                </tr>`,
+                                )
+                                .join('')}
+                            </tbody>
+                          </table>
+                          <script>window.print();</script>
+                        </body>
+                      </html>
+                    `
+                    printWin.document.write(html)
+                    printWin.document.close()
+                  }}
+                  className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-black text-white text-[11px] font-bold cursor-pointer"
+                >
+                  Imprimir Lista de Compras
+                </button>
+              </div>
+              <div className="space-y-1 text-[11px] text-[#333] max-h-40 overflow-y-auto">
+                {view.shoppingReport.map((rep) => (
+                  <div
+                    key={rep.ingredientName}
+                    className="flex items-center justify-between py-0.5 border-b border-dashed border-[#e5e5e5]"
+                  >
+                    <span>
+                      {rep.ingredientName} (gastou: {rep.consumedQty} {rep.unit})
+                    </span>
+                    <span
+                      className={
+                        rep.suggestedBuy > 0
+                          ? 'text-red-700 font-bold'
+                          : 'text-emerald-700 font-semibold'
+                      }
+                    >
+                      {rep.suggestedBuy > 0
+                        ? `Comprar: ${rep.suggestedBuy} ${rep.unit}`
+                        : 'Estoque OK'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Rodapé de botões */}

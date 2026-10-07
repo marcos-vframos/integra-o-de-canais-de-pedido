@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Inbox,
   CheckCircle2,
@@ -11,11 +11,20 @@ import {
   MapPin,
   Search,
   AlertTriangle,
+  UserCheck,
 } from 'lucide-react'
 import type { OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import pb from '@/lib/pocketbase/client'
 import { toast } from '@/hooks/use-toast'
+
+export interface MotoboySimple {
+  id: string
+  name: string
+  phone?: string
+  plate?: string
+  active?: boolean
+}
 
 interface TabPedidosOnlineProps {
   orders: OrderRecord[]
@@ -34,6 +43,29 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
   const [searchQuery, setSearchQuery] = useState('')
   const [rejectModalOrder, setRejectModalOrder] = useState<OrderRecord | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
+  const [motoboyModalOrder, setMotoboyModalOrder] = useState<OrderRecord | null>(null)
+  const [motoboys, setMotoboys] = useState<MotoboySimple[]>([])
+  const [selectedMotoboyId, setSelectedMotoboyId] = useState<string>('')
+
+  // Carregar motoboys ativos para despacho
+  const loadActiveMotoboys = async () => {
+    try {
+      const list = await pb.collection('motoboys').getFullList<MotoboySimple>({
+        filter: 'active = true',
+        sort: 'name',
+      })
+      setMotoboys(list)
+      if (list.length > 0 && !selectedMotoboyId) {
+        setSelectedMotoboyId(list[0].id)
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar motoboys ativos:', e)
+    }
+  }
+
+  useEffect(() => {
+    loadActiveMotoboys()
+  }, [])
 
   // Apenas pedidos online
   const onlineOrders = orders.filter((o) => o.origin === 'online')
@@ -68,11 +100,16 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
     return matchesStatus && matchesSearch
   })
 
-  // Atualizar status do pedido
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  // Atualizar status do pedido com suporte a atribuição de motoboy
+  const handleUpdateStatus = async (
+    orderId: string,
+    newStatus: string,
+    extraFields?: { motoboyId?: string; motoboyName?: string },
+  ) => {
     setIsProcessing(orderId)
     try {
-      await pb.collection('orders').update(orderId, { status: newStatus })
+      const payload: Record<string, any> = { status: newStatus, ...extraFields }
+      await pb.collection('orders').update(orderId, payload)
       toast({
         title: 'Status atualizado',
         description: `Pedido #${padTicket(
@@ -90,6 +127,31 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
     } finally {
       setIsProcessing(null)
     }
+  }
+
+  // Disparar ação de marcar como pronto
+  const handleTriggerPronto = (order: OrderRecord) => {
+    if (order.deliveryType === 'entrega') {
+      // Exibir modal seletor de motoboy
+      setMotoboyModalOrder(order)
+      if (motoboys.length > 0) {
+        setSelectedMotoboyId(order.motoboyId || motoboys[0].id)
+      }
+    } else {
+      // Retirada no balcão: pronto direto
+      handleUpdateStatus(order.id, 'pronto')
+    }
+  }
+
+  // Confirmar despacho com motoboy
+  const handleConfirmMotoboyDispatch = async () => {
+    if (!motoboyModalOrder) return
+    const mb = motoboys.find((m) => m.id === selectedMotoboyId)
+    await handleUpdateStatus(motoboyModalOrder.id, 'pronto', {
+      motoboyId: mb?.id || '',
+      motoboyName: mb?.name || '',
+    })
+    setMotoboyModalOrder(null)
   }
 
   // Recusar pedido com estorno de estoque
@@ -409,6 +471,13 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                       </a>
                     )}
 
+                    {order.motoboyName && (
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[11px] text-amber-300 flex items-center gap-1">
+                        <Bike size={11} />
+                        <b>{order.motoboyName}</b>
+                      </span>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => onPrintOrderTicket(order)}
@@ -509,24 +578,27 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                         <button
                           type="button"
                           disabled={isProcessing === order.id}
-                          onClick={() => handleUpdateStatus(order.id, 'pronto')}
-                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                          onClick={() => handleTriggerPronto(order)}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm cursor-pointer"
                         >
                           <CheckCircle2 size={13} />
-                          <span>Marcar Pronto</span>
+                          <span>
+                            {order.deliveryType === 'entrega'
+                              ? 'Pronto (Despachar Motoboy)'
+                              : 'Marcar Pronto'}
+                          </span>
                         </button>
 
                         <button
                           type="button"
                           disabled={isProcessing === order.id}
                           onClick={() => setRejectModalOrder(order)}
-                          className="px-2.5 py-1.5 rounded-lg bg-[#27272a] hover:bg-red-500/20 text-[var(--muted)] hover:text-red-300 text-xs transition-colors"
+                          className="px-2.5 py-1.5 rounded-lg bg-[#27272a] hover:bg-red-500/20 text-[var(--muted)] hover:text-red-300 text-xs transition-colors cursor-pointer"
                         >
                           Cancelar
                         </button>
                       </>
                     )}
-
                     {isPronto && (
                       <button
                         type="button"
@@ -593,6 +665,74 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                 type="button"
                 className="sc-btn-ghost"
                 onClick={() => setRejectModalOrder(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Seleção de Motoboy ao Marcar Delivery como Pronto */}
+      {motoboyModalOrder && (
+        <div className="sc-modal-backdrop" onClick={() => setMotoboyModalOrder(null)}>
+          <div className="sc-modal max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="sc-modal-header">
+              <div className="flex items-center gap-2 text-purple-400">
+                <Bike size={18} />
+                <span className="sc-modal-title">Despachar Entrega</span>
+              </div>
+            </div>
+
+            <div className="py-2 text-xs text-[var(--silver)] space-y-3">
+              <p>
+                O pedido da comanda{' '}
+                <b className="text-white">#{padTicket(motoboyModalOrder.ticketNumber)}</b> está
+                pronto. Selecione o motoboy que fará a entrega para registro do histórico e da
+                comissão:
+              </p>
+
+              {motoboys.length === 0 ? (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+                  Nenhum motoboy ativo encontrado. Cadastre ou ative motoboys na aba "Motoboys".
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-semibold text-zinc-300">
+                    Entregador Responsável *
+                  </label>
+                  <select
+                    value={selectedMotoboyId}
+                    onChange={(e) => setSelectedMotoboyId(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white"
+                  >
+                    {motoboys.map((mb) => (
+                      <option key={mb.id} value={mb.id}>
+                        {mb.name} {mb.plate ? `[${mb.plate}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="sc-form-actions pt-3">
+              <button
+                type="button"
+                className="sc-btn-primary !bg-purple-600 hover:!bg-purple-500 flex items-center gap-1.5"
+                disabled={
+                  isProcessing === motoboyModalOrder.id ||
+                  (motoboys.length > 0 && !selectedMotoboyId)
+                }
+                onClick={handleConfirmMotoboyDispatch}
+              >
+                <UserCheck size={14} />
+                <span>Confirmar & Marcar Pronto</span>
+              </button>
+              <button
+                type="button"
+                className="sc-btn-ghost"
+                onClick={() => setMotoboyModalOrder(null)}
               >
                 Cancelar
               </button>

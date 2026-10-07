@@ -248,14 +248,18 @@ export default function LojaPublica() {
 
   const menuById = (id: string) => menu.find((m) => m.id === id || m.code === id)
 
-  // Categorias disponíveis no cardápio canônico vindas do backend (excluindo Todos e Complementos)
+  // Categorias disponíveis no cardápio vindas do backend (excluindo Todos e Complementos)
   const availableCategories = useMemo(() => {
     const fromMenu = Array.from(
-      new Set(menu.map((item) => String(item.category)).filter(Boolean)),
+      new Set(
+        menu.map((item) => {
+          const cat = (item.category || '').trim()
+          return cat || 'Outros'
+        }),
+      ),
     ).filter((cat) => cat !== 'Complementos' && cat !== 'Todos')
 
     if (fromMenu.length > 0) {
-      // Manter a ordem canônica pré-definida para as conhecidas, e adicionar novas no fim
       const ordered = CATEGORIES.filter((c) => fromMenu.includes(c))
       const others = fromMenu.filter((c) => !CATEGORIES.includes(c))
       return [...ordered, ...others]
@@ -274,13 +278,14 @@ export default function LojaPublica() {
   // Filtro de itens (excluindo 'Complementos' do cardápio público principal)
   const filteredMenu = useMemo(() => {
     return menu.filter((item) => {
-      if (item.category === 'Complementos') return false
-      const matchCat = item.category === currentCategory
+      const itemCat = (item.category || '').trim() || 'Outros'
+      if (itemCat === 'Complementos') return false
+      const matchCat = itemCat === currentCategory
       const query = searchTerm.toLowerCase().trim()
       const matchSearch =
         !query ||
-        item.name.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
+        (item.name || '').toLowerCase().includes(query) ||
+        itemCat.toLowerCase().includes(query)
       return matchCat && matchSearch
     })
   }, [menu, currentCategory, searchTerm])
@@ -902,10 +907,10 @@ export default function LojaPublica() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filteredMenu.map((item) => {
-              const hasRecipe = item.recipe && item.recipe.length > 0
+              const hasRecipe = Boolean(item.recipe && item.recipe.length > 0)
               const recipeDescriptions = hasRecipe
-                ? item.recipe
-                    ?.map((r) => stockById(r.ingredientId)?.name)
+                ? (item.recipe || [])
+                    .map((r) => stockById(r?.ingredientId)?.name || '')
                     .filter(Boolean)
                     .join(', ')
                 : ''

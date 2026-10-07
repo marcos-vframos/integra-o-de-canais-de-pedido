@@ -1162,3 +1162,17 @@
     margin: 4mm;
   }
 }
+
+/* Ocultação defensiva do badge de plataforma 'Criado com o Skip' */
+[class*='skip-badge'],
+[id*='skip-badge'],
+[href*='goskip.dev'],
+[href*='skip.dev'],
+div[style*='z-index'][style*='fixed']:has(a[href*='skip']),
+div:has(> a[href*='skip.dev']),
+div:has(> a[href*='goskip.dev']) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

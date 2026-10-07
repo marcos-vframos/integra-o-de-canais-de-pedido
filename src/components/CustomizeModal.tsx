@@ -187,154 +187,171 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               Ingredientes inclusos — desmarque para remover ou use o seletor para adicionar extra
             </label>
             <div className="sc-recipe-list">
-              {item.recipe.map((r) => {
-                const si = resolveStockItem(r.ingredientId)
-                const ingKey = si?.code || si?.id || r.ingredientId
-                const checked = !removed[ingKey]
-                const extraCount = Number(added[ingKey]) || 0
+              {(() => {
+                // Ordenar receita para que "Pão Francês" (ing-pao-frances) fique sempre no TOPO da lista
+                const sortedRecipe = [...item.recipe].sort((a, b) => {
+                  const siA = resolveStockItem(a.ingredientId)
+                  const siB = resolveStockItem(b.ingredientId)
+                  const keyA = (siA?.code || siA?.id || a.ingredientId || '').toLowerCase()
+                  const keyB = (siB?.code || siB?.id || b.ingredientId || '').toLowerCase()
+                  const nameA = (siA?.name || '').toLowerCase()
+                  const nameB = (siB?.name || '').toLowerCase()
+                  const isPaoA = keyA.includes('pao-frances') || nameA.includes('pão francês')
+                  const isPaoB = keyB.includes('pao-frances') || nameB.includes('pão francês')
+                  if (isPaoA && !isPaoB) return -1
+                  if (!isPaoA && isPaoB) return 1
+                  return 0
+                })
 
-                return (
-                  <React.Fragment key={ingKey}>
-                    <div className="flex items-center justify-between gap-2 py-1 border-b border-[var(--line)]/40 last:border-b-0">
-                      <label className="sc-check-row flex-1 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) =>
-                            setRemoved((prev) => ({
-                              ...prev,
-                              [ingKey]: !e.target.checked,
-                            }))
-                          }
-                        />
-                        <span
-                          className={
-                            checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'
-                          }
-                        >
-                          {si ? si.name : r.ingredientId}
-                        </span>
-                      </label>
+                return sortedRecipe.map((r) => {
+                  const si = resolveStockItem(r.ingredientId)
+                  const ingKey = si?.code || si?.id || r.ingredientId
+                  const checked = !removed[ingKey]
+                  const extraCount = Number(added[ingKey]) || 0
 
-                      <div className="flex items-center gap-2 shrink-0 select-none">
-                        <button
-                          type="button"
-                          className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--line)] text-white hover:border-[var(--red)] active:scale-95 flex items-center justify-center transition-all disabled:opacity-40"
-                          disabled={extraCount <= 0}
-                          onClick={() =>
-                            setAdded((prev) => {
-                              const current = Number(prev[ingKey]) || 0
-                              if (current <= 1) {
-                                const next = { ...prev }
-                                delete next[ingKey]
-                                return next
-                              }
-                              return { ...prev, [ingKey]: current - 1 }
-                            })
-                          }
-                          title={`Reduzir porção de ${si ? si.name : r.ingredientId}`}
-                          aria-label={`Reduzir porção de ${si ? si.name : r.ingredientId}`}
-                        >
-                          <Minus size={12} strokeWidth={2.5} />
-                        </button>
-                        <span className="sc-tabular font-bold text-[14px] text-white min-w-[14px] text-center">
-                          {extraCount}
-                        </span>
-                        <button
-                          type="button"
-                          className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--red)] text-white hover:bg-[var(--red)] hover:text-white active:scale-95 flex items-center justify-center transition-all"
-                          onClick={() =>
-                            setAdded((prev) => ({
-                              ...prev,
-                              [ingKey]: (Number(prev[ingKey]) || 0) + 1,
-                            }))
-                          }
-                          title={`Adicionar porção extra de ${si ? si.name : r.ingredientId}`}
-                          aria-label={`Adicionar porção extra de ${si ? si.name : r.ingredientId}`}
-                        >
-                          <Plus size={12} strokeWidth={2.5} />
-                        </button>
-                      </div>
-                    </div>
+                  return (
+                    <React.Fragment key={ingKey}>
+                      <div className="flex items-center justify-between gap-2 py-1 border-b border-[var(--line)]/40 last:border-b-0">
+                        <label className="sc-check-row flex-1 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) =>
+                              setRemoved((prev) => ({
+                                ...prev,
+                                [ingKey]: !e.target.checked,
+                              }))
+                            }
+                          />
+                          <span
+                            className={
+                              checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'
+                            }
+                          >
+                            {si ? si.name : r.ingredientId}
+                          </span>
+                        </label>
 
-                    {(ingKey === 'ing-batata-300' || si?.code === 'ing-batata-300') && (
-                      <div style={{ paddingLeft: 22 }} className="pt-1">
-                        <div className="sc-note" style={{ margin: '4px 0' }}>
-                          Cobertura da batata frita:
+                        <div className="flex items-center gap-2 shrink-0 select-none">
+                          <button
+                            type="button"
+                            className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--line)] text-white hover:border-[var(--red)] active:scale-95 flex items-center justify-center transition-all disabled:opacity-40"
+                            disabled={extraCount <= 0}
+                            onClick={() =>
+                              setAdded((prev) => {
+                                const current = Number(prev[ingKey]) || 0
+                                if (current <= 1) {
+                                  const next = { ...prev }
+                                  delete next[ingKey]
+                                  return next
+                                }
+                                return { ...prev, [ingKey]: current - 1 }
+                              })
+                            }
+                            title={`Reduzir porção de ${si ? si.name : r.ingredientId}`}
+                            aria-label={`Reduzir porção de ${si ? si.name : r.ingredientId}`}
+                          >
+                            <Minus size={12} strokeWidth={2.5} />
+                          </button>
+                          <span className="sc-tabular font-bold text-[14px] text-white min-w-[14px] text-center">
+                            {extraCount}
+                          </span>
+                          <button
+                            type="button"
+                            className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--red)] text-white hover:bg-[var(--red)] hover:text-white active:scale-95 flex items-center justify-center transition-all"
+                            onClick={() =>
+                              setAdded((prev) => ({
+                                ...prev,
+                                [ingKey]: (Number(prev[ingKey]) || 0) + 1,
+                              }))
+                            }
+                            title={`Adicionar porção extra de ${si ? si.name : r.ingredientId}`}
+                            aria-label={`Adicionar porção extra de ${si ? si.name : r.ingredientId}`}
+                          >
+                            <Plus size={12} strokeWidth={2.5} />
+                          </button>
                         </div>
-                        {[
-                          ['ing-cheddar', 'Cheddar'],
-                          ['ing-bacon', 'Bacon'],
-                          ['ing-queijo', 'Mussarela'],
-                        ].map(([toppingId, label]) => {
-                          const toppingItem = resolveStockItem(toppingId)
-                          const topKey = toppingItem?.code || toppingItem?.id || toppingId
-                          const topExtra = Number(added[topKey]) || 0
-                          return (
-                            <div
-                              key={topKey}
-                              className="flex items-center justify-between gap-2 py-0.5"
-                            >
-                              <label className="sc-check-row flex-1 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={topExtra > 0}
-                                  onChange={(e) =>
-                                    setAdded((prev) => ({
-                                      ...prev,
-                                      [topKey]: e.target.checked ? 1 : 0,
-                                    }))
-                                  }
-                                />
-                                <span>{label}</span>
-                              </label>
-                              <div className="flex items-center gap-2 shrink-0 select-none">
-                                <button
-                                  type="button"
-                                  className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--line)] text-white hover:border-[var(--red)] active:scale-95 flex items-center justify-center transition-all disabled:opacity-40"
-                                  disabled={topExtra <= 0}
-                                  onClick={() =>
-                                    setAdded((prev) => {
-                                      const current = Number(prev[topKey]) || 0
-                                      if (current <= 1) {
-                                        const next = { ...prev }
-                                        delete next[topKey]
-                                        return next
-                                      }
-                                      return { ...prev, [topKey]: current - 1 }
-                                    })
-                                  }
-                                  title={`Reduzir porção de ${label}`}
-                                  aria-label={`Reduzir porção de ${label}`}
-                                >
-                                  <Minus size={12} strokeWidth={2.5} />
-                                </button>
-                                <span className="sc-tabular font-bold text-[14px] text-white min-w-[14px] text-center">
-                                  {topExtra}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--red)] text-white hover:bg-[var(--red)] hover:text-white active:scale-95 flex items-center justify-center transition-all"
-                                  onClick={() =>
-                                    setAdded((prev) => ({
-                                      ...prev,
-                                      [topKey]: (Number(prev[topKey]) || 0) + 1,
-                                    }))
-                                  }
-                                  title={`Adicionar porção extra de ${label}`}
-                                  aria-label={`Adicionar porção extra de ${label}`}
-                                >
-                                  <Plus size={12} strokeWidth={2.5} />
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
                       </div>
-                    )}
-                  </React.Fragment>
-                )
-              })}
+
+                      {(ingKey === 'ing-batata-300' || si?.code === 'ing-batata-300') && (
+                        <div style={{ paddingLeft: 22 }} className="pt-1">
+                          <div className="sc-note" style={{ margin: '4px 0' }}>
+                            Cobertura da batata frita:
+                          </div>
+                          {[
+                            ['ing-cheddar', 'Cheddar'],
+                            ['ing-bacon', 'Bacon'],
+                            ['ing-queijo', 'Mussarela'],
+                          ].map(([toppingId, label]) => {
+                            const toppingItem = resolveStockItem(toppingId)
+                            const topKey = toppingItem?.code || toppingItem?.id || toppingId
+                            const topExtra = Number(added[topKey]) || 0
+                            return (
+                              <div
+                                key={topKey}
+                                className="flex items-center justify-between gap-2 py-0.5"
+                              >
+                                <label className="sc-check-row flex-1 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={topExtra > 0}
+                                    onChange={(e) =>
+                                      setAdded((prev) => ({
+                                        ...prev,
+                                        [topKey]: e.target.checked ? 1 : 0,
+                                      }))
+                                    }
+                                  />
+                                  <span>{label}</span>
+                                </label>
+                                <div className="flex items-center gap-2 shrink-0 select-none">
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--line)] text-white hover:border-[var(--red)] active:scale-95 flex items-center justify-center transition-all disabled:opacity-40"
+                                    disabled={topExtra <= 0}
+                                    onClick={() =>
+                                      setAdded((prev) => {
+                                        const current = Number(prev[topKey]) || 0
+                                        if (current <= 1) {
+                                          const next = { ...prev }
+                                          delete next[topKey]
+                                          return next
+                                        }
+                                        return { ...prev, [topKey]: current - 1 }
+                                      })
+                                    }
+                                    title={`Reduzir porção de ${label}`}
+                                    aria-label={`Reduzir porção de ${label}`}
+                                  >
+                                    <Minus size={12} strokeWidth={2.5} />
+                                  </button>
+                                  <span className="sc-tabular font-bold text-[14px] text-white min-w-[14px] text-center">
+                                    {topExtra}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--red)] text-white hover:bg-[var(--red)] hover:text-white active:scale-95 flex items-center justify-center transition-all"
+                                    onClick={() =>
+                                      setAdded((prev) => ({
+                                        ...prev,
+                                        [topKey]: (Number(prev[topKey]) || 0) + 1,
+                                      }))
+                                    }
+                                    title={`Adicionar porção extra de ${label}`}
+                                    aria-label={`Adicionar porção extra de ${label}`}
+                                  >
+                                    <Plus size={12} strokeWidth={2.5} />
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  )
+                })
+              })()}
             </div>
           </div>
         )}

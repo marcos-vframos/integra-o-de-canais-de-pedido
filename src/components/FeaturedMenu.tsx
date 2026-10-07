@@ -43,15 +43,20 @@ export default function FeaturedMenu() {
   const availableCategories =
     categoriesList.length > 0
       ? categoriesList
-      : Array.from(new Set(menuItems.map((item) => String(item.category)).filter(Boolean))).filter(
-          (cat) => cat !== 'Complementos' && cat !== 'Todos',
-        )
+      : Array.from(
+          new Set(
+            menuItems.map((item) => {
+              const cat = (item.category || '').trim()
+              return cat || 'Outros'
+            }),
+          ),
+        ).filter((cat) => cat !== 'Complementos' && cat !== 'Todos')
 
   // Se nenhuma categoria estiver selecionada e existirem categorias, seleciona a primeira
   const currentCategory: string =
     activeCategory && availableCategories.includes(activeCategory)
       ? activeCategory
-      : availableCategories[0] || ''
+      : availableCategories[0] || 'Carnes'
 
   const loadMenuAndSettings = () => {
     Promise.all([
@@ -103,8 +108,9 @@ export default function FeaturedMenu() {
 
   // Itens da categoria selecionada (excluindo Complementos do cardápio exibido)
   const filteredItems = menuItems.filter((item) => {
-    if (item.category === 'Complementos') return false
-    return item.category === currentCategory
+    const itemCat = (item.category || '').trim() || 'Outros'
+    if (itemCat === 'Complementos') return false
+    return itemCat === currentCategory
   })
 
   // Imagens associadas por categoria ou nome para manter o visual premium

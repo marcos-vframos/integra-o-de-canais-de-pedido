@@ -176,31 +176,12 @@ export default function Footer() {
           </div>
 
           <div className="space-y-3 text-xs text-[#C4C4C4]">
-            <span className="editorial-tag block text-white/90">Canais & Acesso</span>
+            <span className="editorial-tag block text-white/90">Horário de Funcionamento</span>
             <p className="text-white font-medium">Segunda a Sábado: 20:00 às 23:30</p>
             <p className="text-[#8F0F1B]">Domingo: Encerrado</p>
-            <div className="pt-3 space-y-1.5 border-t border-white/[0.08]">
-              <Link
-                to="/loja"
-                className="block text-[#E2E8F0] hover:text-white font-medium transition-colors"
-              >
-                → Peça pelo App do Cliente (/loja)
-              </Link>
-              <Link
-                to="/gestao"
-                className="block text-[#C4C4C4]/70 hover:text-white transition-colors"
-                title="Acesso exclusivo ao painel do operador"
-              >
-                ⚙ Painel de Gestão (Operador)
-              </Link>
-              <Link
-                to="/adm-landing"
-                className="block text-[#C4C4C4]/50 hover:text-white transition-colors text-[11px]"
-                title="Área Administrativa da Landing Page"
-              >
-                ✎ Editor da Landing Page (/adm-landing)
-              </Link>
-            </div>
+            <p className="text-[11px] text-[#C4C4C4]/70 pt-1">
+              Atendimento presencial e delivery para toda a região central e bairros atendidos.
+            </p>
           </div>
         </div>
 

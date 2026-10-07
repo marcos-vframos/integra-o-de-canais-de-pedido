@@ -84,6 +84,14 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
     loadMotoboys()
   }
 
+  const handleToggleActive = async (mb: MotoboyItem) => {
+    await pb.collection('motoboys').update(mb.id, { active: !mb.active })
+    loadMotoboys()
+  }
+
+  // Histórico individual: entregas acumuladas de todos os tempos
+  const [selectedHistoryMb, setSelectedHistoryMb] = useState<MotoboyItem | null>(null)
+
   // Filtrar entregas do dia atual
   const todayStartIso = new Date()
   todayStartIso.setHours(0, 0, 0, 0)
@@ -94,18 +102,26 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
     return d >= todayStartStr && o.deliveryType === 'entrega' && o.status !== 'recusado'
   })
 
-  // Agrupamento de entregas por motoboy
+  // Agrupamento de entregas por motoboy no dia e no total histórico
   const statsByMotoboy = motoboys.map((mb) => {
     const mbOrders = todayOrders.filter((o) => o.motoboyId === mb.id || o.motoboyName === mb.name)
+    const allMbOrders = orders.filter(
+      (o) => (o.motoboyId === mb.id || o.motoboyName === mb.name) && o.status !== 'recusado',
+    )
     const count = mbOrders.length
     const feeUnit = mb.feePerDelivery || 7
     const totalPagar = count * feeUnit
+    const totalHistoricoValor = allMbOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+
     return {
       motoboy: mb,
       orders: mbOrders,
+      allOrders: allMbOrders,
       deliveriesCount: count,
       feeUnit,
       totalPagar,
+      allCount: allMbOrders.length,
+      totalHistoricoValor,
     }
   })
 
@@ -255,13 +271,167 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
               </div>
 
               <div className="pt-2 border-t border-zinc-800 text-[11px] text-zinc-500 flex items-center justify-between">
-                <span>Status: Ativo</span>
-                <span className="text-emerald-400 font-semibold">Pronto para entrega</span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(motoboy)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                    motoboy.active
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                  }`}
+                >
+                  {motoboy.active ? 'Ativo' : 'Inativo'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedHistoryMb(motoboy)}
+                  className="text-xs text-[#E10600] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <Clock size={12} />
+                  <span>
+                    Histórico (
+                    {
+                      orders.filter(
+                        (o) => o.motoboyId === motoboy.id || o.motoboyName === motoboy.name,
+                      ).length
+                    }
+                    )
+                  </span>
+                </button>
               </div>
             </div>
           ),
         )}
       </div>
+
+      {/* Modal de Histórico Individual do Motoboy */}
+      {selectedHistoryMb && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSelectedHistoryMb(null)}
+        >
+          <div
+            className="w-full max-w-lg bg-[#121215] border border-[#27272A] rounded-2xl p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Bike className="text-[#E10600]" size={18} />
+                  <span>Histórico de Entregas: {selectedHistoryMb.name}</span>
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {selectedHistoryMb.phone || 'Sem telefone'} • Placa:{' '}
+                  {selectedHistoryMb.plate || 'N/A'} • Taxa por entrega:{' '}
+                  {fmtBRL(selectedHistoryMb.feePerDelivery || 7)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedHistoryMb(null)}
+                className="text-zinc-500 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Resumo acumulado */}
+            {(() => {
+              const histOrders = orders.filter(
+                (o) =>
+                  (o.motoboyId === selectedHistoryMb.id ||
+                    o.motoboyName === selectedHistoryMb.name) &&
+                  o.status !== 'recusado',
+              )
+              const totalAcumuladoTaxa = histOrders.length * (selectedHistoryMb.feePerDelivery || 7)
+              const totalAcumuladoPedidos = histOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+
+              return (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2 bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-center">
+                    <div>
+                      <span className="text-[10px] text-zinc-500 block uppercase">
+                        Total Entregas
+                      </span>
+                      <span className="text-base font-bold text-white font-mono">
+                        {histOrders.length}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-500 block uppercase">
+                        Comissão Total
+                      </span>
+                      <span className="text-base font-bold text-emerald-400 font-mono">
+                        {fmtBRL(totalAcumuladoTaxa)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-500 block uppercase">
+                        Volume Entregue
+                      </span>
+                      <span className="text-base font-bold text-zinc-300 font-mono">
+                        {fmtBRL(totalAcumuladoPedidos)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+                      Entregas Registradas
+                    </span>
+                    {histOrders.length === 0 ? (
+                      <p className="text-xs text-zinc-500 py-6 text-center">
+                        Nenhuma entrega registrada para este motoboy ainda.
+                      </p>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+                        {histOrders.map((o) => (
+                          <div
+                            key={o.id}
+                            className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-between text-xs"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-white">
+                                  #{padTicket(o.ticketNumber)}
+                                </span>
+                                <span className="text-zinc-300">{o.customerName || 'Cliente'}</span>
+                              </div>
+                              <div className="text-[10px] text-zinc-500 mt-0.5">
+                                {o.created ? new Date(o.created).toLocaleString('pt-BR') : ''} •
+                                End: {o.customerAddress || 'Não informado'}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-mono font-bold text-white">
+                                {fmtBRL(o.total)}
+                              </div>
+                              <span className="text-[10px] text-emerald-400 font-mono">
+                                +{fmtBRL(selectedHistoryMb.feePerDelivery || 7)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+
+            <div className="flex justify-end pt-2 border-t border-[#27272A]">
+              <button
+                type="button"
+                onClick={() => setSelectedHistoryMb(null)}
+                className="px-4 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Cadastro de Motoboy */}
       {showNewModal && (

@@ -22,85 +22,100 @@ export const DeliveryMapPicker: React.FC<DeliveryMapPickerProps> = ({
 
     // Garante que o Leaflet CSS e JS estejam carregados
     const loadLeaflet = async () => {
-      if (!(window as any).L) {
-        if (!document.getElementById('leaflet-css')) {
-          const link = document.createElement('link')
-          link.id = 'leaflet-css'
-          link.rel = 'stylesheet'
-          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-          document.head.appendChild(link)
+      try {
+        if (!(window as any).L) {
+          if (!document.getElementById('leaflet-css')) {
+            const link = document.createElement('link')
+            link.id = 'leaflet-css'
+            link.rel = 'stylesheet'
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+            document.head.appendChild(link)
+          }
+
+          await new Promise<void>((resolve, reject) => {
+            const existingScript = document.getElementById('leaflet-js')
+            if (existingScript) {
+              let attempts = 0
+              const checkInterval = setInterval(() => {
+                attempts++
+                if ((window as any).L) {
+                  clearInterval(checkInterval)
+                  resolve()
+                } else if (attempts > 60) {
+                  clearInterval(checkInterval)
+                  reject(new Error('Leaflet load timeout'))
+                }
+              }, 50)
+              return
+            }
+            const script = document.createElement('script')
+            script.id = 'leaflet-js'
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+            script.onload = () => resolve()
+            script.onerror = reject
+            document.body.appendChild(script)
+          })
         }
 
-        await new Promise<void>((resolve, reject) => {
-          if (document.getElementById('leaflet-js')) {
-            const checkInterval = setInterval(() => {
-              if ((window as any).L) {
-                clearInterval(checkInterval)
-                resolve()
-              }
-            }, 50)
-            return
-          }
-          const script = document.createElement('script')
-          script.id = 'leaflet-js'
-          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-          script.onload = () => resolve()
-          script.onerror = reject
-          document.body.appendChild(script)
-        })
-      }
+        if (!isMounted || !mapContainerRef.current) return
 
-      if (!isMounted || !mapContainerRef.current) return
+        const L = (window as any).L
+        if (!L || typeof L.map !== 'function') return
 
-      const L = (window as any).L
-      if (!L) return
+        // Inicializa mapa se ainda não existir
+        if (!mapInstanceRef.current) {
+          const map = L.map(mapContainerRef.current, {
+            center: [lat, lng],
+            zoom: 15,
+            zoomControl: true,
+          })
 
-      // Inicializa mapa se ainda não existir
-      if (!mapInstanceRef.current) {
-        const map = L.map(mapContainerRef.current, {
-          center: [lat, lng],
-          zoom: 15,
-          zoomControl: true,
-        })
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19,
+          }).addTo(map)
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap',
-          maxZoom: 19,
-        }).addTo(map)
-
-        // Ícone customizado vermelho para entrega Loyola's
-        const customIcon = L.divIcon({
-          className: 'custom-map-pin',
-          html: `<div style="background-color: #E10600; width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+          // Ícone customizado vermelho para entrega Loyola's
+          const customIcon = L.divIcon({
+            className: 'custom-map-pin',
+            html: `<div style="background-color: #E10600; width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #FFFFFF; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
                   <div style="width: 10px; height: 10px; background-color: #FFFFFF; border-radius: 50%;"></div>
                  </div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 28],
-        })
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+          })
 
-        const marker = L.marker([lat, lng], {
-          draggable: !disabled,
-          icon: customIcon,
-        }).addTo(map)
+          const marker = L.marker([lat, lng], {
+            draggable: !disabled,
+            icon: customIcon,
+          }).addTo(map)
 
-        marker.on('dragend', () => {
-          const pos = marker.getLatLng()
-          onChangeCoords(pos.lat, pos.lng)
-        })
+          marker.on('dragend', () => {
+            const pos = marker.getLatLng()
+            onChangeCoords(pos.lat, pos.lng)
+          })
 
-        map.on('click', (e: any) => {
-          if (disabled) return
-          marker.setLatLng(e.latlng)
-          onChangeCoords(e.latlng.lat, e.latlng.lng)
-        })
+          map.on('click', (e: any) => {
+            if (disabled) return
+            marker.setLatLng(e.latlng)
+            onChangeCoords(e.latlng.lat, e.latlng.lng)
+          })
 
-        mapInstanceRef.current = map
-        markerInstanceRef.current = marker
-      } else {
-        mapInstanceRef.current.setView([lat, lng], mapInstanceRef.current.getZoom())
-        if (markerInstanceRef.current) {
-          markerInstanceRef.current.setLatLng([lat, lng])
+          mapInstanceRef.current = map
+          markerInstanceRef.current = marker
+        } else {
+          if (typeof mapInstanceRef.current.setView === 'function') {
+            mapInstanceRef.current.setView([lat, lng], mapInstanceRef.current.getZoom())
+          }
+          if (
+            markerInstanceRef.current &&
+            typeof markerInstanceRef.current.setLatLng === 'function'
+          ) {
+            markerInstanceRef.current.setLatLng([lat, lng])
+          }
         }
+      } catch (err) {
+        console.warn('Não foi possível inicializar o Leaflet Map:', err)
       }
     }
 

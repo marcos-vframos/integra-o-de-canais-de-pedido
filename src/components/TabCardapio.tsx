@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Plus, Pencil, Trash2, X, Check, Layers, ArrowUp, ArrowDown } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { CATEGORIES, fmtBRL } from '@/lib/seeds'
+import pb from '@/lib/pocketbase/client'
+
+export interface CategoryItem {
+  id: string
+  name: string
+  order: number
+  active: boolean
+  description?: string
+}
 
 interface TabCardapioProps {
   menu: MenuItem[]
@@ -43,6 +52,112 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // Gerenciamento de Áreas / Categorias
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [showManageAreas, setShowManageAreas] = useState(false)
+  const [newAreaName, setNewAreaName] = useState('')
+  const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
+  const [editingAreaName, setEditingAreaName] = useState('')
+
+  const loadCategories = async () => {
+    try {
+      const list = await pb.collection('categories').getFullList<CategoryItem>({
+        sort: 'order',
+      })
+      if (list.length > 0) {
+        setCategories(list)
+      } else {
+        // Fallback para CATEGORIES padrão
+        const fallback = CATEGORIES.map((c, i) => ({
+          id: `cat-${i}`,
+          name: c,
+          order: i + 1,
+          active: true,
+        }))
+        setCategories(fallback)
+      }
+    } catch {
+      const fallback = CATEGORIES.map((c, i) => ({
+        id: `cat-${i}`,
+        name: c,
+        order: i + 1,
+        active: true,
+      }))
+      setCategories(fallback)
+    }
+  }
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const handleCreateArea = async () => {
+    const trimmed = newAreaName.trim()
+    if (!trimmed) return
+    try {
+      const maxOrder = categories.reduce((max, c) => Math.max(max, c.order || 0), 0)
+      await pb.collection('categories').create({
+        name: trimmed,
+        order: maxOrder + 1,
+        active: true,
+      })
+      setNewAreaName('')
+      loadCategories()
+    } catch (e: any) {
+      alert('Erro ao criar área: ' + (e?.message || 'Tente novamente.'))
+    }
+  }
+
+  const handleUpdateArea = async (id: string) => {
+    const trimmed = editingAreaName.trim()
+    if (!trimmed) return
+    try {
+      await pb.collection('categories').update(id, { name: trimmed })
+      setEditingAreaId(null)
+      loadCategories()
+    } catch (e: any) {
+      alert('Erro ao atualizar área: ' + (e?.message || 'Tente novamente.'))
+    }
+  }
+
+  const handleDeleteArea = async (id: string, name: string) => {
+    if (
+      !confirm(
+        `Deseja remover a área "${name}"? Os itens associados continuarão no sistema como 'Outros'.`,
+      )
+    )
+      return
+    try {
+      await pb.collection('categories').delete(id)
+      loadCategories()
+    } catch (e: any) {
+      alert('Erro ao excluir área: ' + (e?.message || 'Tente novamente.'))
+    }
+  }
+
+  const handleMoveArea = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= categories.length) return
+    const cur = categories[index]
+    const target = categories[targetIndex]
+    if (!cur.id.startsWith('cat-') && !target.id.startsWith('cat-')) {
+      try {
+        await pb.collection('categories').update(cur.id, { order: target.order })
+        await pb.collection('categories').update(target.id, { order: cur.order })
+        loadCategories()
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
+  const effectiveCategoriesList = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map((c) => c.name)
+    }
+    return CATEGORIES
+  }, [categories])
 
   const ingredientStock = stock.filter((s) => s.group === 'Ingrediente')
 
@@ -148,18 +263,141 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
     <div className="sc-card">
       <div className="flex items-center justify-between mb-1">
         <h2 className="sc-title" style={{ marginBottom: 0 }}>
-          Cardápio (Canônico)
+          Cardápio
         </h2>
-        {!isOffline && !newFormOpen && (
-          <button
-            className="sc-btn-small flex items-center gap-1 py-1 px-2.5 h-8 text-xs font-semibold"
-            onClick={openNewForm}
-          >
-            <Plus size={13} />
-            Novo item
-          </button>
+        {!isOffline && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="sc-btn-small flex items-center gap-1 py-1 px-2.5 h-8 text-xs font-semibold !bg-zinc-800 hover:!bg-zinc-700 !text-white"
+              onClick={() => setShowManageAreas((prev) => !prev)}
+            >
+              <Layers size={13} className="text-amber-400" />
+              <span>{showManageAreas ? 'Ocultar Áreas' : 'Gerenciar Áreas'}</span>
+            </button>
+            {!newFormOpen && (
+              <button
+                className="sc-btn-small flex items-center gap-1 py-1 px-2.5 h-8 text-xs font-semibold"
+                onClick={openNewForm}
+              >
+                <Plus size={13} />
+                Novo item
+              </button>
+            )}
+          </div>
         )}
       </div>
+
+      {/* PAINEL DE GERENCIAMENTO DE ÁREAS / CATEGORIAS */}
+      {!isOffline && showManageAreas && (
+        <div className="mb-5 p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <div className="flex items-center gap-2 text-amber-400">
+              <Layers size={16} />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                Áreas do Cardápio (Categorias)
+              </h3>
+            </div>
+            <span className="text-[11px] text-zinc-500">Ordene e crie novas áreas do cardápio</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Nome da nova área (ex: Sobremesas, Promoções)..."
+              value={newAreaName}
+              onChange={(e) => setNewAreaName(e.target.value)}
+              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white"
+            />
+            <button
+              type="button"
+              onClick={handleCreateArea}
+              disabled={!newAreaName.trim()}
+              className="px-3 py-1.5 rounded-lg bg-[#E10600] hover:bg-[#9E0400] text-white text-xs font-bold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            >
+              <Plus size={13} />
+              <span>Adicionar Área</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1 max-h-56 overflow-y-auto">
+            {categories.map((cat, idx) => (
+              <div
+                key={cat.id}
+                className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-between gap-2 text-xs"
+              >
+                {editingAreaId === cat.id ? (
+                  <div className="flex items-center gap-1 flex-1">
+                    <input
+                      type="text"
+                      value={editingAreaName}
+                      onChange={(e) => setEditingAreaName(e.target.value)}
+                      className="flex-1 bg-black border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateArea(cat.id)}
+                      className="text-emerald-400 hover:text-emerald-300 p-1"
+                    >
+                      <Check size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingAreaId(null)}
+                      className="text-zinc-500 hover:text-white p-1"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="font-semibold text-white truncate">{cat.name}</span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveArea(idx, 'up')}
+                        disabled={idx === 0}
+                        className="p-1 text-zinc-400 hover:text-white disabled:opacity-30"
+                        title="Subir ordem"
+                      >
+                        <ArrowUp size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveArea(idx, 'down')}
+                        disabled={idx === categories.length - 1}
+                        className="p-1 text-zinc-400 hover:text-white disabled:opacity-30"
+                        title="Descer ordem"
+                      >
+                        <ArrowDown size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAreaId(cat.id)
+                          setEditingAreaName(cat.name)
+                        }}
+                        className="p-1 text-zinc-400 hover:text-amber-400"
+                        title="Editar nome"
+                      >
+                        <Pencil size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteArea(cat.id, cat.name)}
+                        className="p-1 text-zinc-400 hover:text-red-400"
+                        title="Excluir área"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isOffline && (
         <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200/90">
@@ -218,7 +456,7 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value as MenuItem['category'])}
               >
-                {CATEGORIES.map((c) => (
+                {effectiveCategoriesList.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -275,8 +513,8 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
       )}
 
       {/* Categorias e Itens */}
-      {CATEGORIES.map((cat) => {
-        const items = menu.filter((m) => m.category === cat)
+      {effectiveCategoriesList.map((cat) => {
+        const items = menu.filter((m) => (m.category || '').trim() === cat)
         if (items.length === 0) return null
 
         return (
@@ -412,7 +650,7 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                               setEditCategory(e.target.value as MenuItem['category'])
                             }
                           >
-                            {CATEGORIES.map((c) => (
+                            {effectiveCategoriesList.map((c) => (
                               <option key={c} value={c}>
                                 {c}
                               </option>

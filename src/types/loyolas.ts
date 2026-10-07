@@ -55,6 +55,8 @@ export interface OrderRecord {
   customerPhone?: string
   deliveryType?: 'retirada' | 'entrega'
   customerAddress?: string
+  motoboyId?: string
+  motoboyName?: string
   created?: string
   updated?: string
 }
