@@ -541,10 +541,15 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                       </b>
                     </div>
                     {order.deliveryFee ? (
-                      <span className="text-[11px] text-[var(--muted)]">
-                        (Taxa entrega: {fmtBRL(order.deliveryFee)})
+                      <span className="text-[11px] text-amber-300">
+                        Taxa de entrega: {fmtBRL(order.deliveryFee)}{order.deliveryFeeRegion ? ` • ${order.deliveryFeeRegion}` : ''}
                       </span>
                     ) : null}
+                    {order.invoiceRequested && (
+                      <span className="text-[11px] text-blue-300">
+                        NF solicitada{order.invoiceDocument ? ` • CPF/CNPJ: ${order.invoiceDocument}` : ''} • {order.invoiceStatus || 'pendente_emissao'}
+                      </span>
+                    )}
                   </div>
 
                   {/* Fluxo de Status Manual: Pendente -> Aceitar -> Pronto -> Concluído */}
