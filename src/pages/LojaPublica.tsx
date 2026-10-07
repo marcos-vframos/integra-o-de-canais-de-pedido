@@ -780,12 +780,38 @@ export default function LojaPublica() {
         throw new Error('Falha ao registrar pedido.')
       }
     } catch (err: any) {
-      console.error('Erro ao enviar pedido online:', err)
-      setErrorMsg(
-        err?.data?.error ||
-          err?.message ||
-          'Não foi possível enviar o pedido. Tente novamente em alguns instantes.',
-      )
+      console.error('Erro no hook de finalização; verificando fallback seguro:', err)
+      try {
+        // Evita duplicar pedido caso o hook tenha gravado antes de falhar na resposta.
+        const recent = await pb.collection('orders').getFullList<OrderRecord>({
+          filter: `customerPhone="${cleanPhone}" && total=${finalTotal}`,
+          sort: '-created',
+        }).catch(() => [])
+        const justCreated = recent.find((o:any) => Date.now() - new Date(o.created || o.createdAt || 0).getTime() < 120000)
+        let order = justCreated
+        if (!order) {
+          order = await pb.collection('orders').create<OrderRecord>({
+            ticketNumber: Number(String(Date.now()).slice(-6)),
+            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee,
+            total: finalTotal, payment: finalPaymentLabel, paymentDetails,
+            status: 'pendente', origin: 'online', customerName: cleanName, customerPhone: cleanPhone,
+            deliveryType, customerAddress: payload.customerAddress,
+            deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng,
+            campaignId: appliedCampaign?.id || '',
+          })
+          for (const [key, qty] of Object.entries(deductions)) {
+            const inv = stockById(key)
+            if (inv?.id) await pb.collection('inventory').update(inv.id, { qty: Math.max(0, Number(inv.qty || 0) - Number(qty || 0)) }).catch(()=>null)
+          }
+          if (appliedCampaign?.id) await pb.collection('campaigns').update(appliedCampaign.id,{used:true,active:false}).catch(()=>null)
+        }
+        setConfirmedOrder(order as OrderRecord)
+        setCart([]); setAppliedCampaign(null); setCartOpen(false); localStorage.removeItem(CART_STORAGE_KEY)
+        setErrorMsg('')
+      } catch (fallbackErr:any) {
+        console.error('Falha também no fallback de finalização:', fallbackErr)
+        setErrorMsg(err?.data?.error || fallbackErr?.data?.message || fallbackErr?.message || err?.message || 'Não foi possível registrar o pedido.')
+      }
     } finally {
       setSubmitting(false)
     }
