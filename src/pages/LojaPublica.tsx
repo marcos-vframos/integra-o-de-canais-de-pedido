@@ -445,10 +445,22 @@ export default function LojaPublica() {
       return deliveryType === 'entrega' ? deliveryFeeValue : 0
     }
     if (appliedCampaign.type === 'product_discount' && appliedCampaign.discountAmount) {
+      // Se tiver produto alvo, valida se ele está no carrinho ou aplica o valor diretamente
+      if (appliedCampaign.targetProductId) {
+        const hasTarget = cart.some((l) => l.itemId === appliedCampaign.targetProductId)
+        if (!hasTarget) {
+          // Também aceita por compatibilidade com nome do produto
+          const hasTargetByName = cart.some((l) => {
+            const item = menuById(l.itemId)
+            return item?.name === appliedCampaign.targetProductName
+          })
+          if (!hasTargetByName) return 0
+        }
+      }
       return Math.min(appliedCampaign.discountAmount, subtotal)
     }
     return 0
-  }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue])
+  }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue, cart, menu])
 
   const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
   const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
