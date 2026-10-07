@@ -440,6 +440,11 @@ export default function LojaPublica() {
     return lineBase * line.qty
   }
 
+  // Totais precisam existir antes do cálculo do voucher.
+  // Antes, discountAmount acessava subtotal antes da inicialização (TDZ), causando tela preta em /loja.
+  const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
+  const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
+
   // Desconto calculado por campanhas / vouchers
   const discountAmount = useMemo(() => {
     if (!appliedCampaign) return 0
@@ -467,8 +472,6 @@ export default function LojaPublica() {
     return 0
   }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue, cart, menu])
 
-  const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
-  const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
   const finalTotal = Math.max(0, subtotal - discountAmount + currentDeliveryFee)
 
   const totalItemsCount = cart.reduce((sum, line) => sum + line.qty, 0)
