@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Settings } from 'lucide-react'
+import { Store } from 'lucide-react'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
@@ -56,7 +56,15 @@ export default function Index() {
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       <SeasonalCampaignOverlay />
-      <Link to="/adm-landing" aria-label="Abrir administração da landing" title="ADM da Landing" className="fixed bottom-5 right-5 z-50 rounded-xl border border-red-600 bg-zinc-950 p-3 text-red-500 shadow-lg hover:bg-zinc-800"><Settings size={20}/></Link>
+      {/* Atalho administrativo com o ícone original de fachada, sem engrenagem nem segundo botão. */}
+      <Link
+        to="/adm-landing"
+        aria-label="Abrir ADM da Landing"
+        title="ADM da Landing"
+        className="fixed bottom-5 left-5 z-50 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-[#101114] text-zinc-300 shadow-lg transition-colors hover:border-zinc-500 hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <Store size={19} strokeWidth={1.7} aria-hidden="true" />
+      </Link>
 
       {/* 1. Header Fixo com status e botão para /loja */}
       <Header activeSection={activeSection} />
