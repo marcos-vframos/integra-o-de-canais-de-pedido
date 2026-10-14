@@ -1,7 +1,10 @@
 import { MARQUEE_ITEMS } from '@/data/loyolasData'
+import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function Marquee() {
-  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS]
+  const { content } = useLandingContent()
+  const source = content.marqueeItems?.length ? content.marqueeItems : MARQUEE_ITEMS
+  const items = [...source, ...source]
 
   return (
     <aside
