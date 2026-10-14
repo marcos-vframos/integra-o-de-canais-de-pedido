@@ -99,6 +99,7 @@ export interface LandingContentState {
   activeThemeId: string
   activeColors: LandingThemeColors
   themePresets: LandingThemePreset[]
+  heroGlowEnabled?: boolean
 }
 
 export const DEFAULT_THEME_COLORS: LandingThemeColors = {
@@ -326,6 +327,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContentState = {
   activeThemeId: 'padrao',
   activeColors: DEFAULT_THEME_COLORS,
   themePresets: DEFAULT_THEME_PRESETS,
+  heroGlowEnabled: false,
 }
 
 interface LandingContextValue {
@@ -438,6 +440,7 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
           } else if (section === 'theme') {
             if (data.activeThemeId) next.activeThemeId = data.activeThemeId
             if (data.activeColors) next.activeColors = data.activeColors
+            if (typeof data.heroGlowEnabled === 'boolean') next.heroGlowEnabled = data.heroGlowEnabled
             if (Array.isArray(data.themePresets) && data.themePresets.length > 0) {
               next.themePresets = data.themePresets
             }
