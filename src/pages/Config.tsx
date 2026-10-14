@@ -596,6 +596,7 @@ export default function Config() {
           </p>
           <Link
             to="/adm-landing"
+            state={{ returnTo: '/config' }}
             className="flex items-center justify-between p-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] hover:border-[var(--red)] hover:bg-[var(--surface)] transition-all group"
             title="Abrir ADM da Landing"
             aria-label="Abrir ADM da Landing"
