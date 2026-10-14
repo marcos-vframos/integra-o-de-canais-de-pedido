@@ -21,7 +21,7 @@ import useRealtime from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { MenuItem, InventoryItem, OrderRecord, ClosureRecord, CartLine } from '@/types/loyolas'
 import { fmtBRL, padTicket, uid, seedStock, seedMenu } from '@/lib/seeds'
-import { breadKind, accumulateDeductions, addonUnitTotal, hasBread, type BreadChoice } from '@/lib/orderCustomization'
+import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, type BreadChoice } from '@/lib/orderCustomization'
 
 import { TabPedido } from '@/components/TabPedido'
 import { TabCardapio } from '@/components/TabCardapio'
@@ -569,6 +569,7 @@ export default function Gestao() {
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
       const unitExtra = addonUnitTotal(l, stockById, menu)
+      const breadExtra = breadSurcharge(item, l, stockById)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -583,12 +584,13 @@ export default function Gestao() {
 
       return {
         name: item?.name || 'Item',
-        price: (item?.price || 0) + unitExtra,
+        price: (item?.price || 0) + unitExtra + breadExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
         breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
+        breadSurcharge: breadExtra,
       }
     })
 
@@ -623,6 +625,7 @@ export default function Gestao() {
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
       const unitExtra = addonUnitTotal(l, stockById, menu)
+      const breadExtra = breadSurcharge(item, l, stockById)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -638,12 +641,13 @@ export default function Gestao() {
       return {
         itemId: l.itemId,
         name: item?.name || 'Item removido',
-        price: (item?.price || 0) + unitExtra,
+        price: (item?.price || 0) + unitExtra + breadExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
         breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
+        breadSurcharge: breadExtra,
       }
     })
 
