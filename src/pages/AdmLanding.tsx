@@ -37,6 +37,9 @@ export default function AdmLanding() {
   const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja'>('textos')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [heroGlowEnabled, setHeroGlowEnabled] = useState(Boolean(content.heroGlowEnabled))
+  const [allHeadlines, setAllHeadlines] = useState(content.headlines)
+  const [marqueeTexts, setMarqueeTexts] = useState(content.marqueeItems || [])
 
   // Status da loja (controle manual e horário automático)
   const [forceOpen, setForceOpen] = useState(false)
@@ -205,6 +208,9 @@ export default function AdmLanding() {
     setStoryImages(content.storyImages || (content.storyImage ? [content.storyImage] : []))
     setCtaImages(content.ctaImages || [])
     setCustomColors(content.activeColors || DEFAULT_THEME_COLORS)
+    setHeroGlowEnabled(Boolean(content.heroGlowEnabled))
+    setAllHeadlines(content.headlines)
+    setMarqueeTexts(content.marqueeItems || [])
   }, [content])
 
   // Salvar textos no backend
@@ -212,7 +218,7 @@ export default function AdmLanding() {
     setIsSaving(true)
     try {
       // 1. Hero
-      const updatedHeadlines = [...content.headlines]
+      const updatedHeadlines = [...allHeadlines]
       if (updatedHeadlines[0]) {
         updatedHeadlines[0] = {
           ...updatedHeadlines[0],
@@ -238,6 +244,8 @@ export default function AdmLanding() {
         heroSlides,
         heroSubtitleChips: [formText.chip0, formText.chip1, formText.chip2].filter(Boolean),
       })
+
+      await saveSection('marquee', { marqueeItems: marqueeTexts.filter(Boolean) })
 
       // 2. Story
       await saveSection('story', {
@@ -604,7 +612,7 @@ export default function AdmLanding() {
                     Hero (Destaque Principal)
                   </h2>
                   <p className="text-xs text-zinc-400">
-                    Selo superior, frases alternadas e chips de destaque
+                    Selo superior, todas as frases alternadas e chips de destaque
                   </p>
                 </div>
               </div>
@@ -700,6 +708,20 @@ export default function AdmLanding() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 space-y-4">
+              <h3 className="text-sm font-bold text-white">Todas as frases do Hero</h3>
+              <p className="text-xs text-zinc-400">Edite título, destaque, descrição e selo de cada slide. Salve pelo botão Salvar Textos.</p>
+              {allHeadlines.map((item, index) => <div key={index} className="rounded-xl border border-zinc-700 p-3 space-y-2">
+                <strong className="text-xs text-amber-400">Mensagem {index + 1}</strong>
+                {(['prefix','highlight','description','badge'] as const).map(field => <label key={field} className="block text-xs text-zinc-300">{field === 'prefix' ? 'Título' : field === 'highlight' ? 'Destaque' : field === 'description' ? 'Descrição' : 'Selo'}
+                  <textarea rows={field === 'description' ? 3 : 1} value={item[field] || ''} onChange={e => setAllHeadlines(prev => prev.map((h,i) => i === index ? {...h,[field]:e.target.value} : h))} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white"/>
+                </label>)}
+              </div>)}
+              <h3 className="text-sm font-bold text-white">Frases da barra em movimento</h3>
+              {marqueeTexts.map((item,index)=><div key={index} className="flex gap-2"><input value={item} onChange={e=>setMarqueeTexts(prev=>prev.map((v,i)=>i===index?e.target.value:v))} className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-xs text-white"/><button type="button" onClick={()=>setMarqueeTexts(prev=>prev.filter((_,i)=>i!==index))} className="text-red-400 text-xs">Remover</button></div>)}
+              <button type="button" onClick={()=>setMarqueeTexts(prev=>[...prev,'Nova mensagem'])} className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white">+ Adicionar mensagem</button>
             </div>
 
             {/* Seção História */}
@@ -1148,7 +1170,7 @@ export default function AdmLanding() {
 
                   <button
                     type="button"
-                    onClick={() => saveTheme(content.activeThemeId, customColors)}
+                    onClick={async () => { try { await saveTheme(content.activeThemeId, customColors); await saveSection('theme', { activeThemeId: content.activeThemeId, activeColors: customColors, themePresets: content.themePresets, heroGlowEnabled }); alert('Paleta e fundo salvos.'); } catch (e) { alert('Falha ao salvar tema.'); } }}
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" />
@@ -1157,6 +1179,8 @@ export default function AdmLanding() {
                 </div>
               </div>
 
+              <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" checked={heroGlowEnabled} onChange={e=>setHeroGlowEnabled(e.target.checked)}/> Ativar iluminação vermelha no Hero (desligada por padrão)</label>
+              <p className="text-xs text-zinc-400">Mapa das cores: Fundo principal = Hero e página; Secundário = faixas e seções; Cards = painéis; Acento = botões e indicadores; Hover = botões ao passar o mouse; Claro = textos secundários e detalhes.</p>
               {/* Presets Salvos */}
               <div>
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block mb-3">
@@ -1188,26 +1212,27 @@ export default function AdmLanding() {
                           )}
                         </div>
 
+                        <span className="text-[10px] text-zinc-400">Cores: fundo · cards · botões · detalhes</span>
                         {/* Amostras das cores do preset */}
                         <div className="flex items-center gap-1.5">
                           <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.bgPrimary }}
-                            title="Fundo"
+                            title="Fundo principal — Hero e página"
                           />
                           <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.bgCard }}
-                            title="Card"
+                            title="Fundo dos cards — painéis"
                           />                          <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.accentVinho }}
-                            title="Destaque Vinho/Accent"
+                            title="Acento — botões e indicadores"
                           />
                           <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.accentSilver }}
-                            title="Prata/Acento Claro"
+                            title="Acento claro — detalhes e textos"
                           />
                         </div>
 
