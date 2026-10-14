@@ -583,6 +583,35 @@ export default function Config() {
           </div>
         </div>
 
+        {/* Acesso direto ao gerenciamento da landing, sem depender do carregamento do PocketBase. */}
+        <div className="sc-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Store size={18} className="text-[var(--red)]" />
+            <h3 className="sc-title" style={{ fontSize: 17, marginBottom: 0, paddingBottom: 0 }}>
+              Administração da Landing Page
+            </h3>
+          </div>
+          <p className="sc-sub">
+            Edite os textos, imagens, paletas e campanhas da página principal do estabelecimento.
+          </p>
+          <Link
+            to="/adm-landing"
+            className="flex items-center justify-between p-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] hover:border-[var(--red)] hover:bg-[var(--surface)] transition-all group"
+            title="Abrir ADM da Landing"
+            aria-label="Abrir ADM da Landing"
+          >
+            <span className="inline-flex items-center gap-2.5">
+              <span className="p-2 rounded-lg bg-[rgba(225,6,0,0.12)] text-[var(--red)]">
+                <Store size={16} />
+              </span>
+              <span className="text-xs font-semibold text-[var(--silver)] group-hover:text-[var(--red)]">
+                Abrir ADM da Landing
+              </span>
+            </span>
+            <ChevronRight size={14} className="text-[var(--muted)]" />
+          </Link>
+        </div>
+
         {/* Bloco: Terminal e Acesso */}
         <div className="sc-card">
           <div className="flex items-center gap-2 mb-2">
