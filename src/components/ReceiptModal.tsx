@@ -155,6 +155,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 </span>
                 <span>{fmtBRL(i.price * i.qty)}</span>
               </div>
+              {i.breadChoice && <div className="receipt-line" style={{ color: '#333', fontSize: 11 }}>&nbsp;&nbsp;Pão: {i.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}</div>}
               {i.removed && i.removed.length > 0 && (
                 <div className="receipt-line" style={{ color: '#555', fontSize: 11 }}>
                   &nbsp;&nbsp;sem: {i.removed.join(', ')}
