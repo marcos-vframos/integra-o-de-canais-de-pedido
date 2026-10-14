@@ -53,7 +53,10 @@ export function extraUnitPrice(
 }
 
 export function addonUnitTotal(line: AddedLine, resolveStockItem: (id: string) => InventoryItem | undefined, menu: MenuItem[]) {
-  return (line.added || []).reduce((sum, added) => sum + Math.max(0, Number(added.qty) || 0) * extraUnitPrice(added.ingredientId, resolveStockItem, menu), 0)
+  return (line.added || []).reduce((sum, added) => {
+    if (breadKind(added.ingredientId, resolveStockItem)) return sum
+    return sum + Math.max(0, Number(added.qty) || 0) * extraUnitPrice(added.ingredientId, resolveStockItem, menu)
+  }, 0)
 }
 
 export function lineUnitTotal(item: MenuItem, line: AddedLine, resolveStockItem: (id: string) => InventoryItem | undefined, menu: MenuItem[]) {
