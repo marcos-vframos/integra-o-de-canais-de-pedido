@@ -39,6 +39,7 @@ export interface OrderItem {
   added?: { name: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
   breadChoice?: 'hamburguer' | 'frances'
+  breadSurcharge?: number // valor adicional por unidade incorporado em price
 }
 
 export interface OrderRecord {
@@ -90,4 +91,5 @@ export interface CartLine {
   removed: string[] // ingredient codes/ids
   added: { ingredientId: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
+  breadChoice?: 'hamburguer' | 'frances'
 }
