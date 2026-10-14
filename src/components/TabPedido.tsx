@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Search, X, Pencil, Minus, Plus, Trash2, Printer } from 'lucide-react'
 import type { MenuItem, InventoryItem, CartLine } from '@/types/loyolas'
 import { CATEGORIES, PAYMENTS, fmtBRL, padTicket } from '@/lib/seeds'
-import { addonUnitTotal, lineUnitTotal, breadName, hasBread, extraUnitPrice } from '@/lib/orderCustomization'
+import { lineUnitTotal, breadName, hasBread, extraUnitPrice } from '@/lib/orderCustomization'
 
 interface TabPedidoProps {
   menu: MenuItem[]
