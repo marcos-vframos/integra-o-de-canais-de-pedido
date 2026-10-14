@@ -28,6 +28,7 @@ import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
+import MarqueeEditor from '@/components/MarqueeEditor'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
@@ -39,7 +40,6 @@ export default function AdmLanding() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [heroGlowEnabled, setHeroGlowEnabled] = useState(Boolean(content.heroGlowEnabled))
   const [allHeadlines, setAllHeadlines] = useState(content.headlines)
-  const [marqueeTexts, setMarqueeTexts] = useState(content.marqueeItems || [])
 
   // Status da loja (controle manual e horário automático)
   const [forceOpen, setForceOpen] = useState(false)
@@ -210,7 +210,6 @@ export default function AdmLanding() {
     setCustomColors(content.activeColors || DEFAULT_THEME_COLORS)
     setHeroGlowEnabled(Boolean(content.heroGlowEnabled))
     setAllHeadlines(content.headlines)
-    setMarqueeTexts(content.marqueeItems || [])
   }, [content])
 
   // Salvar textos no backend
@@ -226,8 +225,6 @@ export default function AdmLanding() {
         heroSlides,
         heroSubtitleChips: [formText.chip0, formText.chip1, formText.chip2].filter(Boolean),
       })
-
-      await saveSection('marquee', { marqueeItems: marqueeTexts.filter(Boolean) })
 
       // 2. Story
       await saveSection('story', {
@@ -701,10 +698,10 @@ export default function AdmLanding() {
                   <textarea rows={field === 'description' ? 3 : 1} value={item[field] || ''} onChange={e => setAllHeadlines(prev => prev.map((h,i) => i === index ? {...h,[field]:e.target.value} : h))} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white"/>
                 </label>)}
               </div>)}
-              <h3 className="text-sm font-bold text-white">Frases da barra em movimento</h3>
-              {marqueeTexts.map((item,index)=><div key={index} className="flex gap-2"><input value={item} onChange={e=>setMarqueeTexts(prev=>prev.map((v,i)=>i===index?e.target.value:v))} className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-xs text-white"/><button type="button" onClick={()=>setMarqueeTexts(prev=>prev.filter((_,i)=>i!==index))} className="text-red-400 text-xs">Remover</button></div>)}
-              <button type="button" onClick={()=>setMarqueeTexts(prev=>[...prev,'Nova mensagem'])} className="rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white">+ Adicionar mensagem</button>
             </div>
+
+            {/* Editor independente: aplica somente a barra móvel, sem sobrescrever outras seções. */}
+            <MarqueeEditor />
 
             {/* Seção História */}
             <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl space-y-5">
