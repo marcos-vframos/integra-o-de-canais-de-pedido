@@ -38,6 +38,7 @@ export interface OrderItem {
   removed?: string[]
   added?: { name: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
+  breadChoice?: 'hamburguer' | 'frances'
 }
 
 export interface OrderRecord {
