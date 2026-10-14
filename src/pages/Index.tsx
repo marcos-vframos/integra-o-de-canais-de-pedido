@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { Settings } from 'lucide-react'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
@@ -54,6 +56,7 @@ export default function Index() {
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       <SeasonalCampaignOverlay />
+      <Link to="/adm-landing" aria-label="Abrir administração da landing" title="ADM da Landing" className="fixed bottom-5 right-5 z-50 rounded-xl border border-red-600 bg-zinc-950 p-3 text-red-500 shadow-lg hover:bg-zinc-800"><Settings size={20}/></Link>
 
       {/* 1. Header Fixo com status e botão para /loja */}
       <Header activeSection={activeSection} />
