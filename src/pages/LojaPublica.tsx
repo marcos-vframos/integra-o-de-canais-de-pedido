@@ -40,6 +40,7 @@ import {
 import { OrderReceiptModal } from '@/components/OrderReceiptModal'
 import { generatePixPayload } from '@/lib/pix'
 import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
+import { accumulateDeductions, addonUnitTotal, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
   cartLineId: string
@@ -48,6 +49,7 @@ export interface CustomerCartLine {
   removed: string[]
   added: { ingredientId: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
+  breadChoice?: BreadChoice
 }
 
 const CATEGORIES = ['Carnes', 'Frango', 'Hot-Dog', 'Gourmet', 'Especial', 'Combos', 'Bebidas']
@@ -80,6 +82,7 @@ export default function LojaPublica() {
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
+  const [customizeBreadChoice, setCustomizeBreadChoice] = useState<BreadChoice>('hamburguer')
   const [customizeGourmetChoice, setCustomizeGourmetChoice] = useState<
     'catupiry' | 'cheddar' | 'none'
   >('none')
@@ -311,6 +314,7 @@ export default function LojaPublica() {
   }, [menu])
 
   const handleOpenCustomize = (item: MenuItem) => {
+    setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
     setCustomizeQty(1)
     setCustomizeRemoved({})
@@ -322,6 +326,7 @@ export default function LojaPublica() {
   const handleEditCartLine = (line: CustomerCartLine) => {
     const item = menuById(line.itemId)
     if (!item) return
+    setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
@@ -347,12 +352,13 @@ export default function LojaPublica() {
 
     const gourmetFreeChoice =
       customizeItem.category === 'Gourmet' ? customizeGourmetChoice : undefined
+    const breadChoice = hasBread(customizeItem, stockById) ? customizeBreadChoice : undefined
 
     if (customizeEditingLineId) {
       setCart((prev) =>
         prev.map((l) =>
           l.cartLineId === customizeEditingLineId
-            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice }
+            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice }
             : l,
         ),
       )
@@ -366,6 +372,7 @@ export default function LojaPublica() {
           removed,
           added,
           gourmetFreeChoice,
+          breadChoice,
         },
       ])
     }
@@ -384,7 +391,8 @@ export default function LojaPublica() {
         (l) =>
           l.itemId === item.id &&
           (!l.removed || l.removed.length === 0) &&
-          (!l.added || l.added.length === 0),
+          (!l.added || l.added.length === 0) &&
+          (!l.breadChoice || l.breadChoice === 'hamburguer'),
       )
       if (existing) {
         return prev.map((l) =>
@@ -416,33 +424,10 @@ export default function LojaPublica() {
     setCart((prev) => prev.filter((l) => l.cartLineId !== cartLineId))
   }
 
-  // Totais incluindo adicionais cobrados
+  // Preço compartilhado por modal, carrinho, gestão e checkout.
   const calculateLineTotal = (line: CustomerCartLine) => {
     const item = menuById(line.itemId)
-    if (!item) return 0
-    let lineBase = item.price
-
-    // Soma adicionais
-    ;(line.added || []).forEach((a) => {
-      const stockItem = stockById(a.ingredientId)
-      const ingKey = stockItem?.code || a.ingredientId
-      let addPrice = 0
-      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
-        addPrice = catupiryAddPrice
-      } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
-        addPrice = cheddarAddPrice
-      } else {
-        const comp = menu.find(
-          (m) =>
-            m.category === 'Complementos' &&
-            m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
-        )
-        addPrice = comp ? comp.price : 3
-      }
-      lineBase += addPrice * a.qty
-    })
-
-    return lineBase * line.qty
+    return item ? lineUnitTotal(item, line, stockById, menu) * line.qty : 0
   }
 
   // Totais precisam existir antes do cálculo do voucher.
@@ -655,26 +640,7 @@ export default function LojaPublica() {
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
       const baseItemPrice = item?.price || 0
-      let unitExtra = 0
-
-      ;(l.added || []).forEach((a) => {
-        const stockItem = stockById(a.ingredientId)
-        const ingKey = stockItem?.code || a.ingredientId
-        let addPrice = 0
-        if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
-          addPrice = catupiryAddPrice
-        } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
-          addPrice = cheddarAddPrice
-        } else {
-          const comp = menu.find(
-            (m) =>
-              m.category === 'Complementos' &&
-              m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
-          )
-          addPrice = comp ? comp.price : 3
-        }
-        unitExtra += addPrice * a.qty
-      })
+      const unitExtra = addonUnitTotal(l, stockById, menu)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -696,30 +662,13 @@ export default function LojaPublica() {
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
+        breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
       }
     })
 
     // Calcular consumo de estoque (deductions)
     const deductions: Record<string, number> = {}
-    cart.forEach((l) => {
-      const item = menuById(l.itemId)
-      ;(item?.recipe || []).forEach((r) => {
-        const ingMatch = stockById(r.ingredientId)
-        const ingKey = ingMatch?.code || ingMatch?.id || r.ingredientId
-        if (!(l.removed || []).includes(ingKey) && !(l.removed || []).includes(r.ingredientId)) {
-          deductions[ingKey] = (deductions[ingKey] || 0) + r.qty * l.qty
-        }
-      })
-      ;(l.added || []).forEach((a) => {
-        const ingMatch = stockById(a.ingredientId)
-        const ingKey = ingMatch?.code || ingMatch?.id || a.ingredientId
-        deductions[ingKey] = (deductions[ingKey] || 0) + a.qty * l.qty
-      })
-      if (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none') {
-        const freeIngKey = l.gourmetFreeChoice === 'catupiry' ? 'ing-catupiry' : 'ing-cheddar'
-        deductions[freeIngKey] = (deductions[freeIngKey] || 0) + l.qty
-      }
-    })
+    cart.forEach(l => accumulateDeductions(deductions, l, menuById(l.itemId), stockById))
 
     const finalPaymentLabel =
       payment === 'Cartão' ? `Cartão (${cardType === 'credito' ? 'Crédito' : 'Débito'})` : payment
@@ -1153,6 +1102,9 @@ export default function LojaPublica() {
                           </div>
                         </div>
 
+                        {hasBread(item, stockById) && (
+                          <div className="text-[11px] text-zinc-300">Pão: {breadName(line.breadChoice || 'hamburguer')}</div>
+                        )}
                         {line.gourmetFreeChoice && line.gourmetFreeChoice !== 'none' && (
                           <div className="text-[11px] text-amber-300 font-semibold leading-tight">
                             ★ Cortesia Gourmet:{' '}
@@ -1172,7 +1124,7 @@ export default function LojaPublica() {
                             {line.added
                               .map(
                                 (a) =>
-                                  `${stockById(a.ingredientId)?.name || a.ingredientId} x${a.qty}`,
+                                  `${stockById(a.ingredientId)?.name || a.ingredientId} x${a.qty} (+ ${fmtBRL(extraUnitPrice(a.ingredientId, stockById, menu) * a.qty)} por lanche)`,
                               )
                               .join(', ')}
                           </div>
@@ -1665,10 +1617,13 @@ export default function LojaPublica() {
       <CustomizeModal
         item={customizeItem}
         stock={stock}
+        menu={menu}
         qty={customizeQty}
         removed={customizeRemoved}
         added={customizeAdded}
         isEditing={Boolean(customizeEditingLineId)}
+        breadChoice={customizeBreadChoice}
+        setBreadChoice={setCustomizeBreadChoice}
         onClose={handleCloseCustomize}
         onConfirm={handleConfirmCustomize}
         setQty={setCustomizeQty}
@@ -1707,6 +1662,7 @@ export default function LojaPublica() {
               ? it.added.map((a: any) => ({ ingredientId: a.ingredientId || a.name, qty: a.qty }))
               : [],
             gourmetFreeChoice: it.gourmetFreeChoice,
+            breadChoice: it.breadChoice || 'hamburguer',
           }))
           setCart((prev) => [...prev, ...newLines])
           setAuthDrawerOpen(false)
