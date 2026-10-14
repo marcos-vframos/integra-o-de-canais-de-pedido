@@ -27,6 +27,7 @@ export interface DeliveryFeeItem {
   lat?: number
   lng?: number
   description?: string
+  polygon?: [number, number][]
 }
 
 /**
@@ -41,7 +42,29 @@ export function resolveDeliveryFee(
     return { fee: 5, nearestName: 'Taxa Padrão', distanceKm: 0 }
   }
 
-  const withCoords = feesList.filter(
+  // Regiões desenhadas são persistidas no campo description como JSON para manter
+  // compatibilidade com a coleção atual, sem exigir migração imediata do PocketBase.
+  const parsed = feesList.map((f) => {
+    if (f.polygon?.length) return f
+    try {
+      const meta = f.description ? JSON.parse(f.description) : null
+      return meta?.polygon ? { ...f, polygon: meta.polygon as [number, number][] } : f
+    } catch { return f }
+  })
+  const inside = parsed.find((f) => {
+    const poly = f.polygon
+    if (!poly || poly.length < 3) return false
+    let hit = false
+    for (let i=0,j=poly.length-1;i<poly.length;j=i++) {
+      const yi=poly[i][0], xi=poly[i][1], yj=poly[j][0], xj=poly[j][1]
+      const cross=((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/((yj-yi)||1e-12)+xi)
+      if(cross) hit=!hit
+    }
+    return hit
+  })
+  if (inside) return { fee: inside.fee, nearestName: inside.name, distanceKm: 0 }
+
+  const withCoords = parsed.filter(
     (f) => typeof f.lat === 'number' && typeof f.lng === 'number' && !isNaN(f.lat) && !isNaN(f.lng),
   )
 

@@ -9,6 +9,7 @@ import InstagramSection from '@/components/InstagramSection'
 import OrderCTA from '@/components/OrderCTA'
 import LocationHours from '@/components/LocationHours'
 import Footer from '@/components/Footer'
+import SeasonalCampaignOverlay from '@/components/SeasonalCampaignOverlay'
 
 export default function Index() {
   const [activeSection, setActiveSection] = useState('inicio')
@@ -49,9 +50,11 @@ export default function Index() {
   return (
     <div
       id="landing-container"
-      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden snap-y snap-mandatory text-[#F3F4F6] scroll-smooth"
+      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden text-[#F3F4F6] overscroll-y-auto"
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
+      <SeasonalCampaignOverlay />
+
       {/* 1. Header Fixo com status e botão para /loja */}
       <Header activeSection={activeSection} />
 
