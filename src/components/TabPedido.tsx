@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Search, X, Pencil, Minus, Plus, Trash2, Printer } from 'lucide-react'
 import type { MenuItem, InventoryItem, CartLine } from '@/types/loyolas'
 import { CATEGORIES, PAYMENTS, fmtBRL, padTicket } from '@/lib/seeds'
-import { lineUnitTotal, breadName, hasBread, extraUnitPrice } from '@/lib/orderCustomization'
+import { lineUnitTotal, breadName, breadSurcharge, hasBread, extraUnitPrice } from '@/lib/orderCustomization'
 
 interface TabPedidoProps {
   menu: MenuItem[]
@@ -205,7 +205,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                     )
                   })()}
                   {hasBread(item, resolveStockItem) && (
-                    <div className="text-[11px] text-zinc-300">Pão: {breadName(l.breadChoice || 'hamburguer')}</div>
+                    <div className="text-[11px] text-zinc-300">Pão: {breadName(l.breadChoice || 'hamburguer')}{breadSurcharge(item, l, resolveStockItem) > 0 ? ` (+ ${fmtBRL(breadSurcharge(item, l, resolveStockItem))} por lanche)` : ''}</div>
                   )}
                   {(l.removed?.length > 0 ||
                     l.added?.length > 0 ||
