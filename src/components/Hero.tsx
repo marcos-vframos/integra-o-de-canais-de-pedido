@@ -128,8 +128,8 @@ export default function Hero() {
       aria-label="Apresentação principal"
     >
       {/* Luz ambiente oliva/vinho no fundo */}
-      <div className="absolute top-1/4 right-1/4 w-[550px] h-[550px] bg-[#1a3321]/25 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-[450px] h-[450px] bg-[#8F0F1B]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-1/4 w-[550px] h-[550px] bg-[#1a3321]/[0.06] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-[450px] h-[450px] bg-[#8F0F1B]/[0.035] rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
