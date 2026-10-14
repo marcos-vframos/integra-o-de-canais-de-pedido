@@ -2,14 +2,18 @@ import React from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
+import { breadKind, breadName, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 interface CustomizeModalProps {
   item: MenuItem | null
   stock: InventoryItem[]
+  menu: MenuItem[]
   qty: number
   removed: Record<string, boolean>
   added: Record<string, number>
   isEditing: boolean
+  breadChoice: BreadChoice
+  setBreadChoice: (choice: BreadChoice) => void
   onClose: () => void
   onConfirm: () => void
   setQty: React.Dispatch<React.SetStateAction<number>>
@@ -24,10 +28,13 @@ interface CustomizeModalProps {
 
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   item,
+  menu,
   qty,
   removed,
   added,
   isEditing,
+  breadChoice,
+  setBreadChoice,
   onClose,
   onConfirm,
   setQty,
@@ -42,6 +49,12 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   if (!item) return null
 
   const isGourmet = item.category === 'Gourmet'
+  const showBreadSelector = hasBread(item, resolveStockItem)
+  const extras = Object.entries(added)
+    .filter(([ingredientId, amount]) => Number(amount) > 0 && !breadKind(ingredientId, resolveStockItem))
+    .map(([ingredientId, amount]) => ({ ingredientId, qty: Number(amount) }))
+  const currentUnitTotal = lineUnitTotal(item, { added: extras }, resolveStockItem, menu)
+  const extrasTotal = currentUnitTotal - Number(item.price || 0)
 
   return (
     <div className="sc-modal-backdrop" onClick={onClose}>
@@ -68,6 +81,29 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             </button>
           </div>
         </div>
+
+        {showBreadSelector && (
+          <fieldset className="sc-field rounded-xl border border-[var(--line)] bg-[#151518] p-3">
+            <legend className="px-1 text-xs font-bold uppercase tracking-wide text-white">Escolha o pão</legend>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de pão">
+              {(['hamburguer', 'frances'] as const).map(choice => (
+                <button
+                  key={choice}
+                  type="button"
+                  role="radio"
+                  aria-checked={breadChoice === choice}
+                  onClick={() => setBreadChoice(choice)}
+                  className={`rounded-lg border px-3 py-3 text-xs font-bold transition-colors ${breadChoice === choice
+                    ? 'border-[var(--red)] bg-[rgba(225,6,0,0.15)] text-white'
+                    : 'border-zinc-700 bg-[#1a1a1f] text-zinc-300 hover:border-zinc-400'}`}
+                >
+                  {breadChoice === choice ? '✓ ' : ''}{breadName(choice)}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-400">Apenas um tipo de pão por lanche. Pão de Hambúrguer selecionado por padrão, sem cobrança adicional pela troca.</p>
+          </fieldset>
+        )}
 
         {/* EXCEÇÃO GOURMET: Catupiry ou Cheddar grátis */}
         {isGourmet && (
@@ -188,26 +224,15 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             </label>
             <div className="sc-recipe-list">
               {(() => {
-                // Ordenar receita para que "Pão Francês" (ing-pao-frances) fique sempre no TOPO da lista
-                const sortedRecipe = [...item.recipe].sort((a, b) => {
-                  const siA = resolveStockItem(a.ingredientId)
-                  const siB = resolveStockItem(b.ingredientId)
-                  const keyA = (siA?.code || siA?.id || a.ingredientId || '').toLowerCase()
-                  const keyB = (siB?.code || siB?.id || b.ingredientId || '').toLowerCase()
-                  const nameA = (siA?.name || '').toLowerCase()
-                  const nameB = (siB?.name || '').toLowerCase()
-                  const isPaoA = keyA.includes('pao-frances') || nameA.includes('pão francês')
-                  const isPaoB = keyB.includes('pao-frances') || nameB.includes('pão francês')
-                  if (isPaoA && !isPaoB) return -1
-                  if (!isPaoA && isPaoB) return 1
-                  return 0
-                })
+                // O pão tem seletor exclusivo acima; não deve aparecer como adicional de quantidade.
+                const sortedRecipe = item.recipe.filter(r => !breadKind(r.ingredientId, resolveStockItem))
 
                 return sortedRecipe.map((r) => {
                   const si = resolveStockItem(r.ingredientId)
                   const ingKey = si?.code || si?.id || r.ingredientId
                   const checked = !removed[ingKey]
                   const extraCount = Number(added[ingKey]) || 0
+                  const extraPrice = extraUnitPrice(ingKey, resolveStockItem, menu)
 
                   return (
                     <React.Fragment key={ingKey}>
@@ -223,12 +248,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                               }))
                             }
                           />
-                          <span
-                            className={
-                              checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'
-                            }
-                          >
-                            {si ? si.name : r.ingredientId}
+                          <span className="flex flex-col">
+                            <span className={checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'}>
+                              {si ? si.name : r.ingredientId}
+                            </span>
+                            <span className="text-[10px] text-zinc-500">Extra: {fmtBRL(extraPrice)} por porção</span>
                           </span>
                         </label>
 
@@ -355,6 +379,16 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             </div>
           </div>
         )}
+
+        <div className="rounded-xl border border-[var(--line)] bg-[#121217] p-3 space-y-1" aria-live="polite">
+          <div className="flex justify-between text-xs text-zinc-300"><span>Preço do lanche</span><span>{fmtBRL(item.price)}</span></div>
+          <div className="flex justify-between text-xs text-zinc-300"><span>Adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>
+          {extras.map(a => <div key={a.ingredientId} className="flex justify-between text-[11px] text-zinc-400">
+            <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>
+            <span>+ {fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}</span>
+          </div>)}
+          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total ({qty} {qty === 1 ? 'lanche' : 'lanches'})</span><span>{fmtBRL(currentUnitTotal * qty)}</span></div>
+        </div>
 
         <div className="sc-form-actions">
           <button className="sc-btn-primary" onClick={onConfirm}>
