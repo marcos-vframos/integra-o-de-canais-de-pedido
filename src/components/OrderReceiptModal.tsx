@@ -98,7 +98,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                   </span>
                   <span>{fmtBRL(it.price * it.qty)}</span>
                 </div>
-                {it.breadChoice && <div className="text-[9px] text-zinc-600 pl-2">Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}</div>}
+                {it.breadChoice && <div className="text-[9px] text-zinc-600 pl-2">Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}{Number(it.breadSurcharge) > 0 ? ` (+ ${fmtBRL(it.breadSurcharge)} por lanche)` : ''}</div>}
                 {it.gourmetFreeChoice && it.gourmetFreeChoice !== 'none' && (
                   <div className="text-[9px] text-zinc-600 pl-2">
                     ★ Cortesia: {it.gourmetFreeChoice === 'catupiry' ? 'Catupiry' : 'Cheddar'}
