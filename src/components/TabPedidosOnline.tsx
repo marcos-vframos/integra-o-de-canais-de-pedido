@@ -517,7 +517,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                         </span>
                       </div>
 
-                      {it.breadChoice && <div className="text-[11px] text-zinc-300 pl-4 mt-0.5">Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}</div>}
+                      {it.breadChoice && <div className="text-[11px] text-zinc-300 pl-4 mt-0.5">Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}{Number(it.breadSurcharge) > 0 ? ` (+ ${fmtBRL(it.breadSurcharge)} por lanche)` : ''}</div>
                       {it.removed && it.removed.length > 0 && (
                         <div className="text-[11px] text-red-400/90 pl-4 mt-0.5">
                           - Sem: {it.removed.join(', ')}
