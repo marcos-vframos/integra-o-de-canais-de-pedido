@@ -21,6 +21,7 @@ import useRealtime from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { MenuItem, InventoryItem, OrderRecord, ClosureRecord, CartLine } from '@/types/loyolas'
 import { fmtBRL, padTicket, uid, seedStock, seedMenu } from '@/lib/seeds'
+import { accumulateDeductions, addonUnitTotal, hasBread, type BreadChoice } from '@/lib/orderCustomization'
 
 import { TabPedido } from '@/components/TabPedido'
 import { TabCardapio } from '@/components/TabCardapio'
@@ -87,6 +88,7 @@ export default function Gestao() {
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
+  const [customizeBreadChoice, setCustomizeBreadChoice] = useState<BreadChoice>('hamburguer')
   const [customizeGourmetChoice, setCustomizeGourmetChoice] = useState<
     'catupiry' | 'cheddar' | 'none'
   >('none')
@@ -451,7 +453,8 @@ export default function Gestao() {
         (l) =>
           l.itemId === item.id &&
           (!l.removed || l.removed.length === 0) &&
-          (!l.added || l.added.length === 0),
+          (!l.added || l.added.length === 0) &&
+          (!l.breadChoice || l.breadChoice === 'hamburguer'),
       )
       if (existing) {
         return prev.map((l) =>
@@ -478,6 +481,7 @@ export default function Gestao() {
   }, [menu])
 
   const openCustomize = (item: MenuItem) => {
+    setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
     setCustomizeQty(1)
     setCustomizeRemoved({})
@@ -489,6 +493,7 @@ export default function Gestao() {
   const openEditCartLine = (line: CartLine) => {
     const item = menuById(line.itemId)
     if (!item) return
+    setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
@@ -519,12 +524,13 @@ export default function Gestao() {
 
     const gourmetFreeChoice =
       customizeItem.category === 'Gourmet' ? customizeGourmetChoice : undefined
+    const breadChoice = hasBread(customizeItem, stockById) ? customizeBreadChoice : undefined
 
     if (customizeEditingLineId) {
       setCart((prev) =>
         prev.map((l) =>
           l.cartLineId === customizeEditingLineId
-            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice }
+            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice }
             : l,
         ),
       )
@@ -538,6 +544,7 @@ export default function Gestao() {
           removed,
           added,
           gourmetFreeChoice,
+          breadChoice,
         },
       ])
     }
@@ -561,23 +568,7 @@ export default function Gestao() {
 
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
-      let unitExtra = 0
-      ;(l.added || []).forEach((a) => {
-        const stockItem = stockById(a.ingredientId)
-        const ingKey = stockItem?.code || a.ingredientId
-        if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
-          unitExtra += catupiryExtraPrice * a.qty
-        } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
-          unitExtra += cheddarExtraPrice * a.qty
-        } else {
-          const comp = menu.find(
-            (m) =>
-              m.category === 'Complementos' &&
-              m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
-          )
-          unitExtra += (comp ? comp.price : 3) * a.qty
-        }
-      })
+      const unitExtra = addonUnitTotal(l, stockById, menu)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -597,6 +588,7 @@ export default function Gestao() {
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
+        breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
       }
     })
 
@@ -630,23 +622,7 @@ export default function Gestao() {
 
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
-      let unitExtra = 0
-      ;(l.added || []).forEach((a) => {
-        const stockItem = stockById(a.ingredientId)
-        const ingKey = stockItem?.code || a.ingredientId
-        if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
-          unitExtra += catupiryExtraPrice * a.qty
-        } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
-          unitExtra += cheddarExtraPrice * a.qty
-        } else {
-          const comp = menu.find(
-            (m) =>
-              m.category === 'Complementos' &&
-              m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
-          )
-          unitExtra += (comp ? comp.price : 3) * a.qty
-        }
-      })
+      const unitExtra = addonUnitTotal(l, stockById, menu)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -667,6 +643,7 @@ export default function Gestao() {
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
+        breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
       }
     })
 
@@ -675,25 +652,7 @@ export default function Gestao() {
     const total = Math.max(0, subtotal - effectiveDiscount + orderDeliveryFee)
 
     const deductions: Record<string, number> = {}
-    cart.forEach((l) => {
-      const item = menuById(l.itemId)
-      ;(item?.recipe || []).forEach((r) => {
-        const ingMatch = stockById(r.ingredientId)
-        const ingKey = ingMatch?.code || ingMatch?.id || r.ingredientId
-        if (!(l.removed || []).includes(ingKey) && !(l.removed || []).includes(r.ingredientId)) {
-          deductions[ingKey] = (deductions[ingKey] || 0) + r.qty * l.qty
-        }
-      })
-      ;(l.added || []).forEach((a) => {
-        const ingMatch = stockById(a.ingredientId)
-        const ingKey = ingMatch?.code || ingMatch?.id || a.ingredientId
-        deductions[ingKey] = (deductions[ingKey] || 0) + a.qty * l.qty
-      })
-      if (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none') {
-        const freeKey = l.gourmetFreeChoice === 'catupiry' ? 'ing-catupiry' : 'ing-cheddar'
-        deductions[freeKey] = (deductions[freeKey] || 0) + l.qty
-      }
-    })
+    cart.forEach(l => accumulateDeductions(deductions, l, menuById(l.itemId), stockById))
 
     const payload = {
       items,
@@ -1442,10 +1401,13 @@ export default function Gestao() {
         <CustomizeModal
           item={customizeItem}
           stock={stock}
+          menu={menu}
           qty={customizeQty}
           removed={customizeRemoved}
           added={customizeAdded}
           isEditing={Boolean(customizeEditingLineId)}
+          breadChoice={customizeBreadChoice}
+          setBreadChoice={setCustomizeBreadChoice}
           onClose={closeCustomize}
           onConfirm={confirmCustomize}
           setQty={setCustomizeQty}
