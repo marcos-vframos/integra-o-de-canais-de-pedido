@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Search, X, Pencil, Minus, Plus, Trash2, Printer } from 'lucide-react'
 import type { MenuItem, InventoryItem, CartLine } from '@/types/loyolas'
 import { CATEGORIES, PAYMENTS, fmtBRL, padTicket } from '@/lib/seeds'
+import { addonUnitTotal, lineUnitTotal, breadName, hasBread, extraUnitPrice } from '@/lib/orderCustomization'
 
 interface TabPedidoProps {
   menu: MenuItem[]
@@ -68,29 +69,9 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
     .filter((m) => (normalizedQuery ? true : m.category === categoryFilter))
     .filter((m) => !normalizedQuery || normalizeText(m.name).includes(normalizedQuery))
 
-  const subtotal = cart.reduce((sum, l) => {
-    const item = menuById(l.itemId)
-    if (!item) return sum
-    let lineUnitPrice = item.price
-    ;(l.added || []).forEach((a) => {
-      const stockItem = resolveStockItem(a.ingredientId)
-      const ingKey = stockItem?.code || a.ingredientId
-      let addPrice = 3
-      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) {
-        addPrice = 6
-      } else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) {
-        addPrice = 5
-      } else {
-        const comp = menu.find(
-          (m) =>
-            m.category === 'Complementos' &&
-            m.recipe?.some((r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey),
-        )
-        if (comp) addPrice = comp.price
-      }
-      lineUnitPrice += addPrice * a.qty
-    })
-    return sum + lineUnitPrice * l.qty
+  const subtotal = cart.reduce((sum, line) => {
+    const item = menuById(line.itemId)
+    return sum + (item ? lineUnitTotal(item, line, resolveStockItem, menu) * line.qty : 0)
   }, 0)
 
   const effectiveDiscount = Math.min(orderDiscount, subtotal)
@@ -211,25 +192,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                 <div className="sc-cart-line-name">
                   {item.name}
                   {(() => {
-                    let unitTotal = item.price
-                    ;(l.added || []).forEach((a) => {
-                      const stockItem = resolveStockItem(a.ingredientId)
-                      const ingKey = stockItem?.code || a.ingredientId
-                      let addPrice = 3
-                      if (ingKey === 'ing-catupiry' || ingKey.includes('catupiry')) addPrice = 6
-                      else if (ingKey === 'ing-cheddar' || ingKey.includes('cheddar')) addPrice = 5
-                      else {
-                        const comp = menu.find(
-                          (m) =>
-                            m.category === 'Complementos' &&
-                            m.recipe?.some(
-                              (r) => r.ingredientId === a.ingredientId || r.ingredientId === ingKey,
-                            ),
-                        )
-                        if (comp) addPrice = comp.price
-                      }
-                      unitTotal += addPrice * a.qty
-                    })
+                    const unitTotal = lineUnitTotal(item, l, resolveStockItem, menu)
                     return (
                       <div className="sc-cart-line-price sc-tabular">
                         {fmtBRL(unitTotal)} un.{' '}
@@ -241,6 +204,9 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                       </div>
                     )
                   })()}
+                  {hasBread(item, resolveStockItem) && (
+                    <div className="text-[11px] text-zinc-300">Pão: {breadName(l.breadChoice || 'hamburguer')}</div>
+                  )}
                   {(l.removed?.length > 0 ||
                     l.added?.length > 0 ||
                     (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none')) && (
@@ -264,7 +230,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                           {l.added
                             .map(
                               (a) =>
-                                `${resolveStockItem(a.ingredientId)?.name || a.ingredientId} x${a.qty}`,
+                                `${resolveStockItem(a.ingredientId)?.name || a.ingredientId} x${a.qty} (+ ${fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}/un.)`,
                             )
                             .join(', ')}
                         </div>
