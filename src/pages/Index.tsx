@@ -50,7 +50,7 @@ export default function Index() {
   return (
     <div
       id="landing-container"
-      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden snap-y snap-mandatory text-[#F3F4F6] scroll-smooth"
+      className="landing-scope w-full h-screen overflow-y-auto overflow-x-hidden text-[#F3F4F6] scroll-smooth overscroll-y-contain"
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       <SeasonalCampaignOverlay />
