@@ -3,6 +3,7 @@ import type { CartLine, InventoryItem, MenuItem } from '@/types/loyolas'
 export type BreadChoice = 'hamburguer' | 'frances'
 export const BREAD_HAMBURGUER = 'ing-pao'
 export const BREAD_FRANCES = 'ing-pao-frances'
+export const BREAD_FRANCES_SURCHARGE = 2
 
 type AddedLine = Pick<CartLine, 'added'>
 type CartLike = Pick<CartLine, 'removed' | 'added' | 'qty' | 'gourmetFreeChoice'> & { breadChoice?: BreadChoice }
@@ -23,9 +24,18 @@ export function hasBread(item: MenuItem | null | undefined, resolveStockItem: (i
   return !!item?.recipe?.some(r => !!breadKind(r.ingredientId, resolveStockItem))
 }
 
-/** The choice replaces the original recipe bread; it is not a paid addition. */
+/** Choose exactly one bread. French bread replaces the included hamburger bun for +R$ 2,00 per sandwich. */
 export function breadName(choice: BreadChoice) {
   return choice === 'frances' ? 'Pão Francês' : 'Pão de Hambúrguer'
+}
+
+/** Returns the per-unit bread surcharge, only for sandwiches whose recipe includes bread. */
+export function breadSurcharge(
+  item: MenuItem | null | undefined,
+  line: { breadChoice?: BreadChoice },
+  resolveStockItem: (id: string) => InventoryItem | undefined,
+): number {
+  return line.breadChoice === 'frances' && hasBread(item, resolveStockItem) ? BREAD_FRANCES_SURCHARGE : 0
 }
 
 export function extraUnitPrice(
@@ -59,8 +69,8 @@ export function addonUnitTotal(line: AddedLine, resolveStockItem: (id: string) =
   }, 0)
 }
 
-export function lineUnitTotal(item: MenuItem, line: AddedLine, resolveStockItem: (id: string) => InventoryItem | undefined, menu: MenuItem[]) {
-  return Math.round((Number(item.price || 0) + addonUnitTotal(line, resolveStockItem, menu)) * 100) / 100
+export function lineUnitTotal(item: MenuItem, line: AddedLine & { breadChoice?: BreadChoice }, resolveStockItem: (id: string) => InventoryItem | undefined, menu: MenuItem[]) {
+  return Math.round((Number(item.price || 0) + addonUnitTotal(line, resolveStockItem, menu) + breadSurcharge(item, line, resolveStockItem)) * 100) / 100
 }
 
 /** Centralizes recipe substitutions, extras and gourmet courtesy stock usage. */
