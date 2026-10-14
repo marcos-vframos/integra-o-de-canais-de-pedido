@@ -219,24 +219,6 @@ export default function AdmLanding() {
     try {
       // 1. Hero
       const updatedHeadlines = [...allHeadlines]
-      if (updatedHeadlines[0]) {
-        updatedHeadlines[0] = {
-          ...updatedHeadlines[0],
-          prefix: formText.headline0Prefix,
-          highlight: formText.headline0Highlight,
-          description: formText.headline0Desc,
-          badge: formText.headline0Badge,
-        }
-      }
-      if (updatedHeadlines[1]) {
-        updatedHeadlines[1] = {
-          ...updatedHeadlines[1],
-          prefix: formText.headline1Prefix,
-          highlight: formText.headline1Highlight,
-          description: formText.headline1Desc,
-          badge: formText.headline1Badge,
-        }
-      }
 
       await saveSection('hero', {
         traditionBadge: formText.traditionBadge,
