@@ -40,7 +40,7 @@ import {
 import { OrderReceiptModal } from '@/components/OrderReceiptModal'
 import { generatePixPayload } from '@/lib/pix'
 import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
-import { breadKind, accumulateDeductions, addonUnitTotal, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
+import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
   cartLineId: string
@@ -641,6 +641,7 @@ export default function LojaPublica() {
       const item = menuById(l.itemId)
       const baseItemPrice = item?.price || 0
       const unitExtra = addonUnitTotal(l, stockById, menu)
+      const breadExtra = breadSurcharge(item, l, stockById)
 
       const addedList: { name: string; qty: number }[] = (l.added || []).map((a) => ({
         name: stockById(a.ingredientId)?.name || a.ingredientId,
@@ -657,12 +658,13 @@ export default function LojaPublica() {
       return {
         itemId: l.itemId,
         name: item?.name || 'Item',
-        price: baseItemPrice + unitExtra,
+        price: baseItemPrice + unitExtra + breadExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
         gourmetFreeChoice: l.gourmetFreeChoice,
         breadChoice: hasBread(item, stockById) ? (l.breadChoice || 'hamburguer') : undefined,
+        breadSurcharge: breadExtra,
       }
     })
 
@@ -1103,7 +1105,7 @@ export default function LojaPublica() {
                         </div>
 
                         {hasBread(item, stockById) && (
-                          <div className="text-[11px] text-zinc-300">Pão: {breadName(line.breadChoice || 'hamburguer')}</div>
+                          <div className="text-[11px] text-zinc-300">Pão: {breadName(line.breadChoice || 'hamburguer')}{breadSurcharge(item, line, stockById) > 0 ? ` (+ ${fmtBRL(breadSurcharge(item, line, stockById))} por lanche)` : ''}</div>
                         )}
                         {line.gourmetFreeChoice && line.gourmetFreeChoice !== 'none' && (
                           <div className="text-[11px] text-amber-300 font-semibold leading-tight">
