@@ -21,7 +21,7 @@ import useRealtime from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { MenuItem, InventoryItem, OrderRecord, ClosureRecord, CartLine } from '@/types/loyolas'
 import { fmtBRL, padTicket, uid, seedStock, seedMenu } from '@/lib/seeds'
-import { accumulateDeductions, addonUnitTotal, hasBread, type BreadChoice } from '@/lib/orderCustomization'
+import { breadKind, accumulateDeductions, addonUnitTotal, hasBread, type BreadChoice } from '@/lib/orderCustomization'
 
 import { TabPedido } from '@/components/TabPedido'
 import { TabCardapio } from '@/components/TabCardapio'
@@ -519,7 +519,7 @@ export default function Gestao() {
     if (!customizeItem) return
     const removed = Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
     const added = Object.entries(customizeAdded)
-      .filter(([, q]) => Number(q) > 0)
+      .filter(([ingredientId, q]) => Number(q) > 0 && !breadKind(ingredientId, stockById))
       .map(([ingredientId, qty]) => ({ ingredientId, qty: Number(qty) }))
 
     const gourmetFreeChoice =
