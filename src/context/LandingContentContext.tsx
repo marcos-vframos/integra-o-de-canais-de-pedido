@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
-import { BUSINESS_INFO, VERIFIED_RATINGS } from '@/data/loyolasData'
+import { BUSINESS_INFO, VERIFIED_RATINGS, MARQUEE_ITEMS } from '@/data/loyolasData'
 
 export interface LandingSlide {
   image: string
@@ -46,6 +46,9 @@ export interface LandingContentState {
   headlines: LandingHeadline[]
   heroSlides: LandingSlide[]
   heroSubtitleChips: string[]
+
+  // Faixa rotativa editável na administração da landing
+  marqueeItems: string[]
 
   // Story
   storyHeadingPrefix: string
@@ -217,6 +220,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContentState = {
       subtitle: 'Fartura de bacon artesanal chapeado na hora com queijo cremoso',
     },
   ],
+  marqueeItems: [...MARQUEE_ITEMS],
   heroSubtitleChips: [
     'Eleito melhor hamburgueria de Pindamonhangaba',
     'Pão tostado na hora',
@@ -384,6 +388,10 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             }
             if (Array.isArray(data.heroSubtitleChips)) {
               next.heroSubtitleChips = data.heroSubtitleChips
+            }
+          } else if (section === 'marquee') {
+            if (Array.isArray(data.marqueeItems)) {
+              next.marqueeItems = data.marqueeItems.filter((value: unknown): value is string => typeof value === 'string').map((value: string) => value.trim()).filter(Boolean)
             }
           } else if (section === 'story') {
             if (data.storyHeadingPrefix) next.storyHeadingPrefix = data.storyHeadingPrefix
