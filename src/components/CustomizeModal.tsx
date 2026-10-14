@@ -2,7 +2,7 @@ import React from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
-import { breadKind, breadName, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
+import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, breadSurcharge, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 interface CustomizeModalProps {
   item: MenuItem | null
@@ -53,8 +53,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   const extras = Object.entries(added)
     .filter(([ingredientId, amount]) => Number(amount) > 0 && !breadKind(ingredientId, resolveStockItem))
     .map(([ingredientId, amount]) => ({ ingredientId, qty: Number(amount) }))
-  const currentUnitTotal = lineUnitTotal(item, { added: extras }, resolveStockItem, menu)
-  const extrasTotal = currentUnitTotal - Number(item.price || 0)
+  const extrasTotal = extras.reduce((sum, a) => sum + extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty, 0)
+  const breadExtra = breadSurcharge(item, { breadChoice }, resolveStockItem)
+  const currentUnitTotal = lineUnitTotal(item, { added: extras, breadChoice }, resolveStockItem, menu)
 
   return (
     <div className="sc-modal-backdrop" onClick={onClose}>
@@ -98,10 +99,13 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                     : 'border-zinc-700 bg-[#1a1a1f] text-zinc-300 hover:border-zinc-400'}`}
                 >
                   {breadChoice === choice ? '✓ ' : ''}{breadName(choice)}
+                  <span className="mt-1 block text-[10px] font-semibold text-zinc-300">
+                    {choice === 'frances' ? `+ ${fmtBRL(BREAD_FRANCES_SURCHARGE)} por lanche` : 'Incluso no preço'}
+                  </span>
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-zinc-400">Apenas um tipo de pão por lanche. Pão de Hambúrguer selecionado por padrão, sem cobrança adicional pela troca.</p>
+            <p className="mt-2 text-[11px] text-zinc-400">Escolha um pão por lanche. Pão de Hambúrguer incluso; Pão Francês acrescenta {fmtBRL(BREAD_FRANCES_SURCHARGE)} por unidade.</p>
           </fieldset>
         )}
 
@@ -382,7 +386,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
         <div className="rounded-xl border border-[var(--line)] bg-[#121217] p-3 space-y-1" aria-live="polite">
           <div className="flex justify-between text-xs text-zinc-300"><span>Preço do lanche</span><span>{fmtBRL(item.price)}</span></div>
-          <div className="flex justify-between text-xs text-zinc-300"><span>Adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>
+          {showBreadSelector && <div className="flex justify-between text-xs text-zinc-300"><span>{breadName(breadChoice)} por unidade</span><span>{breadExtra > 0 ? `+ ${fmtBRL(breadExtra)}` : 'Incluso'}</span></div>}
+          <div className="flex justify-between text-xs text-zinc-300"><span>Outros adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>
           {extras.map(a => <div key={a.ingredientId} className="flex justify-between text-[11px] text-zinc-400">
             <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>
             <span>+ {fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}</span>
