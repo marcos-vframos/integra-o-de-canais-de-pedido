@@ -1257,6 +1257,7 @@ export default function Gestao() {
 
               <Link
                 to="/adm-landing"
+                state={{ returnTo: '/gestao' }}
                 className="sc-icon-btn"
                 title="Abrir ADM da Landing"
                 aria-label="Abrir ADM da Landing"
