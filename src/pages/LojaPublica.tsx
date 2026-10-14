@@ -40,7 +40,7 @@ import {
 import { OrderReceiptModal } from '@/components/OrderReceiptModal'
 import { generatePixPayload } from '@/lib/pix'
 import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
-import { accumulateDeductions, addonUnitTotal, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
+import { breadKind, accumulateDeductions, addonUnitTotal, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
   cartLineId: string
@@ -347,7 +347,7 @@ export default function LojaPublica() {
     if (!customizeItem) return
     const removed = Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
     const added = Object.entries(customizeAdded)
-      .filter(([, q]) => Number(q) > 0)
+      .filter(([ingredientId, q]) => Number(q) > 0 && !breadKind(ingredientId, stockById))
       .map(([ingredientId, qty]) => ({ ingredientId, qty: Number(qty) }))
 
     const gourmetFreeChoice =
