@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   Save,
   RotateCcw,
@@ -34,6 +34,11 @@ import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
 
 export default function AdmLanding() {
+  const location = useLocation()
+  const requestedReturn = (location.state as { returnTo?: unknown } | null)?.returnTo
+  // Restrict return destinations to known internal management routes.
+  const returnTo = requestedReturn === '/gestao' || requestedReturn === '/config' ? requestedReturn : '/'
+  const returnLabel = returnTo === '/gestao' ? 'Voltar ao Gestor' : returnTo === '/config' ? 'Voltar às Configurações' : 'Voltar à Landing Page'
   const { content, saveSection, saveTheme, applyPreset, refresh } = useLandingContent()
   const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja'>('textos')
   const [isSaving, setIsSaving] = useState(false)
@@ -437,9 +442,10 @@ export default function AdmLanding() {
       <header className="sticky top-0 z-50 bg-[#12141c]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
-            to="/"
+            to={returnTo}
             className="p-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
-            title="Voltar para a Landing Page"
+            title={returnLabel}
+            aria-label={returnLabel}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
