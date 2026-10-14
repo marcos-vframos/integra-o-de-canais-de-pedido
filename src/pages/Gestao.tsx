@@ -1293,12 +1293,10 @@ export default function Gestao() {
               </button>
 
               <Link
-                to="/loja"
-                target="_blank"
-                rel="noopener noreferrer"
+                to="/adm-landing"
                 className="sc-icon-btn"
-                title="Ver Loja do Cliente"
-                aria-label="Loja do Cliente"
+                title="Abrir ADM da Landing"
+                aria-label="Abrir ADM da Landing"
               >
                 <StoreIcon size={15} />
               </Link>
