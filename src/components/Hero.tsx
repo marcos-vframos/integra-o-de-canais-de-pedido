@@ -126,11 +126,10 @@ export default function Hero() {
       id="inicio"
       className="relative min-h-screen w-full text-white flex items-center justify-center pt-24 pb-12 lg:py-0 overflow-hidden"
       aria-label="Apresentação principal"
-      style={{ background: 'var(--landing-bg-primary, #07140B)' }}
+      style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
-      {/* Fundo neutro consistente com a paleta ativa */}
-      <div className="absolute top-1/4 right-1/4 w-[550px] h-[550px] bg-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-[450px] h-[450px] bg-transparent rounded-full blur-3xl pointer-events-none" />
+      {/* Efeito luminoso opcional, desligado por padrão e controlado pelo ADM. */}
+      {content.heroGlowEnabled && <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 70% 55%, var(--landing-vinho, #8F0F1B) 0%, transparent 65%)', opacity: 0.35 }} />}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
