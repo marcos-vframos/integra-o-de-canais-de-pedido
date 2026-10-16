@@ -28,6 +28,8 @@ import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
+import { savePromotionPalette } from '@/lib/promotionPaletteStore'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import MarqueeEditor from '@/components/MarqueeEditor'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -396,6 +398,25 @@ export default function AdmLanding() {
     const updatedPresets = [...content.themePresets, newPreset]
     await saveTheme(newPreset.id, customColors, updatedPresets)
     setNewPresetName('')
+  }
+
+  const handleSaveAdobeForPromotion = async () => {
+    if (!newPresetName.trim()) { alert('Informe o nome da paleta.'); return }
+    if (!backendConfigured || !pb.authStore.isValid) {
+      alert('Ainda não é possível salvar paletas compartilhadas: conecte o novo PocketBase e autentique um operador.')
+      return
+    }
+    try {
+      await savePromotionPalette({
+        id: 'promocao_' + Date.now(),
+        name: newPresetName.trim(),
+        colors: { ...customColors },
+      })
+      alert('Paleta salva no catálogo de promoções. Abra a seção Campanhas Sazonais para selecioná-la.')
+      setNewPresetName('')
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Erro ao salvar a paleta de promoção.')
+    }
   }
 
   const handleDeletePreset = async (id: string) => {
@@ -1259,7 +1280,16 @@ export default function AdmLanding() {
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-white text-xs font-semibold cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Salvar Novo Tema</span>
+                    <span>Salvar como paleta da interface</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!newPresetName.trim()}
+                    onClick={handleSaveAdobeForPromotion}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-violet-700 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-600 disabled:opacity-40"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Salvar como paleta de promoção</span>
                   </button>
                 </div>
               </div>
