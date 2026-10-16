@@ -56,7 +56,12 @@ const CATEGORIES = ['Carnes', 'Frango', 'Hot-Dog', 'Gourmet', 'Especial', 'Combo
 
 const CART_STORAGE_KEY = 'loyolas_customer_cart_v1'
 
-export default function LojaPublica() {
+interface LojaPublicaProps {
+  /** When true, show the complete purchasing flow inside the public Landing without navigating away. */
+  embedded?: boolean
+}
+
+export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const [loading, setLoading] = useState(true)
   const [storeName, setStoreName] = useState("Loyola's Lanches")
   const [isOpen, setIsOpen] = useState(true)
@@ -779,7 +784,7 @@ export default function LojaPublica() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090B] text-white flex items-center justify-center p-4">
+      <div className={embedded ? "min-h-[280px] bg-[#09090B] text-white flex items-center justify-center p-4" : "min-h-screen bg-[#09090B] text-white flex items-center justify-center p-4"}>
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-10 h-10 border-3 border-[#E10600] border-t-transparent rounded-full animate-spin" />
           <p className="text-[#C0C0C0] font-medium text-sm">Carregando cardápio de Loyola's...</p>
@@ -789,9 +794,9 @@ export default function LojaPublica() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] flex flex-col font-sans selection:bg-[#E10600] selection:text-white">
-      {/* 1. Header do Cliente */}
-      <header className="sticky top-0 z-30 bg-[#121215]/95 backdrop-blur-md border-b border-[#27272A] px-4 py-3 shadow-md">
+    <div className={embedded ? "relative w-full bg-[#09090B] text-[#FAFAFA] flex flex-col font-sans selection:bg-[#E10600] selection:text-white" : "min-h-screen bg-[#09090B] text-[#FAFAFA] flex flex-col font-sans selection:bg-[#E10600] selection:text-white"}>
+      {/* The landing already has its own header; avoid duplicate navigation when embedded. */}
+      {!embedded && <header className="sticky top-0 z-30 bg-[#121215]/95 backdrop-blur-md border-b border-[#27272A] px-4 py-3 shadow-md">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
@@ -855,7 +860,24 @@ export default function LojaPublica() {
             </button>
           </div>
         </div>
-      </header>
+      </header>}
+
+      {embedded && (
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 pt-4">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-[.17em] text-[#E10600]">Cardápio completo • Pedido sem sair da página</span>
+            <h3 className="mt-1 text-xl font-black text-white">Escolha seu lanche</h3>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => setAuthDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-semibold text-white hover:border-zinc-400"
+              title="Meus pedidos e vouchers"><User size={16} /> <span className="hidden sm:inline">Minha conta</span></button>
+            <button type="button" onClick={() => setCartOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-[#E10600]/50 bg-zinc-900 px-3 py-2.5 text-xs font-semibold text-white hover:border-[#E10600]"
+              aria-label={`Abrir cesta de pedidos, ${totalItemsCount} itens`}><ShoppingBag size={16} className="text-[#E10600]"/> Cesta {totalItemsCount > 0 && <span className="rounded bg-[#E10600] px-1.5 py-0.5 text-[10px]">{totalItemsCount}</span>}</button>
+          </div>
+        </div>
+      )}
 
       {/* Banner de Loja Fechada */}
       {!isOpen && (
@@ -871,7 +893,7 @@ export default function LojaPublica() {
       )}
 
       {/* 2. Conteúdo Principal */}
-      <main className="flex-1 max-w-3xl w-full mx-auto p-4 pb-28">
+      <main className={embedded ? "w-full max-w-5xl mx-auto p-4 pb-7" : "flex-1 max-w-3xl w-full mx-auto p-4 pb-28"}>
         {/* Barra de Busca */}
         <div className="relative mb-4">
           <Search
@@ -927,7 +949,7 @@ export default function LojaPublica() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className={embedded ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" : "grid grid-cols-1 sm:grid-cols-2 gap-3"}>
             {filteredMenu.map((item) => {
               const hasRecipe = Boolean(item.recipe && item.recipe.length > 0)
               const recipeDescriptions = hasRecipe
@@ -996,7 +1018,7 @@ export default function LojaPublica() {
       </main>
 
       {/* 3. Barra Fixa Inferior Mobile */}
-      {cart.length > 0 && (
+      {!embedded && cart.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-20 bg-[#121215]/95 backdrop-blur-md border-t border-[#27272A] p-3 shadow-2xl">
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
             <div>
@@ -1023,10 +1045,23 @@ export default function LojaPublica() {
         </div>
       )}
 
+      {embedded && (
+        <button type="button"
+          onClick={() => setCartOpen(true)}
+          title="Abrir cesta de pedidos"
+          aria-label={`Abrir cesta de pedidos com ${totalItemsCount} itens, subtotal ${fmtBRL(subtotal)}`}
+          className="fixed bottom-5 right-5 z-[60] inline-flex items-center gap-2 rounded-full border border-[#E10600]/50 bg-[#111114]/95 px-3.5 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md transition-colors hover:bg-[#222226] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E10600]">
+          <ShoppingBag size={17} className="text-[#E10600]" />
+          <span className="hidden sm:inline">Minha cesta</span>
+          <span className="rounded-full bg-[#E10600] px-1.5 py-0.5 text-[10px]">{totalItemsCount}</span>
+          {cart.length > 0 && <span className="font-mono text-xs">{fmtBRL(subtotal)}</span>}
+        </button>
+      )}
+
       {/* 4. Drawer de Carrinho e Checkout */}
       {cartOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end"
+          className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex justify-end"
           onClick={() => setCartOpen(false)}
         >
           <div
