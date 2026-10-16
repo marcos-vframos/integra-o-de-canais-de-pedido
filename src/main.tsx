@@ -7,5 +7,4 @@ import { registerServiceWorker } from './lib/pwa/registerServiceWorker'
 // Registro do Service Worker para suporte PWA offline
 registerServiceWorker()
 
-// @skip-protected: Do not remove. Required for React rendering.
 createRoot(document.getElementById('root')!).render(<App />)
