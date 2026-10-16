@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import { LandingProvider } from '@/context/LandingContentContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import BackendStatusNotice from '@/components/BackendStatusNotice'
+import { demoGestaoMode } from '@/lib/pocketbase/client'
 import Layout from '@/components/Layout'
 import Gestao from '@/pages/Gestao'
 import Config from '@/pages/Config'
@@ -28,11 +29,11 @@ export default function GestaoApp() {
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
+              <Route path="/login" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <Login />} />
+              <Route path="/forgot-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ForgotPassword />} />
+              <Route path="/reset-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ResetPassword />} />
+              <Route path="/verify-email" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <VerifyEmail />} />
+              <Route path="/confirm-email-change" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ConfirmEmailChange />} />
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/gestao" element={<Gestao />} />
                 <Route path="/config" element={<Config />} />
