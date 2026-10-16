@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, AlertCircle } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem } from '@/types/loyolas'
-import { fmtBRL } from '@/lib/seeds'
+import { fmtBRL, seedMenu } from '@/lib/seeds'
 
 import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function FeaturedMenu() {
   const { content } = useLandingContent()
   const [activeCategory, setActiveCategory] = useState<string>('')
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => backendConfigured ? [] : seedMenu().filter(i=>i.active).map(i=>({ ...i,id:i.code })) as MenuItem[])
   const [isOpen, setIsOpen] = useState(true)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(backendConfigured)
 
   // As categorias vêm da coleção categories ou menu do PocketBase
   const [categoriesList, setCategoriesList] = useState<string[]>([])
 
   const loadCategories = () => {
+    if (!backendConfigured) return
     pb.collection('categories')
       .getFullList({ filter: 'active = true', sort: 'order' })
       .then((cats) => {
@@ -58,6 +59,7 @@ export default function FeaturedMenu() {
       : availableCategories[0] || 'Carnes'
 
   const loadMenuAndSettings = () => {
+    if (!backendConfigured) { setLoading(false); return }
     Promise.all([
       pb.collection('menu').getFullList<MenuItem>({
         filter: 'active = true',
