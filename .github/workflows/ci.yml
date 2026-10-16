@@ -1,8 +1,8 @@
-name: CI
+name: CI — Site e Gestor
 
 on:
   push:
-    branches: [main, chatgpt-independencia]
+    branches: [main, landing-loja-integradas-20261016]
   pull_request:
     branches: [main]
 
@@ -11,10 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run build:cliente
+      - run: pnpm run build:gestao
