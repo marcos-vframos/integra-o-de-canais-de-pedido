@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
 import { BUSINESS_INFO, checkIsOpenNow } from '@/data/loyolasData'
 import pb from '@/lib/pocketbase/client'
@@ -13,6 +12,7 @@ const navLinks = [
   { href: '#inicio', label: 'Início', id: 'inicio' },
   { href: '#historia', label: 'Origem', id: 'historia' },
   { href: '#cardapio', label: 'Cardápio', id: 'cardapio' },
+  { href: '#fazer-pedido', label: 'Pedir', id: 'fazer-pedido' },
   { href: '#avaliacoes', label: 'Avaliações', id: 'avaliacoes' },
   { href: '#instagram', label: 'Instagram', id: 'instagram' },
   { href: '#localizacao', label: 'Horários & Ponto', id: 'localizacao' },
@@ -166,13 +166,14 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
                 {actuallyOpen ? status.statusText : 'Fechado no momento'}
               </span>
             </div>
-            <Link
-              to="/loja"
+            <a
+              href="#fazer-pedido"
+              onClick={(e) => handleNavClick(e, '#fazer-pedido')}
               className="inline-flex items-center gap-2 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-xs tracking-wide uppercase px-4 py-2.5 rounded-md transition-all duration-200 border border-[#8F0F1B] hover:border-[#990000]"
             >
               <span>Fazer Pedido</span>
               <ArrowUpRight className="w-3.5 h-3.5 text-white/80" />
-            </Link>
+            </a>
           </div>
 
           <button
@@ -225,14 +226,14 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
                 {actuallyOpen ? status.statusText : 'Fechado no momento'} • {status.nextInfo}
               </span>
             </div>
-            <Link
-              to="/loja"
-              onClick={() => setMobileMenuOpen(false)}
+            <a
+              href="#fazer-pedido"
+              onClick={(e) => handleNavClick(e, '#fazer-pedido')}
               className="w-full bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-5 py-3 rounded-md text-center transition-colors flex items-center justify-center gap-2"
             >
               <span>Fazer Pedido Online</span>
               <ArrowUpRight className="w-4 h-4 text-white/80" />
-            </Link>
+            </a>
             <p className="text-center text-xs text-[#C4C4C4]/70 pt-1">
               Seg a Sáb: 20:00 às 23:30 • Araretama, Pindamonhangaba
             </p>
