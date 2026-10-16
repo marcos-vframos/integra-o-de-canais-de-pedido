@@ -91,7 +91,8 @@ function prepareItems(db, supplied) {
     if(!Number.isInteger(qty)||qty<1||qty>30) throw new Error('Quantidade inválida')
     units+=qty
     if(units>100)throw new Error('Quantidade acima do permitido')
-    const recipe=product.get('recipe')||[]
+    // PocketBase JSONField nested rows may be wrapped Go maps: normalize to plain JS.
+    const recipe=JSON.parse(JSON.stringify(product.get('recipe')||[]))
     const removed=Array.isArray(raw.removed)?raw.removed.slice(0,30).map(normalized):[]
     const additions=Array.isArray(raw.added)?raw.added.slice(0,40):[]
     const declaredBread=raw.breadChoice==='frances'?'frances':'hamburguer'
