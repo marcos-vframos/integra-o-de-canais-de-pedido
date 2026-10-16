@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
-import { ArrowUpRight, AlertCircle } from 'lucide-react'
+import { ArrowUpRight, AlertCircle, Search } from 'lucide-react'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem } from '@/types/loyolas'
 import { fmtBRL, seedMenu } from '@/lib/seeds'
 
 import { useLandingContent } from '@/context/LandingContentContext'
+import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 
 export default function FeaturedMenu() {
   const { content } = useLandingContent()
   const [activeCategory, setActiveCategory] = useState<string>('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => backendConfigured ? [] : seedMenu().filter(i=>i.active).map(i=>({ ...i,id:i.code })) as MenuItem[])
   const [isOpen, setIsOpen] = useState(true)
   const [loading, setLoading] = useState(backendConfigured)
@@ -111,6 +113,10 @@ export default function FeaturedMenu() {
   const filteredItems = menuItems.filter((item) => {
     const itemCat = (item.category || '').trim() || 'Outros'
     if (itemCat === 'Complementos') return false
+    const query = searchTerm.trim().toLowerCase()
+    if (query) {
+      return item.name.toLowerCase().includes(query) || itemCat.toLowerCase().includes(query)
+    }
     return itemCat === currentCategory
   })
 
@@ -193,6 +199,18 @@ export default function FeaturedMenu() {
             })}
           </div>
         </div>
+
+        <div className="mb-5 rounded-xl border border-white/10 bg-[#0D1A11] p-3">
+          <label htmlFor="landing-search-product" className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-400">Buscar no cardápio</label>
+          <div className="relative">
+            <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input id="landing-search-product" type="search" value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Buscar lanche, cachorro-quente, bebida..."
+              className="w-full rounded-lg border border-white/10 bg-[#101417] px-10 py-3 text-sm text-white outline-none focus:border-[#E10600]" />
+          </div>
+        </div>
+        <StorePromotionCarousel />
 
         {loading ? (
           <div className="py-16 text-center text-[#C4C4C4]">Carregando cardápio atualizado...</div>
