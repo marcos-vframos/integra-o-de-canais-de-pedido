@@ -1,6 +1,5 @@
-// Service Worker para Loyola's Gestão (PWA)
-// Versão do cache:
-const CACHE_NAME = 'loyolas-gestao-v1'
+// Service Worker compartilhado; cada aplicacao vive em dominio diferente.
+const CACHE_NAME = 'loyolas-separated-v2'
 
 // Recursos essenciais para shell do app offline
 const PRECACHE_ASSETS = [
@@ -73,7 +72,7 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // 3. NUNCA interceptar scripts externos de infraestrutura (skip.js, etc.)
+  // 3. Não interceptar scripts ou APIs externas.
   if (url.origin !== self.location.origin) {
     // Permite cache de fontes Google Fonts se desejado, mas não mexe em APIs
     if (
