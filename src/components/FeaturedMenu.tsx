@@ -234,18 +234,14 @@ export default function FeaturedMenu() {
 
                   <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
                     <span className="text-[11px] text-[#C4C4C4]/70">Feito na chapa</span>
-                    <a
-                      href="#fazer-pedido"
-                      onClick={e => {
-                        e.preventDefault()
-                        document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }}
+                    <button type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent('loyolas:select-product', { detail: { itemId: item.id } }))}
                       className="inline-flex items-center gap-1.5 text-xs text-white hover:text-[#C4C4C4] font-medium tracking-wide uppercase transition-colors"
-                      aria-label={`Pedir ${item.name} na loja`}
+                      aria-label={`Personalizar e pedir ${item.name} sem sair da página`}
                     >
                       <span>Pedir</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </article>
