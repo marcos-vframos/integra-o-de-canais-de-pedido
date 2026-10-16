@@ -895,8 +895,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         </div>
       )}
 
+      {/* 2. Conteúdo Principal: available on legacy /loja, hidden when mounted inside Landing. */}
       {!embedded && (
-      {/* 2. Conteúdo Principal */}
       <main className={embedded ? "w-full max-w-5xl mx-auto p-4 pb-7" : "flex-1 max-w-3xl w-full mx-auto p-4 pb-28"}>
         {/* Barra de Busca */}
         <div className="relative mb-4">
