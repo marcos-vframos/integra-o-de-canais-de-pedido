@@ -49,10 +49,10 @@ export default function OrderCTA() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
           <a
-            href="#fazer-pedido"
+            href="#cardapio"
             onClick={event => {
               event.preventDefault()
-              document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              document.getElementById('cardapio')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-8 py-3.5 rounded-md transition-colors duration-200"
           >
