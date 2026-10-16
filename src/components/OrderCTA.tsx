@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { AutoCarousel } from '@/components/AutoCarousel'
 import { useLandingContent } from '@/context/LandingContentContext'
@@ -49,13 +48,17 @@ export default function OrderCTA() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
-          <Link
-            to="/loja"
+          <a
+            href="#fazer-pedido"
+            onClick={event => {
+              event.preventDefault()
+              document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-8 py-3.5 rounded-md transition-colors duration-200"
           >
             <span>{ctaButtonText}</span>
             <ArrowUpRight className="w-4 h-4 text-white/80" />
-          </Link>
+          </a>
 
           <a
             href="#cardapio"
