@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { RecordModel, RecordSubscription } from 'pocketbase'
 
-import pb from '@/lib/pocketbase/client'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 
 /**
  * Hook for real-time subscriptions to a PocketBase collection.
@@ -22,7 +22,7 @@ export function useRealtime<TRecord extends RecordModel = RecordModel>(
   callbackRef.current = callback
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || !backendConfigured) return
 
     let unsubscribeFn: (() => Promise<void>) | undefined
     let cancelled = false
