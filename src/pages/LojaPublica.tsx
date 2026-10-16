@@ -1678,6 +1678,9 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       <CustomerAuthDrawer
         isOpen={authDrawerOpen}
         onClose={() => setAuthDrawerOpen(false)}
+        authUnavailableReason={backendConfigured
+          ? 'O histórico, vouchers pessoais e exclusão de conta serão ativados após adicionar verificação segura do WhatsApp. Apenas o telefone não comprova a identidade do cliente.'
+          : 'Modo demonstração: conecte o PocketBase independente para habilitar os cadastros. O acesso ao histórico também exigirá verificação do WhatsApp.'}
         currentCustomer={currentCustomer}
         orders={customerOrders}
         campaigns={customerCampaigns}
