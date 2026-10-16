@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import pb from '@/lib/pocketbase/client'
+import pb, { demoGestaoMode } from '@/lib/pocketbase/client'
 import {
   Settings,
   Store,
@@ -93,6 +93,10 @@ export default function Config() {
   const [openOrdersCount, setOpenOrdersCount] = useState(0)
 
   useEffect(() => {
+    if (demoGestaoMode) {
+      setLoading(false)
+      return
+    }
     let mounted = true
     ;(async () => {
       try {
