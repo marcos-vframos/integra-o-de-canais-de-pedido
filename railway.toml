@@ -1,0 +1,10 @@
+# In Railway, create a service from this repo and set its config file to /railway.toml.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/pocketbase/Dockerfile"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 180
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
