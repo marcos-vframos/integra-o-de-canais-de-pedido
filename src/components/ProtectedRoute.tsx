@@ -1,7 +1,12 @@
-import React from 'react'
+import type { ReactNode } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Autenticação temporariamente desativada a pedido do usuário.
-  // Permite acesso direto a todas as rotas operacionais sem login.
+/** Route-level access control for the separate administrative app. */
+export default function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-zinc-200 bg-[#09090B]">Verificando acesso…</div>
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return <>{children}</>
 }
