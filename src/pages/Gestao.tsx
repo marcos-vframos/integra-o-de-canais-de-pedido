@@ -16,7 +16,7 @@ import {
   Settings as SettingsIcon,
   Store as StoreIcon,
 } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
+import pb, { demoGestaoMode } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { MenuItem, InventoryItem, OrderRecord, ClosureRecord, CartLine } from '@/types/loyolas'
@@ -126,6 +126,19 @@ export default function Gestao() {
 
   // Load initial data
   const loadInitialData = useCallback(async () => {
+    if (demoGestaoMode) {
+      // Work offline with sample menu/stock without exposing or depending on the legacy database.
+      setMenu(getMenuCache() ?? seedMenu().map(item => ({ ...item, id: item.code })))
+      setStock(getStockCache() ?? seedStock().map(item => ({ ...item, id: item.code })))
+      const saved = getSettingsCache()
+      if (saved) {
+        setCartName(saved.storeName)
+        setIsOpen(saved.isOpen)
+        setTicketCounter(saved.ticketCounter || 1)
+      }
+      setLoaded(true)
+      return
+    }
     try {
       const [mRecords, sRecords, oRecords, cRecords, settingsList] = await Promise.all([
         pb
