@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { AuthModel } from 'pocketbase'
-import pb from '@/lib/pocketbase/client'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 
 interface AuthContextType {
   user: AuthModel | null
@@ -18,19 +18,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    setUser(pb.authStore.record)
-    setLoading(false)
-
-    const unsubscribe = pb.authStore.onChange((token, model) => {
-      setUser(model)
+    let active = true
+    const unsubscribe = pb.authStore.onChange((_token, model) => {
+      if (active) setUser(model)
     })
-
-    return () => {
-      unsubscribe()
+    if (!backendConfigured) {
+      pb.authStore.clear()
+      setUser(null)
+      setLoading(false)
+    } else if (!pb.authStore.isValid) {
+      pb.authStore.clear()
+      setUser(null)
+      setLoading(false)
+    } else {
+      // A token from an earlier backend must never unlock the manager.
+      pb.collection('users').authRefresh()
+        .then(() => { if (active) setUser(pb.authStore.record) })
+        .catch(() => { pb.authStore.clear(); if (active) setUser(null) })
+        .finally(() => { if (active) setLoading(false) })
     }
+    return () => { active = false; unsubscribe() }
   }, [])
 
   const login = async (email: string, pass: string) => {
+    if (!backendConfigured) throw new Error('Configure o backend PocketBase independente antes de entrar.')
     await pb.collection('users').authWithPassword(email, pass)
   }
 
