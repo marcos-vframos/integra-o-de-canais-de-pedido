@@ -82,7 +82,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end"
+      className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex justify-end"
       onClick={onClose}
     >
       <div
