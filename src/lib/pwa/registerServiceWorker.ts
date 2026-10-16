@@ -4,7 +4,7 @@ export function registerServiceWorker() {
 
   // Atualiza o link do manifest dinamicamente com base na rota atual (Landing vs Gestão)
   const updateManifestForRoute = () => {
-    const isGestao = window.location.pathname.startsWith('/gestao')
+    const isGestao = import.meta.env.MODE === 'gestao'
     const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
     const targetManifest = isGestao ? '/manifest.webmanifest' : '/manifest-landing.webmanifest'
     const targetThemeColor = isGestao ? '#0B0B0C' : '#07140B'
@@ -39,7 +39,7 @@ export function registerServiceWorker() {
             if (!installingWorker) return
             installingWorker.addEventListener('statechange', () => {
               if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.info("[PWA] Nova versão do Loyola's Gestão pronta para uso.")
+                console.info('[PWA] Nova versão do aplicativo pronta para uso.')
               }
             })
           })
