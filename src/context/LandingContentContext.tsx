@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
-import pb from '@/lib/pocketbase/client'
+import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { BUSINESS_INFO, VERIFIED_RATINGS, MARQUEE_ITEMS } from '@/data/loyolasData'
 
@@ -360,6 +360,7 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
   }
 
   const loadContent = async () => {
+    if (!backendConfigured) { setLoading(false); return }
     try {
       const records = await pb.collection('landing_content').getFullList({
         sort: 'section',
@@ -485,6 +486,8 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
   }, [content.activeColors])
 
   const saveSection = async (section: string, data: any, imageFile?: File | null) => {
+    if (!backendConfigured) throw new Error(backendConfigMessage);
+    if (!pb.authStore.isValid) throw new Error('O PocketBase independente exige conta autorizada para publicar na Landing.');
     let existingRecord: any = null
     try {
       existingRecord = await pb
