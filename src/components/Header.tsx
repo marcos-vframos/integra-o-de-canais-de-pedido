@@ -12,7 +12,6 @@ const navLinks = [
   { href: '#inicio', label: 'Início', id: 'inicio' },
   { href: '#historia', label: 'Origem', id: 'historia' },
   { href: '#cardapio', label: 'Cardápio', id: 'cardapio' },
-  { href: '#fazer-pedido', label: 'Pedir', id: 'fazer-pedido' },
   { href: '#avaliacoes', label: 'Avaliações', id: 'avaliacoes' },
   { href: '#instagram', label: 'Instagram', id: 'instagram' },
   { href: '#localizacao', label: 'Horários & Ponto', id: 'localizacao' },
@@ -167,8 +166,8 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
               </span>
             </div>
             <a
-              href="#fazer-pedido"
-              onClick={(e) => handleNavClick(e, '#fazer-pedido')}
+              href="#cardapio"
+              onClick={(e) => handleNavClick(e, '#cardapio')}
               className="inline-flex items-center gap-2 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-xs tracking-wide uppercase px-4 py-2.5 rounded-md transition-all duration-200 border border-[#8F0F1B] hover:border-[#990000]"
             >
               <span>Fazer Pedido</span>
@@ -227,8 +226,8 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
               </span>
             </div>
             <a
-              href="#fazer-pedido"
-              onClick={(e) => handleNavClick(e, '#fazer-pedido')}
+              href="#cardapio"
+              onClick={(e) => handleNavClick(e, '#cardapio')}
               className="w-full bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-5 py-3 rounded-md text-center transition-colors flex items-center justify-center gap-2"
             >
               <span>Fazer Pedido Online</span>
