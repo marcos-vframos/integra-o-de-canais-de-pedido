@@ -46,6 +46,7 @@ interface CustomerAuthDrawerProps {
   onDeleteAccount?: () => Promise<void>
   onApplyCampaign?: (c: CampaignVoucher) => void
   onRepeatOrder?: (order: OrderRecord) => void
+  authUnavailableReason?: string
 }
 
 export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
@@ -59,6 +60,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
   onDeleteAccount,
   onApplyCampaign,
   onRepeatOrder,
+  authUnavailableReason,
 }) => {
   const [phoneInput, setPhoneInput] = useState('')
   const [nameInput, setNameInput] = useState('')
@@ -69,7 +71,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!phoneInput.trim() || !nameInput.trim()) return
+    if (authUnavailableReason || !phoneInput.trim() || !nameInput.trim()) return
     setLoading(true)
     try {
       await onLogin(phoneInput.trim(), nameInput.trim())
@@ -125,6 +127,11 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
               </p>
             </div>
 
+            {authUnavailableReason && (
+              <p role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+                {authUnavailableReason}
+              </p>
+            )}
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-[#C0C0C0] mb-1">
@@ -168,7 +175,7 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !!authUnavailableReason}
                 className="w-full py-3 rounded-xl bg-[#E10600] hover:bg-[#9E0400] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
