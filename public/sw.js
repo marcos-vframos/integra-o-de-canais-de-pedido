@@ -1,5 +1,5 @@
 // Service Worker compartilhado; cada aplicacao vive em dominio diferente.
-const CACHE_NAME = 'loyolas-separated-v2'
+const CACHE_NAME = 'loyolas-separated-v3-refresh'
 
 // Recursos essenciais para shell do app offline
 const PRECACHE_ASSETS = [
@@ -102,7 +102,7 @@ self.addEventListener('fetch', (event) => {
   // com fallback para o index.html em cache se estiver offline.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      fetch(new Request(req, { cache: 'no-store' }))
         .then((networkRes) => {
           if (networkRes && networkRes.status === 200) {
             const resClone = networkRes.clone()
