@@ -31,7 +31,6 @@ import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { savePromotionPalette } from '@/lib/promotionPaletteStore'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import MarqueeEditor from '@/components/MarqueeEditor'
-import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
 
