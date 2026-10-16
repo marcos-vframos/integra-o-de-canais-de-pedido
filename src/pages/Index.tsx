@@ -4,6 +4,7 @@ import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
 import Story from '@/components/Story'
 import FeaturedMenu from '@/components/FeaturedMenu'
+import LojaPublica from '@/pages/LojaPublica'
 import Reviews from '@/components/Reviews'
 import InstagramSection from '@/components/InstagramSection'
 import OrderCTA from '@/components/OrderCTA'
@@ -15,7 +16,7 @@ export default function Index() {
   const [activeSection, setActiveSection] = useState('inicio')
 
   useEffect(() => {
-    const sectionIds = ['inicio', 'historia', 'cardapio', 'avaliacoes', 'instagram', 'localizacao']
+    const sectionIds = ['inicio', 'historia', 'cardapio', 'fazer-pedido', 'avaliacoes', 'instagram', 'localizacao']
     const container = document.getElementById('landing-container')
 
     const handleScroll = () => {
@@ -66,6 +67,10 @@ export default function Index() {
         <Story />
         {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
         <FeaturedMenu />
+        {/* Loja integrada: produtos, personalizacao, pagamento e carrinho lateral sem trocar de rota. */}
+        <section id="fazer-pedido" className="w-full scroll-mt-24 bg-[#09090B] border-y border-white/10" aria-label="Fazer pedido sem sair da landing">
+          <LojaPublica embedded />
+        </section>
         {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
         <Reviews />
         {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}
