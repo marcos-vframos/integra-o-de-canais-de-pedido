@@ -11,16 +11,13 @@ node_modules
 dist
 dist-ssr
 dev-dist
+dist-gestao
 dev-dist-ssr
 *.local
 .pnpm-store
 .pnpm
 
-# pods-manager atomic build operations (rename/restore leftovers).
-# AppManager creates these during build (set-aside previous output before
-# running pnpm build, restore on failure). Success path cleans them up;
-# failure paths may leave orphans. Always ignore them in version control +
-# in the sandbox memGit hydration (see ProjectSandbox.hydrate).
+# Build/editor temporary files.
 *.bak-*
 *.legacy-bak-*
 *.failed-*
@@ -44,7 +41,8 @@ screenshot.png
 
 # Environment variables
 .env*
-!.env
+# Never commit real environment files; keep only the public example.
+!.env.example
 
 # Linux kernel core dumps (e.g. when oxfmt or pnpm crash)
 core.[0-9]*
