@@ -782,7 +782,27 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     }
   }
 
-  if (loading) {
+  // The landing cards send the selected canonical product to this single store instance.
+  // Its state powers native customization, vouchers, customer account, basket and checkout.
+  useEffect(() => {
+    if (!embedded) return
+    const chooseProduct = (event: Event) => {
+      const itemId = (event as CustomEvent<{ itemId?: string }>).detail?.itemId
+      if (!itemId) return
+      const product = menuById(itemId)
+      if (!product) {
+        setErrorMsg('Produto indisponível. Atualize o cardápio e tente novamente.')
+        setCartOpen(true)
+        return
+      }
+      if (product.recipe?.length) handleOpenCustomize(product)
+      else { handleQuickAdd(product); setCartOpen(true) }
+    }
+    window.addEventListener('loyolas:select-product', chooseProduct)
+    return () => window.removeEventListener('loyolas:select-product', chooseProduct)
+  }, [embedded, menu, stock])
+
+  if (loading && !embedded) {
     return (
       <div className={embedded ? "min-h-[280px] bg-[#09090B] text-white flex items-center justify-center p-4" : "min-h-screen bg-[#09090B] text-white flex items-center justify-center p-4"}>
         <div className="flex flex-col items-center gap-3 text-center">
@@ -862,25 +882,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         </div>
       </header>}
 
-      {embedded && (
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 px-4 pt-4">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-[.17em] text-[#E10600]">Cardápio completo • Pedido sem sair da página</span>
-            <h3 className="mt-1 text-xl font-black text-white">Escolha seu lanche</h3>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <button type="button" onClick={() => setAuthDrawerOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-semibold text-white hover:border-zinc-400"
-              title="Meus pedidos e vouchers"><User size={16} /> <span className="hidden sm:inline">Minha conta</span></button>
-            <button type="button" onClick={() => setCartOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#E10600]/50 bg-zinc-900 px-3 py-2.5 text-xs font-semibold text-white hover:border-[#E10600]"
-              aria-label={`Abrir cesta de pedidos, ${totalItemsCount} itens`}><ShoppingBag size={16} className="text-[#E10600]"/> Cesta {totalItemsCount > 0 && <span className="rounded bg-[#E10600] px-1.5 py-0.5 text-[10px]">{totalItemsCount}</span>}</button>
-          </div>
-        </div>
-      )}
-
       {/* Banner de Loja Fechada */}
-      {!isOpen && (
+      {!embedded && !isOpen && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-300 px-4 py-3">
           <div className="max-w-3xl mx-auto flex items-center gap-3 text-xs sm:text-sm font-medium">
             <AlertCircle size={18} className="shrink-0 text-amber-400" />
@@ -892,6 +895,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         </div>
       )}
 
+      {!embedded && (
       {/* 2. Conteúdo Principal */}
       <main className={embedded ? "w-full max-w-5xl mx-auto p-4 pb-7" : "flex-1 max-w-3xl w-full mx-auto p-4 pb-28"}>
         {/* Barra de Busca */}
@@ -1017,6 +1021,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         )}
       </main>
 
+      )}
+
       {/* 3. Barra Fixa Inferior Mobile */}
       {!embedded && cart.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-20 bg-[#121215]/95 backdrop-blur-md border-t border-[#27272A] p-3 shadow-2xl">
@@ -1046,16 +1052,22 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       )}
 
       {embedded && (
-        <button type="button"
-          onClick={() => setCartOpen(true)}
-          title="Abrir cesta de pedidos"
-          aria-label={`Abrir cesta de pedidos com ${totalItemsCount} itens, subtotal ${fmtBRL(subtotal)}`}
-          className="fixed bottom-5 right-5 z-[60] inline-flex items-center gap-2 rounded-full border border-[#E10600]/50 bg-[#111114]/95 px-3.5 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md transition-colors hover:bg-[#222226] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E10600]">
-          <ShoppingBag size={17} className="text-[#E10600]" />
-          <span className="hidden sm:inline">Minha cesta</span>
-          <span className="rounded-full bg-[#E10600] px-1.5 py-0.5 text-[10px]">{totalItemsCount}</span>
-          {cart.length > 0 && <span className="font-mono text-xs">{fmtBRL(subtotal)}</span>}
-        </button>
+        <nav aria-label="Acesso rápido a conta e cesta" className="fixed bottom-5 right-4 z-[55] flex items-center gap-2 sm:right-6">
+          <button type="button" onClick={() => setAuthDrawerOpen(true)}
+            title="Minha conta e meus pedidos" aria-label="Abrir minha conta, pedidos e vouchers"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-[#111114]/95 px-3 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md hover:bg-[#222226] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+            <User size={17} className="text-[#E10600]" />
+            <span className="hidden md:inline">Minha Conta</span>
+          </button>
+          <button type="button" onClick={() => setCartOpen(true)}
+            title="Minha cesta" aria-label={`Abrir cesta de pedidos com ${totalItemsCount} itens, subtotal ${fmtBRL(subtotal)}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#E10600]/50 bg-[#111114]/95 px-3.5 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md hover:bg-[#222226] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E10600]">
+            <ShoppingBag size={17} className="text-[#E10600]" />
+            <span className="hidden sm:inline">Minha Cesta</span>
+            <span className="rounded-full bg-[#E10600] px-1.5 py-0.5 text-[10px]">{totalItemsCount}</span>
+            {cart.length > 0 && <span className="font-mono text-xs">{fmtBRL(subtotal)}</span>}
+          </button>
+        </nav>
       )}
 
       {/* 4. Drawer de Carrinho e Checkout */}
