@@ -204,10 +204,10 @@ export default function Hero() {
             {/* Botões de Ação */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 w-full sm:w-auto">
               <a
-                href="#fazer-pedido"
+                href="#cardapio"
                 onClick={(event) => {
                   event.preventDefault()
-                  document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  document.getElementById('cardapio')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
                 className="inline-flex items-center justify-center gap-2.5 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-[#8F0F1B]/30 hover:shadow-[#8F0F1B]/50 hover:scale-[1.02] active:scale-[0.99]"
               >
