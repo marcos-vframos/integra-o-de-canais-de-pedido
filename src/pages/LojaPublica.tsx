@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ShoppingBag,
@@ -132,6 +132,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [confirmedOrder, setConfirmedOrder] = useState<OrderRecord | null>(null)
+  const checkoutRequestRef = useRef<{ signature: string; key: string }>({ signature: '', key: '' })
 
   // Salvar carrinho no localStorage
   useEffect(() => {
@@ -698,7 +699,24 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       pixKey: payment === 'Pix' ? pixKey : undefined,
     }
 
+    // Preserve the same high-entropy key on a retry of an unchanged checkout.
+    // A changed cart/address regenerates the key; the server guarantees idempotency.
+    const signature = JSON.stringify({
+      cart, customerName: cleanName, customerPhone: cleanPhone,
+      deliveryType, customerAddress, deliveryLat, deliveryLng,
+      payment, appliedCampaign: appliedCampaign?.id, invoiceDocument, wantsInvoice,
+    })
+    if (checkoutRequestRef.current.signature !== signature) {
+      checkoutRequestRef.current = {
+        signature,
+        key: 'ord-' + (typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(36).slice(2)),
+      }
+    }
     const payload = {
+      clientRequestId: checkoutRequestRef.current.key,
+      invoiceRequested: wantsInvoice,
+      invoiceDocument: invoiceDocument.trim(),
       origin: 'online',
       customerName: cleanName,
       customerPhone: cleanPhone,
@@ -742,48 +760,13 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         setAppliedCampaign(null)
         setCartOpen(false)
         localStorage.removeItem(CART_STORAGE_KEY)
+        checkoutRequestRef.current = { signature: '', key: '' }
       } else {
         throw new Error('Falha ao registrar pedido.')
       }
     } catch (err: any) {
-      console.error('Erro no hook de finalização; verificando fallback seguro:', err)
-      try {
-        // Evita duplicar pedido caso o hook tenha gravado antes de falhar na resposta.
-        const recent = await pb.collection('orders').getFullList<OrderRecord>({
-          filter: `customerPhone="${cleanPhone}" && total=${finalTotal}`,
-          sort: '-created',
-        }).catch(() => [])
-        const justCreated = recent.find((o:any) => Date.now() - new Date(o.created || o.createdAt || 0).getTime() < 120000)
-        let order = justCreated
-        if (!order) {
-          order = await pb.collection('orders').create<OrderRecord>({
-            ticketNumber: Number(String(Date.now()).slice(-6)),
-            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee, deliveryFeeRegion: selectedFeeNeighborhood,
-            total: finalTotal, payment: finalPaymentLabel, paymentDetails,
-            status: 'pendente', origin: 'online', customerName: cleanName, customerPhone: cleanPhone,
-            deliveryType, customerAddress: payload.customerAddress,
-            deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng,
-            campaignId: appliedCampaign?.id || '',
-            invoiceRequested: wantsInvoice,
-            invoiceDocument: invoiceDocument.trim(),
-            invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
-      invoiceRequested: wantsInvoice,
-      invoiceDocument: invoiceDocument.trim(),
-      invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
-          })
-          for (const [key, qty] of Object.entries(deductions)) {
-            const inv = stockById(key)
-            if (inv?.id) await pb.collection('inventory').update(inv.id, { qty: Math.max(0, Number(inv.qty || 0) - Number(qty || 0)) }).catch(()=>null)
-          }
-          if (appliedCampaign?.id) await pb.collection('campaigns').update(appliedCampaign.id,{used:true,active:false}).catch(()=>null)
-        }
-        setConfirmedOrder(order as OrderRecord)
-        setCart([]); setAppliedCampaign(null); setCartOpen(false); localStorage.removeItem(CART_STORAGE_KEY)
-        setErrorMsg('')
-      } catch (fallbackErr:any) {
-        console.error('Falha também no fallback de finalização:', fallbackErr)
-        setErrorMsg(err?.data?.error || fallbackErr?.data?.message || fallbackErr?.message || err?.message || 'Não foi possível registrar o pedido.')
-      }
+      console.error('O pedido não foi confirmado pelo PocketBase:', err)
+      setErrorMsg(err?.data?.error || err?.data?.message || err?.message || 'Falha ao confirmar o pedido. Nenhuma gravação direta foi realizada.')
     } finally {
       setSubmitting(false)
     }
