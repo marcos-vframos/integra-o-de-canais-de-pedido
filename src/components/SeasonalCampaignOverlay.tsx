@@ -17,6 +17,7 @@ interface SeasonalCampaign {
   ctaUrl?: string
   palette?: Partial<LandingThemeColors>
   images?: string[]
+  media?: string
 }
 
 function isCampaignLive(c: SeasonalCampaign, now = new Date()) {
@@ -69,14 +70,16 @@ export default function SeasonalCampaignOverlay() {
 
   if (!active || dismissedId === active.id) return null
 
-  const image = Array.isArray(active.images) ? active.images.find(Boolean) : undefined
-  const cta = active.ctaUrl || '/loja'
-  const internal = cta.startsWith('/')
+  const image = active.media ? pb.files.getURL(active, active.media) : Array.isArray(active.images) ? active.images.find(Boolean) : undefined
+  const isVideo = !!image && (/\.(mp4|webm)(\?|$)/i.test(image) || /^data:video\//i.test(image))
+  const suppliedCta = (active.ctaUrl || '#fazer-pedido').trim()
+  const cta = suppliedCta === '/loja' ? '#fazer-pedido' : /^https:\/\//i.test(suppliedCta) || suppliedCta.startsWith('/') || suppliedCta.startsWith('#') ? suppliedCta : '#fazer-pedido'
+  const internal = cta.startsWith('/') || cta.startsWith('#')
 
   return (
     <div className="seasonal-overlay fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-8" role="dialog" aria-modal="true" aria-label={active.title}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md" onClick={() => setDismissedId(active.id)} />
-      {image && <div className="absolute inset-0 opacity-35 bg-cover bg-center" style={{ backgroundImage: `url("${image}")` }} />}
+      {image && !isVideo && <div className="absolute inset-0 opacity-35 bg-cover bg-center" style={{ backgroundImage: `url("${image}")` }} />}
       <div className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-white/15 bg-[var(--landing-bg-secondary)] shadow-2xl">
         <button type="button" onClick={() => setDismissedId(active.id)} className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2 text-white hover:bg-black/60" aria-label="Fechar campanha">
           <X className="h-5 w-5" />
@@ -88,7 +91,7 @@ export default function SeasonalCampaignOverlay() {
             {active.description && <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--landing-silver)]">{active.description}</p>}
             <div className="mt-8">
               {internal ? (
-                <Link to={cta} onClick={() => setDismissedId(active.id)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-vinho)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--landing-vinho-hover)]">
+                <Link to={cta} onClick={(event) => { setDismissedId(active.id); if (cta.startsWith('#')) { event.preventDefault(); document.getElementById(cta.slice(1))?.scrollIntoView({behavior:'smooth',block:'start'}) } }} className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-vinho)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--landing-vinho-hover)]">
                   {active.ctaText || 'Ver campanha'} <ArrowUpRight className="h-4 w-4" />
                 </Link>
               ) : (
@@ -99,7 +102,7 @@ export default function SeasonalCampaignOverlay() {
             </div>
           </div>
           <div className="min-h-[280px] bg-[var(--landing-bg-card)]">
-            {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-gradient-to-br from-[var(--landing-vinho)]/50 to-[var(--landing-bg-card)]" />}
+            {image ? (isVideo ? <video src={image} autoPlay loop muted playsInline className="h-full w-full object-cover" /> : <img src={image} alt="" className="h-full w-full object-cover" />) : <div className="h-full w-full bg-gradient-to-br from-[var(--landing-vinho)]/50 to-[var(--landing-bg-card)]" />}
           </div>
         </div>
       </div>
