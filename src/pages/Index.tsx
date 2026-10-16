@@ -16,7 +16,7 @@ export default function Index() {
   const [activeSection, setActiveSection] = useState('inicio')
 
   useEffect(() => {
-    const sectionIds = ['inicio', 'historia', 'cardapio', 'fazer-pedido', 'avaliacoes', 'instagram', 'localizacao']
+    const sectionIds = ['inicio', 'historia', 'cardapio', 'avaliacoes', 'instagram', 'localizacao']
     const container = document.getElementById('landing-container')
 
     const handleScroll = () => {
@@ -55,7 +55,7 @@ export default function Index() {
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       <SeasonalCampaignOverlay />
-      {/* 1. Header Fixo com status e botão para /loja */}
+      {/* 1. Header Fixo com acesso ao cardápio nativo */}
       <Header activeSection={activeSection} />
 
       {/* 2. Hero 100vh com textos alternados e crossfade de imagens */}
@@ -67,15 +67,13 @@ export default function Index() {
         <Story />
         {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
         <FeaturedMenu />
-        {/* Loja integrada: produtos, personalizacao, pagamento e carrinho lateral sem trocar de rota. */}
-        <section id="fazer-pedido" className="w-full scroll-mt-24 bg-[#09090B] border-y border-white/10" aria-label="Fazer pedido sem sair da landing">
-          <LojaPublica embedded />
-        </section>
+        {/* O motor da loja vive na propria landing: sem segundo catalogo nem outra rota. */}
+        <LojaPublica embedded />
         {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
         <Reviews />
         {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}
         <InstagramSection />
-        {/* 8. CTA de Conversão direto para /loja (100vh) */}
+        {/* 8. CTA de Conversão para o cardápio nativo (100vh) */}
         <OrderCTA />
         {/* 9. Localização (Google Maps Embed) & Horários Dinâmicos (100vh) */}
         <LocationHours />
