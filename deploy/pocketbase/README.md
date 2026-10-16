@@ -11,9 +11,9 @@
 7. Configure CORS permitido para domínios dos dois frontends, SSL, backups `/data`, restauração testada e alertas.
 
 ### Cuidados obrigatórios
-- Os arquivos de migração atuais foram criados para outra versão da infraestrutura; testar compatibilidade com PocketBase fixado no Docker antes da produção.
+- As migrações `0001` a `0007` executaram num PocketBase 0.40.5 temporário com sucesso. O teste não substitui validação dos dados reais já existentes na infraestrutura antiga.
 - A coleção `users` usada pelo login operacional e as regras de API precisam ser auditadas/implantadas.
-- O hook antigo de finalização aceita preços e baixas de estoque informados pelo cliente; **não abrir pedidos reais na internet sem reescrever e validar essa regra no servidor**.
+- O novo hook `orders_finalize.pb.js` recalcula preço, adicionais, descontos e baixas de estoque no servidor em transação. Foi testado em PocketBase 0.40.5 num ambiente temporário; ainda faltam homologação de operação e limites de requisições antes da produção.
 - API de clientes e vouchers não pode ter acesso público irrestrito; incluir autenticação real ou tokens limitados por operação.
 - Não copie o `.env` antigo nem exponha segredos através de variáveis `VITE_*`.
 - Migrar dados antigos somente com backup, exportação autorizada e conferência de integridade; publicar servidor vazio não equivale a migrar os cadastros.
