@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { LandingProvider } from '@/context/LandingContentContext'
+import { ThemeProvider } from '@/context/ThemeContext'
 import BackendStatusNotice from '@/components/BackendStatusNotice'
 import Index from '@/pages/Index'
 import LojaPublica from '@/pages/LojaPublica'
@@ -10,6 +11,7 @@ import LojaPublica from '@/pages/LojaPublica'
 /** Public client-only application. No administrative route or module is exposed here. */
 export default function App() {
   return <BrowserRouter>
+    <ThemeProvider>
     <LandingProvider>
       <TooltipProvider>
         <BackendStatusNotice />
@@ -22,5 +24,6 @@ export default function App() {
         </Routes>
       </TooltipProvider>
     </LandingProvider>
+    </ThemeProvider>
   </BrowserRouter>
 }
