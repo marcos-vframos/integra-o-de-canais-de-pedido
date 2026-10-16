@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { ArrowUpRight, AlertCircle } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -235,14 +234,18 @@ export default function FeaturedMenu() {
 
                   <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
                     <span className="text-[11px] text-[#C4C4C4]/70">Feito na chapa</span>
-                    <Link
-                      to="/loja"
+                    <a
+                      href="#fazer-pedido"
+                      onClick={e => {
+                        e.preventDefault()
+                        document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }}
                       className="inline-flex items-center gap-1.5 text-xs text-white hover:text-[#C4C4C4] font-medium tracking-wide uppercase transition-colors"
                       aria-label={`Pedir ${item.name} na loja`}
                     >
                       <span>Pedir</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </article>
