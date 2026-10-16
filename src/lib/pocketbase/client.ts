@@ -17,6 +17,9 @@ function isValidIndependentUrl(value: string): boolean {
 }
 
 export const backendConfigured = isValidIndependentUrl(rawBackendUrl)
+
+/** Preview-only manager access. Automatically disabled when a real PocketBase URL is configured. */
+export const demoGestaoMode = import.meta.env.MODE === 'gestao' && !backendConfigured
 export const backendConfigMessage = rawBackendUrl && !backendConfigured
   ? 'Endpoint anterior ou inseguro bloqueado. Configure uma URL HTTPS própria do PocketBase.'
   : 'Defina VITE_POCKETBASE_URL com a URL HTTPS do novo PocketBase na hospedagem.'
