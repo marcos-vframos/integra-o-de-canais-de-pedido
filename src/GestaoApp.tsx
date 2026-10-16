@@ -1,0 +1,48 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from '@/components/ui/toaster'
+import { Toaster as Sonner } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
+import { LandingProvider } from '@/context/LandingContentContext'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import BackendStatusNotice from '@/components/BackendStatusNotice'
+import Layout from '@/components/Layout'
+import Gestao from '@/pages/Gestao'
+import Config from '@/pages/Config'
+import AdmLanding from '@/pages/AdmLanding'
+import Login from '@/pages/Login'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
+import VerifyEmail from '@/pages/VerifyEmail'
+import ConfirmEmailChange from '@/pages/ConfirmEmailChange'
+
+/** Dedicated administrator PWA. This output must be deployed on its own domain. */
+export default function GestaoApp() {
+  return <BrowserRouter>
+    <AuthProvider>
+      <ThemeProvider>
+        <LandingProvider>
+          <TooltipProvider>
+            <BackendStatusNotice />
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/gestao" element={<Gestao />} />
+                <Route path="/config" element={<Config />} />
+                <Route path="/adm-landing" element={<AdmLanding />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/gestao" replace />} />
+            </Routes>
+          </TooltipProvider>
+        </LandingProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  </BrowserRouter>
+}
