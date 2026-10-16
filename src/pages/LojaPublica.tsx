@@ -25,10 +25,10 @@ import {
   Tag,
   History,
 } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
-import { fmtBRL, padTicket } from '@/lib/seeds'
+import { fmtBRL, padTicket, seedMenu, seedStock } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
 import StorePromotionCarousel from '@/components/StorePromotionCarousel'
@@ -62,11 +62,11 @@ interface LojaPublicaProps {
 }
 
 export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(backendConfigured)
   const [storeName, setStoreName] = useState("Loyola's Lanches")
   const [isOpen, setIsOpen] = useState(true)
-  const [menu, setMenu] = useState<MenuItem[]>([])
-  const [stock, setStock] = useState<InventoryItem[]>([])
+  const [menu, setMenu] = useState<MenuItem[]>(() => backendConfigured ? [] : seedMenu().filter(i=>i.active).map(i=>({ ...i, id:i.code })) as MenuItem[])
+  const [stock, setStock] = useState<InventoryItem[]>(() => backendConfigured ? [] : seedStock().map(i=>({ ...i,id:i.code })) as InventoryItem[])
 
   const [activeCategory, setActiveCategory] = useState<string>('Carnes')
   const [searchTerm, setSearchTerm] = useState('')
@@ -146,6 +146,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   useEffect(() => {
     let mounted = true
     const loadStore = async () => {
+      if (!backendConfigured) { if (mounted) setLoading(false); return }
       try {
         const [settingsList, menuList, stockList, feesList] = await Promise.all([
           pb
@@ -515,6 +516,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Login e busca de histórico do cliente
   const handleCustomerLogin = async (phone: string, name: string) => {
+    if (!backendConfigured) { setVoucherMessage('Cadastro indisponível: configure o banco de dados independente.'); return }
     const raw = phone.trim()
     try {
       let cust = null
@@ -596,6 +598,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }
 
   const handleDeleteCustomerAccount = async () => {
+    if (!backendConfigured) { setVoucherMessage('Operação indisponível sem banco de dados.'); return }
     if (!currentCustomer?.id) return
     if (!confirm('Excluir seu cadastro? O histórico operacional dos pedidos permanece na loja, mas seu perfil e vouchers ativos serão removidos.')) return
     try {
@@ -611,6 +614,10 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
+    if (!backendConfigured) {
+      setErrorMsg('Compra demonstrativa: ainda não há PocketBase independente. Nenhum pedido será enviado ou registrado.')
+      return
+    }
 
     if (!isOpen) {
       setErrorMsg('Desculpe, a loja está fechada no momento. Não é possível enviar pedidos.')
@@ -795,8 +802,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         setCartOpen(true)
         return
       }
-      if (product.recipe?.length) handleOpenCustomize(product)
-      else { handleQuickAdd(product); setCartOpen(true) }
+      handleOpenCustomize(product)
     }
     window.addEventListener('loyolas:select-product', chooseProduct)
     return () => window.removeEventListener('loyolas:select-product', chooseProduct)
