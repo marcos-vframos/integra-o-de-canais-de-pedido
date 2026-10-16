@@ -2,8 +2,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-// @ts-expect-error - uidPlugin is a custom plugin
-import uidPlugin from './vite-plugin-react-uid'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -12,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   build: {
-    outDir: mode === 'development' ? 'dev-dist' : 'dist',
+    outDir: mode === 'gestao' ? 'dist-gestao' : mode === 'development' ? 'dev-dist' : 'dist',
     minify: mode !== 'development',
     // lightningcss in every mode so dev/QA catches the same CSS errors as prod
     cssMinify: 'lightningcss',
@@ -26,7 +24,24 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  plugins: [mode === 'development' ? uidPlugin() : undefined, react()].filter(Boolean),
+  plugins: [
+    react(),
+    {
+      name: 'loyolas-separate-entrypoints',
+      // Both builds use the same repository, but produce distinct HTML shells and JS bundles.
+      transformIndexHtml: {
+        order: 'pre' as const,
+        handler(html: string) {
+          return mode === 'gestao'
+            ? html.replace('/src/main.tsx', '/src/main-gestao.tsx')
+                .replace('/manifest-landing.webmanifest', '/manifest.webmanifest')
+                .replace(/Loyolas Lanches \| O Verdadeiro Podrão de Pindamonhangaba/g, "Loyola's Gestão")
+                .replace(/Loyola's Lanches/g, "Loyola's Gestão")
+            : html
+        },
+      },
+    },
+  ],
   define: {
     'process.env.NODE_ENV': JSON.stringify(mode ?? process.env.NODE_ENV ?? 'production'),
   },
