@@ -1,6 +1,6 @@
 {
-  "name": "skip-react-template",
-  "description": "A frontend React Vite TypeScript Shadcn UI template for Skip projects",
+  "name": "loyolas-canais-de-venda",
+  "description": "Loyola's Lanches — website de pedidos e Gestor PWA independentes",
   "private": true,
   "version": "0.0.10",
   "type": "module",
@@ -15,7 +15,11 @@
     "format:check": "oxfmt --check",
     "preview": "vite preview",
     "test": "echo \"there are no tests for this project\" && exit 0",
-    "test:watch": "echo \"there are no tests for this project\" && exit 0"
+    "test:watch": "echo \"there are no tests for this project\" && exit 0",
+    "build:cliente": "vite build",
+    "build:gestao": "vite build --mode gestao",
+    "dev:gestao": "vite --mode gestao",
+    "preview:gestao": "vite preview --outDir dist-gestao"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
