@@ -33,6 +33,8 @@ export function registerServiceWorker() {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
         .then((registration) => {
+          // Check for an updated worker at every F5/refresh.
+          void registration.update().catch(() => {})
           // Verifica se há novas atualizações em background
           registration.addEventListener('updatefound', () => {
             const installingWorker = registration.installing
