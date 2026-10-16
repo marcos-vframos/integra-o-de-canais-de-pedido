@@ -7,6 +7,7 @@ interface Promo {
   id: string; title: string; badge?: string; description?: string; active?: boolean
   startDate?: string; endDate?: string; ctaText?: string; ctaUrl?: string; images?: string[]
   palette?: { accentVinho?: string; bgCard?: string; accentSilver?: string }
+  media?: string
 }
 const live=(p:Promo)=>{const n=Date.now(),s=p.startDate?new Date(p.startDate).getTime():0,e=p.endDate?new Date(p.endDate).getTime():Infinity;return !!p.active&&n>=s&&n<=e}
 export default function StorePromotionCarousel(){
@@ -17,7 +18,7 @@ export default function StorePromotionCarousel(){
  useEffect(()=>{if(promos.length<2)return;const t=setInterval(()=>setIndex(i=>(i+1)%promos.length),5000);return()=>clearInterval(t)},[promos.length])
  useEffect(()=>{if(index>=promos.length)setIndex(0)},[promos.length,index])
  if(!promos.length)return null
- const p=promos[index], media=Array.isArray(p.images)?p.images[0]:undefined
+ const p=promos[index], media=p.media ? pb.files.getURL(p,p.media) : Array.isArray(p.images)?p.images[0]:undefined
  const accent=p.palette?.accentVinho||'#E10600'
  return <section className="relative mb-4 min-h-[150px] overflow-hidden rounded-2xl border border-white/10 bg-[#121215]" aria-label="Promoções atuais">
   {media && (/^data:video|\.(mp4|webm|mov)(\?|$)/i.test(media)?<video src={media} autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover opacity-40"/>:<img src={media} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40"/>)}
