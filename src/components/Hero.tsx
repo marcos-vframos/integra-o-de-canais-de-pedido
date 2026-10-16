@@ -203,13 +203,17 @@ export default function Hero() {
 
             {/* Botões de Ação */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 w-full sm:w-auto">
-              <Link
-                to="/loja"
+              <a
+                href="#fazer-pedido"
+                onClick={(event) => {
+                  event.preventDefault()
+                  document.getElementById('fazer-pedido')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
                 className="inline-flex items-center justify-center gap-2.5 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-[#8F0F1B]/30 hover:shadow-[#8F0F1B]/50 hover:scale-[1.02] active:scale-[0.99]"
               >
                 <span>Fazer Pedido</span>
                 <ArrowRight className="w-4 h-4 text-white/90" />
-              </Link>
+              </a>
 
               <a
                 href="#cardapio"
