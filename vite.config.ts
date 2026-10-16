@@ -35,6 +35,10 @@ export default defineConfig(({ mode }) => ({
           return mode === 'gestao'
             ? html.replace('/src/main.tsx', '/src/main-gestao.tsx')
                 .replace('/manifest-landing.webmanifest', '/manifest.webmanifest')
+                .replace('/pwa-landing-icon.svg', '/pwa-icon.svg')
+                .replace('/pwa-landing-192.svg', '/pwa-icon-192.svg')
+                .replace('/pwa-landing-512.svg', '/pwa-icon-512.svg')
+                .replace('#07140B', '#0B0B0C')
                 .replace(/Loyolas Lanches \| O Verdadeiro Podrão de Pindamonhangaba/g, "Loyola's Gestão")
                 .replace(/Loyola's Lanches/g, "Loyola's Gestão")
             : html
