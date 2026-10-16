@@ -91,6 +91,27 @@ routerAdd('POST','/backend/v1/orders/finalize',(e)=>{
         voucher.campaign.set('active',false)
         db.save(voucher.campaign)
       }
+      // Keep CRM coherent with confirmed orders (server-only, no public customer writes).
+      if(origin==='online' && body.customerPhone){
+        const rawPhone=String(body.customerPhone).trim()
+        let customer=null
+        try{customer=db.findFirstRecordByData('customers','phone',rawPhone)}catch(_){}
+        if(!customer)try{customer=db.findFirstRecordByData('customers','phone',digits(rawPhone))}catch(_){}
+        if(!customer)customer=new Record(db.findCollectionByNameOrId('customers'))
+        const isNew=!customer.id
+        customer.set('name',String(body.customerName||'Cliente').trim().slice(0,120))
+        customer.set('phone',isNew?rawPhone:customer.getString('phone'))
+        if(body.customerAddress)customer.set('address',String(body.customerAddress).trim().slice(0,350))
+        customer.set('totalOrders',(isNew?0:customer.getInt('totalOrders'))+1)
+        customer.set('totalSpent',money(cents(isNew?0:customer.getFloat('totalSpent'))+total))
+        customer.set('lastOrderAt',new Date().toISOString())
+        let favorites=[]
+        try{favorites=JSON.parse(toString(customer.get('favoriteItems')||'[]'))}catch(_){}
+        if(!Array.isArray(favorites))favorites=[]
+        validated.items.forEach(it=>{if(it.name&&!favorites.includes(it.name))favorites.push(it.name)})
+        customer.set('favoriteItems',favorites.slice(-15))
+        db.save(customer)
+      }
       response={order:rec}
     })
   }catch(err){
