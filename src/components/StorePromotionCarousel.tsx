@@ -11,7 +11,7 @@ interface Promo {
 const live=(p:Promo)=>{const n=Date.now(),s=p.startDate?new Date(p.startDate).getTime():0,e=p.endDate?new Date(p.endDate).getTime():Infinity;return !!p.active&&n>=s&&n<=e}
 export default function StorePromotionCarousel(){
  const [items,setItems]=useState<Promo[]>([]),[index,setIndex]=useState(0)
- const load=async()=>{try{setItems((await pb.collection('seasonal_campaigns').getFullList({sort:'-startDate,-created'})) as unknown as Promo[])}catch{}}
+ const load=async()=>{try{setItems((await pb.collection('seasonal_campaigns').getFullList({sort:'-startDate,-created'})) as unknown as Promo[])}catch{setItems([])}}
  useEffect(()=>{load()},[]); useRealtime('seasonal_campaigns',load)
  const promos=useMemo(()=>items.filter(live),[items])
  useEffect(()=>{if(promos.length<2)return;const t=setInterval(()=>setIndex(i=>(i+1)%promos.length),5000);return()=>clearInterval(t)},[promos.length])
