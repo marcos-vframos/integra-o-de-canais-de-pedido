@@ -32,6 +32,7 @@ import { fmtBRL, padTicket, seedMenu, seedStock } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
 import StorePromotionCarousel from '@/components/StorePromotionCarousel'
+import { activeOffer, type PromotionalCampaign, type CampaignOffer } from '@/lib/campaignOffer'
 import {
   CustomerAuthDrawer,
   CustomerProfile,
@@ -50,6 +51,10 @@ export interface CustomerCartLine {
   added: { ingredientId: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
   breadChoice?: BreadChoice
+  promotionId?: string
+  promotionTitle?: string
+  promotionPrice?: number
+  promotionalIncluded?: CampaignOffer['included']
 }
 
 const CATEGORIES = ['Carnes', 'Frango', 'Hot-Dog', 'Gourmet', 'Especial', 'Combos', 'Bebidas']
@@ -81,6 +86,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     }
   })
   const [cartOpen, setCartOpen] = useState(false)
+  const [availableOffers, setAvailableOffers] = useState<PromotionalCampaign[]>([])
 
   // Customização
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
@@ -397,7 +403,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     setCart((prev) => {
       const existing = prev.find(
         (l) =>
-          l.itemId === item.id &&
+          l.itemId === item.id && !l.promotionId &&
           (!l.removed || l.removed.length === 0) &&
           (!l.added || l.added.length === 0) &&
           (!l.breadChoice || l.breadChoice === 'hamburguer'),
@@ -420,6 +426,52 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     })
   }
 
+  // Promotion is bound to its server record, not a client-controlled free addition.
+  useEffect(() => {
+    let cancelled = false
+    const loadOffers = () => {
+      if (!backendConfigured) return
+      pb.collection('seasonal_campaigns').getFullList<PromotionalCampaign>()
+        .then(rows => { if(!cancelled) setAvailableOffers(rows.filter(activeOffer)) })
+        .catch(() => { if(!cancelled) setAvailableOffers([]) })
+    }
+    loadOffers()
+    const timer = window.setInterval(loadOffers, 60000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [])
+
+  useEffect(() => {
+    const addOffer = (event: Event) => {
+      const {campaignId,itemId}=(event as CustomEvent<{campaignId?:string;itemId?:string}>).detail || {}
+      const promo = availableOffers.find(p => p.id === campaignId && activeOffer(p))
+      if (!promo?.offer || !itemId || promo.offer.productId !== itemId) {
+        setErrorMsg('Oferta indisponível ou encerrada. Atualize a página para verificar as ofertas.')
+        setCartOpen(true); return
+      }
+      const product = menuById(itemId)
+      if (!product) {
+        setErrorMsg('O produto da oferta não está disponível no cardápio.')
+        setCartOpen(true); return
+      }
+      const price = Number(promo.offer.unitPrice ?? product.price)
+      if (!Number.isFinite(price) || price < 0 || price > Number(product.price)) {
+        setErrorMsg('Preço da promoção inválido. Consulte o estabelecimento.')
+        setCartOpen(true); return
+      }
+      setCart(prev => [...prev, {
+        cartLineId: 'promo_' + crypto.randomUUID(),
+        itemId: product.id, qty:1, removed:[], added:[],
+        promotionId:promo.id, promotionTitle:promo.title,
+        promotionPrice:price,
+        promotionalIncluded:(promo.offer.included||[]).map(i=>({...i})),
+      }])
+      setErrorMsg('')
+      setCartOpen(true)
+    }
+    window.addEventListener('loyolas:select-offer',addOffer)
+    return () => window.removeEventListener('loyolas:select-offer',addOffer)
+  }, [availableOffers,menu])
+
   const handleCartQtyChange = (cartLineId: string, delta: number) => {
     setCart((prev) =>
       prev
@@ -435,7 +487,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   // Preço compartilhado por modal, carrinho, gestão e checkout.
   const calculateLineTotal = (line: CustomerCartLine) => {
     const item = menuById(line.itemId)
-    return item ? lineUnitTotal(item, line, stockById, menu) * line.qty : 0
+    return item ? Math.round(((line.promotionId ? Number(line.promotionPrice ?? item.price) : Number(item.price)) + addonUnitTotal(line, stockById, menu) + breadSurcharge(item, line, stockById)) * line.qty * 100) / 100 : 0
   }
 
   // Totais precisam existir antes do cálculo do voucher.
@@ -655,6 +707,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     setSubmitting(true)
 
     // Formatar itens para backend com indicação da cortesia gourmet
+    const expiredPromotion = cart.some(l => l.promotionId && !availableOffers.some(p => p.id===l.promotionId && activeOffer(p) && p.offer?.productId===l.itemId))
+    if (expiredPromotion) { setSubmitting(false); setErrorMsg('Uma oferta expirou. Remova o item promocional e atualize o carrinho.'); return }
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
       const baseItemPrice = item?.price || 0
@@ -676,7 +730,9 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       return {
         itemId: l.itemId,
         name: item?.name || 'Item',
-        price: baseItemPrice + unitExtra + breadExtra,
+        price: (l.promotionId ? Number(l.promotionPrice ?? baseItemPrice) : baseItemPrice) + unitExtra + breadExtra,
+        promotionId: l.promotionId,
+        promotionalIncluded: l.promotionalIncluded,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
         added: addedList,
@@ -1125,7 +1181,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            {item?.recipe && item.recipe.length > 0 && (
+                            {!line.promotionId && item?.recipe && item.recipe.length > 0 && (
                               <button
                                 type="button"
                                 onClick={() => handleEditCartLine(line)}
@@ -1145,6 +1201,13 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                           </div>
                         </div>
 
+                        {line.promotionId && (
+                          <div className="rounded-md bg-emerald-900/20 border border-emerald-500/25 p-2 text-xs text-emerald-300">
+                            <strong>★ Oferta: {line.promotionTitle}</strong>
+                            <div>Preço anunciado: {fmtBRL(line.promotionPrice ?? item?.price ?? 0)} por unidade</div>
+                            {(line.promotionalIncluded||[]).map((i,n)=><div key={n}>Cortesia incluída: {stockById(i.ingredientId)?.name || i.ingredientId} ×{i.qty} — grátis</div>)}
+                          </div>
+                        )}
                         {hasBread(item, stockById) && (
                           <div className="text-[11px] text-zinc-300">Pão: {breadName(line.breadChoice || 'hamburguer')}{breadSurcharge(item, line, stockById) > 0 ? ` (+ ${fmtBRL(breadSurcharge(item, line, stockById))} por lanche)` : ''}</div>
                         )}
