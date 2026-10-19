@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
+import { notifyOffer, type CampaignOffer } from '@/lib/campaignOffer'
 import useRealtime from '@/hooks/use-realtime'
 
 interface Promo {
@@ -8,6 +9,7 @@ interface Promo {
   startDate?: string; endDate?: string; ctaText?: string; ctaUrl?: string; images?: string[]
   palette?: { accentVinho?: string; bgCard?: string; accentSilver?: string }
   media?: string
+  offer?: CampaignOffer
 }
 const live=(p:Promo)=>{const n=Date.now(),s=p.startDate?new Date(p.startDate).getTime():0,e=p.endDate?new Date(p.endDate).getTime():Infinity;return !!p.active&&n>=s&&n<=e}
 export default function StorePromotionCarousel(){
@@ -26,7 +28,7 @@ export default function StorePromotionCarousel(){
   <div className="relative z-10 flex min-h-[150px] items-center p-5 pr-14">
    <div className="max-w-[80%]"><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em]" style={{color:accent}}><Tag size={12}/>{p.badge||'Promoção atual'}</div>
    <h2 className="text-xl font-black text-white">{p.title}</h2>{p.description&&<p className="mt-1 line-clamp-2 text-xs text-zinc-300">{p.description}</p>}
-   {p.ctaText&&<span className="mt-3 inline-block rounded-md px-3 py-1.5 text-[11px] font-bold text-white" style={{backgroundColor:accent}}>{p.ctaText}</span>}</div>
+   {p.offer?.productId ? <button type="button" onClick={()=>notifyOffer(p)} className="mt-3 inline-block rounded-md px-3 py-1.5 text-[11px] font-bold text-white" style={{backgroundColor:accent}}>{p.ctaText||'Adicionar oferta ao carrinho'}</button> : p.ctaText&&<span className="mt-3 inline-block rounded-md px-3 py-1.5 text-[11px] font-bold text-white" style={{backgroundColor:accent}}>{p.ctaText}</span>}</div>
   </div>
   {promos.length>1&&<><button onClick={()=>setIndex(i=>(i-1+promos.length)%promos.length)} className="absolute right-9 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white"><ChevronLeft size={15}/></button><button onClick={()=>setIndex(i=>(i+1)%promos.length)} className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white"><ChevronRight size={15}/></button><div className="absolute bottom-2 right-3 z-20 text-[10px] text-white/70">{index+1}/{promos.length}</div></>}
  </section>
