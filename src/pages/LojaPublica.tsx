@@ -185,8 +185,9 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
           setIsOpen(openSetting.value === 'true')
         }
 
-        setMenu(menuList)
-        setStock(stockList)
+        const isDraftDemo = import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true' && menuList.length === 0
+        setMenu(isDraftDemo ? seedMenu().filter(x=>x.active).map(x=>({...x,id:x.code})) as MenuItem[] : menuList)
+        setStock(isDraftDemo ? seedStock().map(x=>({...x,id:x.code})) as InventoryItem[] : stockList)
         setDeliveryFees(feesList)
         if (feesList.length > 0) {
           setSelectedFeeNeighborhood(feesList[0].name)
@@ -625,6 +626,10 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       return
     }
 
+    if (import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true') {
+      setErrorMsg('Homologação Supabase: nenhum pedido nem pagamento real será registrado enquanto a loja estiver em DRAFT.')
+      return
+    }
     if (cart.length === 0) {
       setErrorMsg('Seu carrinho está vazio.')
       return
