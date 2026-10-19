@@ -104,7 +104,7 @@ export default function SeasonalCampaignAdmin() {
   }
   useEffect(() => {
     void load(); void reloadPalettes()
-    if (!pb.authStore.isValid) return
+    // The selector uses public catalog/projection in demo; saving still requires authorized staff.
     void Promise.all([
       pb.collection('menu').getFullList<MenuItem>({ sort: 'name' }),
       pb.collection('inventory').getFullList<InventoryItem>({ sort: 'name' }),
