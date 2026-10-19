@@ -189,7 +189,7 @@ const collection=(name:string)=>{
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
       if(name==='seasonal_campaigns'&&raw.media instanceof File)raw.media_path=await upload(name,raw.media,'campaigns')
-      for(const key of ['data','palette','images','recipe','items']){
+      for(const key of ['data','palette','images','recipe','items','offer']){
         if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch{}
       }
       const payload=fromRow(name,raw)
@@ -206,7 +206,7 @@ const collection=(name:string)=>{
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
       if(name==='seasonal_campaigns'&&raw.media instanceof File)raw.media_path=await upload(name,raw.media,'campaigns')
-      for(const key of ['data','palette','images','recipe','items']){
+      for(const key of ['data','palette','images','recipe','items','offer']){
         if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch{}
       }
       const payload=fromRow(name,raw)
