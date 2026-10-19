@@ -192,11 +192,7 @@ begin
         raise exception 'Coordenadas de entrega inválidas'; end if;
     end if;
     if v_lat is not null and v_lng is not null then
-      select f.*, 6371*2*asin(least(1,sqrt(
-        power(sin(radians((f.lat-v_lat)::double precision)/2),2)
-        +cos(radians(v_lat::double precision))*cos(radians(f.lat::double precision))
-          *power(sin(radians((f.lng-v_lng)::double precision)/2),2)
-      ))) into v_nearest,v_distance
+      select f.* into v_nearest
       from public.delivery_fees f
       where f.tenant_id=p_tenant and f.active and f.lat is not null and f.lng is not null
       order by 6371*2*asin(least(1,sqrt(
@@ -204,6 +200,13 @@ begin
         +cos(radians(v_lat::double precision))*cos(radians(f.lat::double precision))
           *power(sin(radians((f.lng-v_lng)::double precision)/2),2)
       ))) asc limit 1;
+      if v_nearest.id is not null then
+        v_distance := 6371*2*asin(least(1,sqrt(
+          power(sin(radians((v_nearest.lat-v_lat)::double precision)/2),2)
+          +cos(radians(v_lat::double precision))*cos(radians(v_nearest.lat::double precision))
+            *power(sin(radians((v_nearest.lng-v_lng)::double precision)/2),2)
+        )));
+      end if;
     else
       select * into v_nearest from public.delivery_fees
       where tenant_id=p_tenant and active and name=p_payload->>'deliveryFeeRegion'
