@@ -19,12 +19,15 @@ import {
 import {
   useLandingContent,
   LandingThemeColors,
+  LandingSlide,
+  LandingFeedPost,
   DEFAULT_THEME_COLORS,
   DEFAULT_THEME_PRESETS,
 } from '@/context/LandingContentContext'
 import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
+import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
@@ -459,7 +462,7 @@ export default function AdmLanding() {
                 Área Administrativa • Landing Page
               </h1>
               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                Skip Cloud CMS
+                CMS PocketBase
               </span>
             </div>
             <p className="text-xs text-zinc-400">
@@ -797,8 +800,7 @@ export default function AdmLanding() {
                     value={formText.menuHeading}
                     onChange={(e) => setFormText({ ...formText, menuHeading: e.target.value })}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:border-amber-400 outline-none"
-                  />
-                </div>
+                  />                </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-300 block mb-1">Subtítulo</label>
                   <textarea
@@ -1197,8 +1199,7 @@ export default function AdmLanding() {
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.bgCard }}
                             title="Card"
-                          />
-                          <div
+                          />                          <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.accentVinho }}
                             title="Destaque Vinho/Accent"
@@ -1294,6 +1295,8 @@ export default function AdmLanding() {
             </div>
           </div>
         )}
+
+        {activeTab === 'temas' && <SeasonalCampaignAdmin />}
 
         {/* ================= ABA 4: ABERTO / FECHADO ================= */}
         {activeTab === 'loja' && (

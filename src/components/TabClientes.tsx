@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
-import { MenuItem } from '@/types/loyolas'
+import { MenuItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 
 interface CustomerItem {
@@ -67,6 +67,8 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
   const [productDiscountVal, setProductDiscountVal] = useState<number>(5)
   const [creating, setCreating] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+  const [detailCustomer, setDetailCustomer] = useState<CustomerItem | null>(null)
+  const [detailOrders, setDetailOrders] = useState<OrderRecord[]>([])
 
   const loadData = async () => {
     try {
@@ -93,6 +95,12 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
 
   useRealtime('customers', loadData)
   useRealtime('campaigns', loadData)
+
+  const openCustomerDetail = async (cust: CustomerItem) => {
+    setDetailCustomer(cust)
+    const list = await pb.collection('orders').getFullList<OrderRecord>({ filter: `customerPhone="${cust.phone}"`, sort: '-created' }).catch(() => [])
+    setDetailOrders(list)
+  }
 
   const handleOpenCampaignModal = (cust: CustomerItem) => {
     setSelectedCustomer(cust)
@@ -251,7 +259,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-bold text-sm text-white">{cust.name}</h3>
+                      <button type="button" onClick={() => openCustomerDetail(cust)} className="font-bold text-sm text-white hover:text-[#E10600] text-left">{cust.name}</button>
                       <div className="text-xs text-zinc-400 flex items-center gap-1 mt-0.5">
                         <Phone size={12} className="text-[#E10600]" />
                         <span>{cust.phone}</span>
@@ -299,7 +307,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E10600] hover:bg-[#9E0400] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
                   >
                     <Gift size={13} />
-                    <span>Gerar Campanha</span>
+                    <span>Gerar Voucher</span>
                   </button>
                 </div>
               </div>
@@ -307,6 +315,25 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
           })
         )}
       </div>
+
+      {detailCustomer && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={()=>setDetailCustomer(null)}>
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#121215] border border-[#27272A] rounded-2xl p-6 space-y-5" onClick={e=>e.stopPropagation()}>
+            <div className="flex justify-between gap-4"><div><h3 className="text-lg font-bold text-white">{detailCustomer.name}</h3><p className="text-xs text-zinc-400">{detailCustomer.phone} {detailCustomer.address ? ' • '+detailCustomer.address : ''}</p></div><button onClick={()=>setDetailCustomer(null)} className="text-zinc-400">✕</button></div>
+            {(() => {
+              const now=new Date(), month=detailOrders.filter(o=>{const d=new Date(o.created||'');return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()})
+              const valid=detailOrders.filter(o=>o.status!=='recusado'), cancelled=detailOrders.filter(o=>o.status==='recusado')
+              const monthSpent=month.reduce((s,o)=>s+(o.total||0),0), total=valid.reduce((s,o)=>s+(o.total||0),0)
+              const byMonth=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);const val=valid.filter(o=>{const x=new Date(o.created||'');return x.getMonth()===d.getMonth()&&x.getFullYear()===d.getFullYear()}).reduce((s,o)=>s+(o.total||0),0);return{label:d.toLocaleDateString('pt-BR',{month:'short'}),val}})
+              const max=Math.max(1,...byMonth.map(x=>x.val))
+              return <><div className="grid grid-cols-2 md:grid-cols-4 gap-2">{[['Pedidos no mês',month.length],['Consumo no mês',fmtBRL(monthSpent)],['Consumo total',fmtBRL(total)],['Desistências/recusas',cancelled.length]].map(([a,b])=><div key={String(a)} className="rounded-xl bg-zinc-950 border border-zinc-800 p-3"><span className="block text-[10px] uppercase text-zinc-500">{a}</span><strong className="text-white">{b}</strong></div>)}</div>
+              <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4"><span className="text-xs font-bold text-zinc-300">Consumo — últimos 6 meses</span><div className="mt-4 flex h-32 items-end gap-3">{byMonth.map(x=><div key={x.label} className="flex-1 text-center"><div className="mx-auto w-full max-w-12 rounded-t bg-[#E10600]" style={{height:`${Math.max(4,(x.val/max)*100)}px`}} title={fmtBRL(x.val)}/><span className="mt-1 block text-[9px] text-zinc-500">{x.label}</span></div>)}</div></div>
+              <div className="text-xs text-zinc-400">Atividade: {valid.length} pedidos válidos • Ticket médio {fmtBRL(valid.length?total/valid.length:0)} • Última atividade {detailCustomer.lastOrderAt?new Date(detailCustomer.lastOrderAt).toLocaleString('pt-BR'):'sem registro'}.</div></>
+            })()}
+            <button onClick={()=>{setDetailCustomer(null);handleOpenCampaignModal(detailCustomer)}} className="rounded-lg bg-[#E10600] px-4 py-2 text-xs font-bold text-white">Gerar voucher para este cliente</button>
+          </div>
+        </div>
+      )}
 
       {/* Campanhas Ativas / Histórico de Vouchers */}
       <div className="bg-[#121215] border border-[#27272A] rounded-xl p-5 space-y-4">
@@ -337,6 +364,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                     </button>
                   </div>
                   <p className="text-[11px] text-zinc-400 mt-1">{camp.description}</p>
+                  <div className="mt-2 rounded bg-black/30 px-2 py-1 font-mono text-[10px] text-amber-300">Código: LOY-{camp.id.slice(0,6).toUpperCase()}</div>
                   <div className="text-[10px] text-zinc-500 mt-1">
                     Para: <b>{camp.customerName}</b> ({camp.customerPhone})
                   </div>

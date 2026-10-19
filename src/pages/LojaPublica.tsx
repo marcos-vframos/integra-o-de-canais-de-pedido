@@ -31,6 +31,7 @@ import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
+import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 import {
   CustomerAuthDrawer,
   CustomerProfile,
@@ -92,6 +93,8 @@ export default function LojaPublica() {
   const [payment, setPayment] = useState<'Dinheiro' | 'Pix' | 'Cartão'>('Pix')
   const [cardType, setCardType] = useState<'debito' | 'credito'>('debito')
   const [changeFor, setChangeFor] = useState('')
+  const [wantsInvoice, setWantsInvoice] = useState(false)
+  const [invoiceDocument, setInvoiceDocument] = useState('')
 
   // Pix real estático
   const [pixKey, setPixKey] = useState('12991591915')
@@ -112,6 +115,8 @@ export default function LojaPublica() {
   const [customerOrders, setCustomerOrders] = useState<OrderRecord[]>([])
   const [customerCampaigns, setCustomerCampaigns] = useState<CampaignVoucher[]>([])
   const [appliedCampaign, setAppliedCampaign] = useState<CampaignVoucher | null>(null)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherMessage, setVoucherMessage] = useState('')
 
   // Modal de Comprovante completo
   const [showReceiptModal, setShowReceiptModal] = useState(false)
@@ -440,6 +445,11 @@ export default function LojaPublica() {
     return lineBase * line.qty
   }
 
+  // Totais precisam existir antes do cálculo do voucher.
+  // Antes, discountAmount acessava subtotal antes da inicialização (TDZ), causando tela preta em /loja.
+  const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
+  const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
+
   // Desconto calculado por campanhas / vouchers
   const discountAmount = useMemo(() => {
     if (!appliedCampaign) return 0
@@ -467,8 +477,6 @@ export default function LojaPublica() {
     return 0
   }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue, cart, menu])
 
-  const subtotal = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0)
-  const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
   const finalTotal = Math.max(0, subtotal - discountAmount + currentDeliveryFee)
 
   const totalItemsCount = cart.reduce((sum, line) => sum + line.qty, 0)
@@ -579,6 +587,34 @@ export default function LojaPublica() {
     setCustomerOrders([])
     setCustomerCampaigns([])
     setAppliedCampaign(null)
+  }
+
+  const handleApplyVoucherCode = async () => {
+    const code = voucherCode.trim().toUpperCase()
+    if (!code) return
+    try {
+      const camps = await pb.collection('campaigns').getFullList<CampaignVoucher>({ filter: 'active=true && used=false' })
+      const match = camps.find((camp: any) => {
+        const generated = `LOY-${String(camp.id).slice(0, 6).toUpperCase()}`
+        const belongs = !camp.customerPhone || camp.customerPhone === customerPhone.trim() || camp.customerPhone === currentCustomer?.phone
+        return generated === code && belongs
+      })
+      if (!match) return setVoucherMessage('Código inválido, já utilizado ou vinculado a outro cliente.')
+      setAppliedCampaign(match)
+      setVoucherMessage(`Voucher ${code} aplicado.`)
+    } catch { setVoucherMessage('Não foi possível validar o código agora.') }
+  }
+
+  const handleDeleteCustomerAccount = async () => {
+    if (!currentCustomer?.id) return
+    if (!confirm('Excluir seu cadastro? O histórico operacional dos pedidos permanece na loja, mas seu perfil e vouchers ativos serão removidos.')) return
+    try {
+      const related = await pb.collection('campaigns').getFullList({ filter: `customerId="${currentCustomer.id}"` }).catch(() => [])
+      await Promise.all(related.map((x:any) => pb.collection('campaigns').delete(x.id).catch(() => null)))
+      await pb.collection('customers').delete(currentCustomer.id)
+      handleCustomerLogout(); setCustomerName(''); setCustomerPhone(''); setCustomerAddress('')
+      setVoucherMessage('Cadastro excluído.')
+    } catch (err:any) { setVoucherMessage(err?.message || 'Não foi possível excluir o cadastro.') }
   }
 
   // Checkout submit via endpoint /backend/v1/orders/finalize com origin: 'online'
@@ -721,6 +757,7 @@ export default function LojaPublica() {
       subtotal,
       discount: discountAmount,
       deliveryFee: currentDeliveryFee,
+      deliveryFeeRegion: selectedFeeNeighborhood,
       total: finalTotal,
       payment: finalPaymentLabel,
       paymentDetails,
@@ -746,12 +783,44 @@ export default function LojaPublica() {
         throw new Error('Falha ao registrar pedido.')
       }
     } catch (err: any) {
-      console.error('Erro ao enviar pedido online:', err)
-      setErrorMsg(
-        err?.data?.error ||
-          err?.message ||
-          'Não foi possível enviar o pedido. Tente novamente em alguns instantes.',
-      )
+      console.error('Erro no hook de finalização; verificando fallback seguro:', err)
+      try {
+        // Evita duplicar pedido caso o hook tenha gravado antes de falhar na resposta.
+        const recent = await pb.collection('orders').getFullList<OrderRecord>({
+          filter: `customerPhone="${cleanPhone}" && total=${finalTotal}`,
+          sort: '-created',
+        }).catch(() => [])
+        const justCreated = recent.find((o:any) => Date.now() - new Date(o.created || o.createdAt || 0).getTime() < 120000)
+        let order = justCreated
+        if (!order) {
+          order = await pb.collection('orders').create<OrderRecord>({
+            ticketNumber: Number(String(Date.now()).slice(-6)),
+            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee, deliveryFeeRegion: selectedFeeNeighborhood,
+            total: finalTotal, payment: finalPaymentLabel, paymentDetails,
+            status: 'pendente', origin: 'online', customerName: cleanName, customerPhone: cleanPhone,
+            deliveryType, customerAddress: payload.customerAddress,
+            deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng,
+            campaignId: appliedCampaign?.id || '',
+            invoiceRequested: wantsInvoice,
+            invoiceDocument: invoiceDocument.trim(),
+            invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
+      invoiceRequested: wantsInvoice,
+      invoiceDocument: invoiceDocument.trim(),
+      invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
+          })
+          for (const [key, qty] of Object.entries(deductions)) {
+            const inv = stockById(key)
+            if (inv?.id) await pb.collection('inventory').update(inv.id, { qty: Math.max(0, Number(inv.qty || 0) - Number(qty || 0)) }).catch(()=>null)
+          }
+          if (appliedCampaign?.id) await pb.collection('campaigns').update(appliedCampaign.id,{used:true,active:false}).catch(()=>null)
+        }
+        setConfirmedOrder(order as OrderRecord)
+        setCart([]); setAppliedCampaign(null); setCartOpen(false); localStorage.removeItem(CART_STORAGE_KEY)
+        setErrorMsg('')
+      } catch (fallbackErr:any) {
+        console.error('Falha também no fallback de finalização:', fallbackErr)
+        setErrorMsg(err?.data?.error || fallbackErr?.data?.message || fallbackErr?.message || err?.message || 'Não foi possível registrar o pedido.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -874,6 +943,8 @@ export default function LojaPublica() {
             </button>
           )}
         </div>
+
+        <StorePromotionCarousel />
 
         {/* Categorias (Pills horizontais) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
@@ -1312,6 +1383,14 @@ export default function LojaPublica() {
                     )}
                   </div>
 
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 space-y-2">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-white">
+                      <input type="checkbox" checked={wantsInvoice} onChange={e=>setWantsInvoice(e.target.checked)} />
+                      Desejo Nota Fiscal deste pedido
+                    </label>
+                    {wantsInvoice && <><input value={invoiceDocument} onChange={e=>setInvoiceDocument(e.target.value)} placeholder="CPF/CNPJ para a nota" className="w-full rounded-lg border border-zinc-700 bg-[#17171C] px-3 py-2 text-xs text-white"/><p className="text-[10px] text-zinc-500">A nota incluirá produtos, quantidades, adicionais, remoções, descontos e taxa de entrega. A autorização fiscal será processada pelo emissor fiscal conectado ao estabelecimento.</p></>}
+                  </div>
+
                   {/* Forma de Pagamento */}
                   <div>
                     <label className="block text-xs font-semibold text-[#C0C0C0] mb-1.5">
@@ -1443,6 +1522,15 @@ export default function LojaPublica() {
             {/* Footer Carrinho / Botão Enviar */}
             {cart.length > 0 && (
               <div className="p-4 border-t border-[#27272A] bg-[#121215] space-y-3">
+                <div className="rounded-xl border border-[#27272A] bg-[#17171C] p-3 space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-400">Voucher, código ou cupom</label>
+                  <div className="flex gap-2">
+                    <input value={voucherCode} onChange={(e)=>setVoucherCode(e.target.value.toUpperCase())} placeholder="Ex.: LOY-A1B2C3" className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs uppercase text-white" />
+                    <button type="button" onClick={handleApplyVoucherCode} className="rounded-lg bg-[#E10600] px-3 py-2 text-xs font-bold text-white">Aplicar</button>
+                  </div>
+                  {voucherMessage && <p className="text-[11px] text-zinc-400">{voucherMessage}</p>}
+                </div>
+
                 <div className="flex items-center justify-between text-xs text-[#C0C0C0]">
                   <span>Subtotal</span>
                   <span className="font-bold text-white font-mono">{fmtBRL(subtotal)}</span>
@@ -1602,6 +1690,7 @@ export default function LojaPublica() {
         campaigns={customerCampaigns}
         onLogin={handleCustomerLogin}
         onLogout={handleCustomerLogout}
+        onDeleteAccount={handleDeleteCustomerAccount}
         onApplyCampaign={(c) => {
           setAppliedCampaign(c)
           setAuthDrawerOpen(false)
