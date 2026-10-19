@@ -73,7 +73,8 @@ export default function FeaturedMenu() {
         .catch(() => []),
     ])
       .then(([items, settingsList]) => {
-        setMenuItems(items)
+        const isDraftDemo = import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true' && items.length === 0
+        setMenuItems(isDraftDemo ? seedMenu().filter(x=>x.active).map(x=>({...x,id:x.code})) as MenuItem[] : items)
         const openRec = (settingsList as any[]).find((s) => s.key === 'is_open')
         const forceOpenRec = (settingsList as any[]).find((s) => s.key === 'force_open')
         const forceClosedRec = (settingsList as any[]).find((s) => s.key === 'force_closed')
@@ -101,7 +102,10 @@ export default function FeaturedMenu() {
   useRealtime('menu', () => {
     pb.collection('menu')
       .getFullList<MenuItem>({ filter: 'active = true', sort: 'category,name' })
-      .then(setMenuItems)
+      .then((items) => {
+        const isDraftDemo = import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true' && items.length === 0
+        setMenuItems(isDraftDemo ? seedMenu().filter(x=>x.active).map(x=>({...x,id:x.code})) as MenuItem[] : items)
+      })
       .catch(() => {})
   })
 
