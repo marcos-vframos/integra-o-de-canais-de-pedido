@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { StoreCloseChoiceModal } from '@/components/StoreCloseChoiceModal'
+import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 
 function maskCNPJ(val: string): string {
   const digits = val.replace(/\D/g, '').slice(0, 14)
@@ -314,6 +315,9 @@ export default function Config() {
           </div>
         </div>
 
+        <section className="mb-4" aria-label="Instalação do aplicativo">
+          <PWAInstallBanner variant="banner" />
+        </section>
         {/* Card Principal: Configurações da Lanchonete e Status */}
         <div className="sc-card">
           <div className="flex items-center gap-2 mb-2">
