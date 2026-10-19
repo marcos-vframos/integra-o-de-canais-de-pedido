@@ -270,7 +270,11 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
                     <span>Sair desta conta</span>
                   </button>
                   {onDeleteAccount && (
-                    <button type="button" onClick={onDeleteAccount} className="w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:border-red-500/50 hover:text-red-400 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={onDeleteAccount}
+                      className="w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:border-red-500/50 hover:text-red-400 text-xs font-semibold"
+                    >
                       Excluir meu cadastro
                     </button>
                   )}
@@ -355,7 +359,9 @@ export const CustomerAuthDrawer: React.FC<CustomerAuthDrawerProps> = ({
                             </button>
                           )}
                         </div>
-                        <div className="rounded bg-black/30 px-2 py-1 font-mono text-[11px] text-amber-300">Código: LOY-{camp.id.slice(0, 6).toUpperCase()}</div>
+                        <div className="rounded bg-black/30 px-2 py-1 font-mono text-[11px] text-amber-300">
+                          Código: LOY-{camp.id.slice(0, 6).toUpperCase()}
+                        </div>
                         {camp.description && (
                           <p className="text-[11px] text-zinc-400">{camp.description}</p>
                         )}

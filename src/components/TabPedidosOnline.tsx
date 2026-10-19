@@ -542,12 +542,15 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                     </div>
                     {order.deliveryFee ? (
                       <span className="text-[11px] text-amber-300">
-                        Taxa de entrega: {fmtBRL(order.deliveryFee)}{order.deliveryFeeRegion ? ` • ${order.deliveryFeeRegion}` : ''}
+                        Taxa de entrega: {fmtBRL(order.deliveryFee)}
+                        {order.deliveryFeeRegion ? ` • ${order.deliveryFeeRegion}` : ''}
                       </span>
                     ) : null}
                     {order.invoiceRequested && (
                       <span className="text-[11px] text-blue-300">
-                        NF solicitada{order.invoiceDocument ? ` • CPF/CNPJ: ${order.invoiceDocument}` : ''} • {order.invoiceStatus || 'pendente_emissao'}
+                        NF solicitada
+                        {order.invoiceDocument ? ` • CPF/CNPJ: ${order.invoiceDocument}` : ''} •{' '}
+                        {order.invoiceStatus || 'pendente_emissao'}
                       </span>
                     )}
                   </div>

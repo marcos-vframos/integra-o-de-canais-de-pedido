@@ -800,7 +800,8 @@ export default function AdmLanding() {
                     value={formText.menuHeading}
                     onChange={(e) => setFormText({ ...formText, menuHeading: e.target.value })}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:border-amber-400 outline-none"
-                  />                </div>
+                  />{' '}
+                </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-300 block mb-1">Subtítulo</label>
                   <textarea
@@ -1199,7 +1200,8 @@ export default function AdmLanding() {
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.bgCard }}
                             title="Card"
-                          />                          <div
+                          />{' '}
+                          <div
                             className="w-5 h-5 rounded-full border border-white/20"
                             style={{ backgroundColor: preset.colors.accentVinho }}
                             title="Destaque Vinho/Accent"

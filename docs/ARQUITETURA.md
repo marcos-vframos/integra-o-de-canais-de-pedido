@@ -24,6 +24,7 @@ O frontend pode ser publicado como site estático no Netlify. O PocketBase é um
 ## 2. Rotas e canais
 
 ### `/` — Landing pública
+
 Entrada: `src/pages/Index.tsx`.
 
 Componentes principais: `Header`, `Hero`, `Marquee`, `Story`, `FeaturedMenu`, `Reviews`, `InstagramSection`, `OrderCTA`, `LocationHours`, `Footer` e `SeasonalCampaignOverlay`.
@@ -40,6 +41,7 @@ O conteúdo editorial e a paleta permanente vêm de `landing_content`. `LandingC
 `src/main.css` traduz esses tokens também para classes legadas que ainda possuem os HEX originais, mantendo o tema restrito a `.landing-scope`.
 
 ### `/loja` — Loja do cliente
+
 Entrada: `src/pages/LojaPublica.tsx`.
 
 Responsabilidades: menu/categorias, busca, customização, carrinho, Gourmet, identificação do cliente, vouchers, entrega/retirada, taxa de entrega, pagamento e envio do pedido ao backend.
@@ -47,11 +49,13 @@ Responsabilidades: menu/categorias, busca, customização, carrinho, Gourmet, id
 O carrinho do cliente possui persistência local. Menu, estoque e configurações recebem atualizações do PocketBase.
 
 ### `/gestao` — Gestão/PDV
+
 Entrada: `src/pages/Gestao.tsx`, protegida por `ProtectedRoute` e `Layout`.
 
 Responsabilidades: pedido de balcão, pedidos online, cardápio, estoque, motoboys, caixa, fechamento e operação offline. A fila offline é implementada em `src/lib/offlineQueue.ts` e sincronizada por `src/lib/offlineSync.ts`.
 
 ### `/adm-landing` — CMS da landing
+
 Entrada: `src/pages/AdmLanding.tsx`.
 
 Edita textos, imagens, presets de tema, paleta, campanhas sazonais e override de abertura/fechamento. O editor sazonal é `src/components/SeasonalCampaignAdmin.tsx`.
@@ -59,27 +63,28 @@ Edita textos, imagens, presets de tema, paleta, campanhas sazonais e override de
 **Atenção:** atualmente esta rota não está envolvida pelo `ProtectedRoute` em `App.tsx`. Antes de produção, ela deve receber autenticação/autorização equivalente às áreas administrativas.
 
 ### Autenticação
+
 `/login`, `/forgot-password`, `/reset-password`, `/verify-email` e `/confirm-email-change`. O estado de autenticação fica em `AuthContext`.
 
 ## 3. PocketBase
 
 Coleções de domínio:
 
-| Coleção | Papel |
-|---|---|
-| `menu` | produtos, preços, categoria, disponibilidade e receita/insumos |
-| `inventory` | estoque, unidade, quantidade e mínimo |
-| `orders` | pedidos, itens, valores, origem, entrega, pagamento, status e motoboy |
-| `closures` | fechamentos, totais, pagamentos, produtos e totais por origem |
-| `settings` | configurações chave/valor e estado operacional |
-| `users` | autenticação de operadores |
-| `categories` | categorias e ordenação do cardápio |
-| `motoboys` | entregadores, contato, placa, atividade e taxa |
-| `delivery_fees` | pontos/regras de taxa por localização/proximidade |
-| `customers` | CRM: identificação, contato, endereço e histórico agregado |
-| `campaigns` | vouchers/campanhas individuais de cliente |
-| `seasonal_campaigns` | campanhas visuais temporárias da landing |
-| `landing_content` | conteúdo e tema editáveis da landing |
+| Coleção              | Papel                                                                 |
+| -------------------- | --------------------------------------------------------------------- |
+| `menu`               | produtos, preços, categoria, disponibilidade e receita/insumos        |
+| `inventory`          | estoque, unidade, quantidade e mínimo                                 |
+| `orders`             | pedidos, itens, valores, origem, entrega, pagamento, status e motoboy |
+| `closures`           | fechamentos, totais, pagamentos, produtos e totais por origem         |
+| `settings`           | configurações chave/valor e estado operacional                        |
+| `users`              | autenticação de operadores                                            |
+| `categories`         | categorias e ordenação do cardápio                                    |
+| `motoboys`           | entregadores, contato, placa, atividade e taxa                        |
+| `delivery_fees`      | pontos/regras de taxa por localização/proximidade                     |
+| `customers`          | CRM: identificação, contato, endereço e histórico agregado            |
+| `campaigns`          | vouchers/campanhas individuais de cliente                             |
+| `seasonal_campaigns` | campanhas visuais temporárias da landing                              |
+| `landing_content`    | conteúdo e tema editáveis da landing                                  |
 
 As migrações ficam em `pocketbase/migrations/`. `src/lib/pocketbase/schema.json` é uma referência do schema e não substitui as migrações.
 

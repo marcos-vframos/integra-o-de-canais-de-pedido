@@ -95,6 +95,9 @@ export interface LandingContentState {
   // Footer
   footerDesc: string
 
+  // Marquee
+  marqueeItems?: string[]
+
   // Themes
   activeThemeId: string
   activeColors: LandingThemeColors
@@ -321,6 +324,9 @@ export const DEFAULT_LANDING_CONTENT: LandingContentState = {
   // Footer
   footerDesc:
     'O autêntico podrão brasileiro com mais de 18 anos de tradição. Fartura, saboroso, feito com carinho e ingredientes selecionados com capricho.',
+
+  // Marquee
+  marqueeItems: [],
 
   // Themes
   activeThemeId: 'padrao',

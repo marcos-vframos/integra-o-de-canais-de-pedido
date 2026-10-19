@@ -593,28 +593,56 @@ export default function LojaPublica() {
     const code = voucherCode.trim().toUpperCase()
     if (!code) return
     try {
-      const camps = await pb.collection('campaigns').getFullList<CampaignVoucher>({ filter: 'active=true && used=false' })
+      const camps = await pb
+        .collection('campaigns')
+        .getFullList<CampaignVoucher>({ filter: 'active=true && used=false' })
       const match = camps.find((camp: any) => {
         const generated = `LOY-${String(camp.id).slice(0, 6).toUpperCase()}`
-        const belongs = !camp.customerPhone || camp.customerPhone === customerPhone.trim() || camp.customerPhone === currentCustomer?.phone
+        const belongs =
+          !camp.customerPhone ||
+          camp.customerPhone === customerPhone.trim() ||
+          camp.customerPhone === currentCustomer?.phone
         return generated === code && belongs
       })
-      if (!match) return setVoucherMessage('Código inválido, já utilizado ou vinculado a outro cliente.')
+      if (!match)
+        return setVoucherMessage('Código inválido, já utilizado ou vinculado a outro cliente.')
       setAppliedCampaign(match)
       setVoucherMessage(`Voucher ${code} aplicado.`)
-    } catch { setVoucherMessage('Não foi possível validar o código agora.') }
+    } catch {
+      setVoucherMessage('Não foi possível validar o código agora.')
+    }
   }
 
   const handleDeleteCustomerAccount = async () => {
     if (!currentCustomer?.id) return
-    if (!confirm('Excluir seu cadastro? O histórico operacional dos pedidos permanece na loja, mas seu perfil e vouchers ativos serão removidos.')) return
+    if (
+      !confirm(
+        'Excluir seu cadastro? O histórico operacional dos pedidos permanece na loja, mas seu perfil e vouchers ativos serão removidos.',
+      )
+    )
+      return
     try {
-      const related = await pb.collection('campaigns').getFullList({ filter: `customerId="${currentCustomer.id}"` }).catch(() => [])
-      await Promise.all(related.map((x:any) => pb.collection('campaigns').delete(x.id).catch(() => null)))
+      const related = await pb
+        .collection('campaigns')
+        .getFullList({ filter: `customerId="${currentCustomer.id}"` })
+        .catch(() => [])
+      await Promise.all(
+        related.map((x: any) =>
+          pb
+            .collection('campaigns')
+            .delete(x.id)
+            .catch(() => null),
+        ),
+      )
       await pb.collection('customers').delete(currentCustomer.id)
-      handleCustomerLogout(); setCustomerName(''); setCustomerPhone(''); setCustomerAddress('')
+      handleCustomerLogout()
+      setCustomerName('')
+      setCustomerPhone('')
+      setCustomerAddress('')
       setVoucherMessage('Cadastro excluído.')
-    } catch (err:any) { setVoucherMessage(err?.message || 'Não foi possível excluir o cadastro.') }
+    } catch (err: any) {
+      setVoucherMessage(err?.message || 'Não foi possível excluir o cadastro.')
+    }
   }
 
   // Checkout submit via endpoint /backend/v1/orders/finalize com origin: 'online'
@@ -786,40 +814,70 @@ export default function LojaPublica() {
       console.error('Erro no hook de finalização; verificando fallback seguro:', err)
       try {
         // Evita duplicar pedido caso o hook tenha gravado antes de falhar na resposta.
-        const recent = await pb.collection('orders').getFullList<OrderRecord>({
-          filter: `customerPhone="${cleanPhone}" && total=${finalTotal}`,
-          sort: '-created',
-        }).catch(() => [])
-        const justCreated = recent.find((o:any) => Date.now() - new Date(o.created || o.createdAt || 0).getTime() < 120000)
+        const recent = await pb
+          .collection('orders')
+          .getFullList<OrderRecord>({
+            filter: `customerPhone="${cleanPhone}" && total=${finalTotal}`,
+            sort: '-created',
+          })
+          .catch(() => [])
+        const justCreated = recent.find(
+          (o: any) => Date.now() - new Date(o.created || o.createdAt || 0).getTime() < 120000,
+        )
         let order = justCreated
         if (!order) {
           order = await pb.collection('orders').create<OrderRecord>({
             ticketNumber: Number(String(Date.now()).slice(-6)),
-            items, subtotal, discount: discountAmount, deliveryFee: currentDeliveryFee, deliveryFeeRegion: selectedFeeNeighborhood,
-            total: finalTotal, payment: finalPaymentLabel, paymentDetails,
-            status: 'pendente', origin: 'online', customerName: cleanName, customerPhone: cleanPhone,
-            deliveryType, customerAddress: payload.customerAddress,
-            deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng,
+            items,
+            subtotal,
+            discount: discountAmount,
+            deliveryFee: currentDeliveryFee,
+            deliveryFeeRegion: selectedFeeNeighborhood,
+            total: finalTotal,
+            payment: finalPaymentLabel,
+            paymentDetails,
+            status: 'pendente',
+            origin: 'online',
+            customerName: cleanName,
+            customerPhone: cleanPhone,
+            deliveryType,
+            customerAddress: payload.customerAddress,
+            deliveryLat: payload.deliveryLat,
+            deliveryLng: payload.deliveryLng,
             campaignId: appliedCampaign?.id || '',
             invoiceRequested: wantsInvoice,
             invoiceDocument: invoiceDocument.trim(),
             invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
-      invoiceRequested: wantsInvoice,
-      invoiceDocument: invoiceDocument.trim(),
-      invoiceStatus: wantsInvoice ? 'pendente_emissao' : 'nao_solicitada',
           })
           for (const [key, qty] of Object.entries(deductions)) {
             const inv = stockById(key)
-            if (inv?.id) await pb.collection('inventory').update(inv.id, { qty: Math.max(0, Number(inv.qty || 0) - Number(qty || 0)) }).catch(()=>null)
+            if (inv?.id)
+              await pb
+                .collection('inventory')
+                .update(inv.id, { qty: Math.max(0, Number(inv.qty || 0) - Number(qty || 0)) })
+                .catch(() => null)
           }
-          if (appliedCampaign?.id) await pb.collection('campaigns').update(appliedCampaign.id,{used:true,active:false}).catch(()=>null)
+          if (appliedCampaign?.id)
+            await pb
+              .collection('campaigns')
+              .update(appliedCampaign.id, { used: true, active: false })
+              .catch(() => null)
         }
         setConfirmedOrder(order as OrderRecord)
-        setCart([]); setAppliedCampaign(null); setCartOpen(false); localStorage.removeItem(CART_STORAGE_KEY)
+        setCart([])
+        setAppliedCampaign(null)
+        setCartOpen(false)
+        localStorage.removeItem(CART_STORAGE_KEY)
         setErrorMsg('')
-      } catch (fallbackErr:any) {
+      } catch (fallbackErr: any) {
         console.error('Falha também no fallback de finalização:', fallbackErr)
-        setErrorMsg(err?.data?.error || fallbackErr?.data?.message || fallbackErr?.message || err?.message || 'Não foi possível registrar o pedido.')
+        setErrorMsg(
+          err?.data?.error ||
+            fallbackErr?.data?.message ||
+            fallbackErr?.message ||
+            err?.message ||
+            'Não foi possível registrar o pedido.',
+        )
       }
     } finally {
       setSubmitting(false)
@@ -1385,10 +1443,28 @@ export default function LojaPublica() {
 
                   <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 space-y-2">
                     <label className="flex items-center gap-2 text-xs font-semibold text-white">
-                      <input type="checkbox" checked={wantsInvoice} onChange={e=>setWantsInvoice(e.target.checked)} />
+                      <input
+                        type="checkbox"
+                        checked={wantsInvoice}
+                        onChange={(e) => setWantsInvoice(e.target.checked)}
+                      />
                       Desejo Nota Fiscal deste pedido
                     </label>
-                    {wantsInvoice && <><input value={invoiceDocument} onChange={e=>setInvoiceDocument(e.target.value)} placeholder="CPF/CNPJ para a nota" className="w-full rounded-lg border border-zinc-700 bg-[#17171C] px-3 py-2 text-xs text-white"/><p className="text-[10px] text-zinc-500">A nota incluirá produtos, quantidades, adicionais, remoções, descontos e taxa de entrega. A autorização fiscal será processada pelo emissor fiscal conectado ao estabelecimento.</p></>}
+                    {wantsInvoice && (
+                      <>
+                        <input
+                          value={invoiceDocument}
+                          onChange={(e) => setInvoiceDocument(e.target.value)}
+                          placeholder="CPF/CNPJ para a nota"
+                          className="w-full rounded-lg border border-zinc-700 bg-[#17171C] px-3 py-2 text-xs text-white"
+                        />
+                        <p className="text-[10px] text-zinc-500">
+                          A nota incluirá produtos, quantidades, adicionais, remoções, descontos e
+                          taxa de entrega. A autorização fiscal será processada pelo emissor fiscal
+                          conectado ao estabelecimento.
+                        </p>
+                      </>
+                    )}
                   </div>
 
                   {/* Forma de Pagamento */}
@@ -1523,10 +1599,23 @@ export default function LojaPublica() {
             {cart.length > 0 && (
               <div className="p-4 border-t border-[#27272A] bg-[#121215] space-y-3">
                 <div className="rounded-xl border border-[#27272A] bg-[#17171C] p-3 space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-400">Voucher, código ou cupom</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wide text-zinc-400">
+                    Voucher, código ou cupom
+                  </label>
                   <div className="flex gap-2">
-                    <input value={voucherCode} onChange={(e)=>setVoucherCode(e.target.value.toUpperCase())} placeholder="Ex.: LOY-A1B2C3" className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs uppercase text-white" />
-                    <button type="button" onClick={handleApplyVoucherCode} className="rounded-lg bg-[#E10600] px-3 py-2 text-xs font-bold text-white">Aplicar</button>
+                    <input
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                      placeholder="Ex.: LOY-A1B2C3"
+                      className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs uppercase text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyVoucherCode}
+                      className="rounded-lg bg-[#E10600] px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Aplicar
+                    </button>
                   </div>
                   {voucherMessage && <p className="text-[11px] text-zinc-400">{voucherMessage}</p>}
                 </div>

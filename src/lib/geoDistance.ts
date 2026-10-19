@@ -49,16 +49,22 @@ export function resolveDeliveryFee(
     try {
       const meta = f.description ? JSON.parse(f.description) : null
       return meta?.polygon ? { ...f, polygon: meta.polygon as [number, number][] } : f
-    } catch { return f }
+    } catch {
+      return f
+    }
   })
   const inside = parsed.find((f) => {
     const poly = f.polygon
     if (!poly || poly.length < 3) return false
     let hit = false
-    for (let i=0,j=poly.length-1;i<poly.length;j=i++) {
-      const yi=poly[i][0], xi=poly[i][1], yj=poly[j][0], xj=poly[j][1]
-      const cross=((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/((yj-yi)||1e-12)+xi)
-      if(cross) hit=!hit
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const yi = poly[i][0],
+        xi = poly[i][1],
+        yj = poly[j][0],
+        xj = poly[j][1]
+      const cross =
+        yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi || 1e-12) + xi
+      if (cross) hit = !hit
     }
     return hit
   })

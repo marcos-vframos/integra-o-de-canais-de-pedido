@@ -989,9 +989,9 @@ export default function Gestao() {
             consumedMap[r.ingredientId] = (consumedMap[r.ingredientId] || 0) + r.qty * it.qty
           }
         })
-        ;(it.added || []).forEach((a) => {
+        ;(it.added || []).forEach((a: any) => {
           const ingObj = stock.find((s) => s.name === a.name || s.id === a.ingredientId)
-          const ingId = ingObj?.id || a.ingredientId
+          const ingId = ingObj?.id || a.ingredientId || a.name
           consumedMap[ingId] = (consumedMap[ingId] || 0) + a.qty * it.qty
         })
       })
