@@ -315,11 +315,10 @@ export default function Config() {
           </div>
         </div>
 
-        <section className="mb-4" aria-label="Instalação do aplicativo">
-          <PWAInstallBanner variant="banner" />
-        </section>
-        {/* Card Principal: Configurações da Lanchonete e Status */}
-        <div className="sc-card">
+        {/* Instalação integrada dentro da área acessada pela engrenagem */}
+        <div className="sc-card space-y-4">
+          <PWAInstallBanner variant="settings" />
+          <div className="border-t border-[var(--line)] pt-4"></div>
           <div className="flex items-center gap-2 mb-2">
             <Settings size={20} className="text-[var(--red)]" />
             <h2 className="sc-title" style={{ marginBottom: 0, paddingBottom: 0 }}>
