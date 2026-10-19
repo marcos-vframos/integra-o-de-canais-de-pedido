@@ -1,6 +1,6 @@
 # MIGRAÇÃO LOYOLA'S → SUPABASE — BASE DE TRABALHO
 **Branch:** `supabase-estrutura-inicial-20261016`  
-**Estado em 19/10/2026:** projeto Supabase **criado e HEALTHY**, baseline SQL aplicado, 14 tabelas PostgreSQL, isolamento RLS ativado, tenant Loyola's Lanches em `DRAFT`, bucket de mídia de campanhas criado e auditoria de segurança do Supabase sem avisos. **Ainda NÃO foram migrados dados nem integrado o frontend**.
+**Estado em 19/10/2026:** projeto Supabase **criado e HEALTHY**, baseline SQL aplicado, 14 tabelas PostgreSQL, isolamento RLS ativado, tenant Loyola's Lanches em `DRAFT`, bucket de mídia de campanhas criado e auditoria de segurança do Supabase sem avisos. **194 registros operacionais já importados e conferidos no Supabase; frontend ainda não integrado, três imagens e contas de acesso pendentes**.
 
 ## 1. Por que esta migração
 O frontend público (Landing + Loja) e o Gestor PWA estão publicados em projetos Vercel separados. O app foi escrito contra o SDK do PocketBase: uma conexão Supabase nova NÃO substitui a API automaticamente. Sem migrar o adaptador de dados, o app continua em modo demonstração e operações de escrita não são persistidas.
@@ -15,7 +15,7 @@ O Supabase foi conectado na organização `Work Space of Marcos` (plano Free). O
 - [x] Migração `campaign_storage_tenant_policies` aplicada: bucket `loyolas-public-media` e upload restrito por empresa.
 - [x] Auditoria automatizada de segurança: nenhuma recomendação detectada após ajustes.
 - [x] Tenant `loyolas-lanches` criado em `DRAFT`, sem catálogo importado e sem usuários associados.
-- [ ] Exportar e importar os dados completos do PocketBase antigo; mapear arquivos e IDs.
+- [x] Backup original do PocketBase recebido e validado: 194 registros operacionais importados; identificadores legados preservados e senha/token excluídos.\n- [ ] Transferir 3 imagens do backup para o Supabase Storage; manifesto privado gerado.\n- [x] Migração `landing_media_storage_policies` aplicada: escrita em `landing/` e `campaigns/` somente por dono/gerente do tenant.
 - [ ] Configurar autenticação Supabase Auth, criar a conta do proprietário e associá-la ao tenant.
 - [ ] Substituir os acessos PocketBase do frontend pelos adaptadores Supabase.
 - [ ] Implementar Edge Functions de finalização de pedido, descontos, estoques e fechamento de caixa.
@@ -70,7 +70,7 @@ O funcionamento de um aplicativo para UMA empresa também precisa filtrar por `t
 2. **Concluído:** baseline aplicada no banco novo, tabelas verificadas com RLS ativo e auditoria de segurança sem avisos.
 3. Configurar `supabase-js` no React, criar adaptadores de leitura para Landing e Catálogo, sem substituir todos os módulos no mesmo commit.
 4. Implementar autenticação, RBAC, Storage e APIs de escrita; testar isolamento, IDOR e tentativas anônimas.
-5. Exportar backup integral do PocketBase antigo: registros + arquivos (evitar migrar sem ele). Mapear IDs e referências.
+5. **Concluído para registros:** backup PocketBase recebido, validado por SQLite e 194 registros importados, com `legacy_id`. **Pendente:** envio de três mídias ao Storage.
 6. Importar dados em ordem: tenants → categorias/cardápio/estoque → clientes → campanhas → pedidos/caixa → anexos.
 7. Conferir contagem, totais, hashes de anexos e amostras; realizar testes reais em ambiente isolado.
 8. Configurar **ambos** os projetos Vercel com o **mesmo URL Supabase**, a chave publishable e o tenant apropriado.
@@ -86,7 +86,7 @@ VITE_TENANT_SLUG=loyolas-lanches
 Essas variáveis são **especificação futura**, ainda não consumidas pelo código atual. As versões Vercel dependem de novos builds após alterar variáveis. As configurações do banco continuam no servidor.
 
 ## 8. Critérios objetivos de aceite
-- [ ] Projeto Supabase real criado e migração SQL aplicada com sucesso.
+- [x] Projeto Supabase real criado e migração SQL aplicada com sucesso.
 - [ ] Políticas RLS testadas: anônimo não modifica tabelas, staff de outro tenant não acessa dados.
 - [ ] Landing carrega catálogo da API Supabase.
 - [ ] Gestor edita paletas, campanhas, textos e cardápio; alterações chegam na Landing.
@@ -97,4 +97,4 @@ Essas variáveis são **especificação futura**, ainda não consumidas pelo có
 - [ ] F5 busca o novo build depois de `READY`; alterações de dados podem ser visualizadas sem redeploy.
 
 ## 9. Pontos ainda não concluídos
-A estrutura SQL **já foi aplicada ao Supabase novo**, porém os adaptadores frontend e os dados operacionais **não foram migrados**. O ambiente legado PocketBase/Skip continua intacto como fonte a ser exportada. O tenant permanece em DRAFT, sem usuários e sem pedidos reais. Publicação na Vercel pode exigir aguardar a renovação da cota do plano.
+A estrutura SQL e **194 registros operacionais de 12 coleções** já estão importados no Supabase. Contagens conferidas: 87 menu, 50 estoque, 17 pedidos, 12 Landing, 9 configurações, 8 categorias, 6 taxas, 2 clientes, 1 motoboy, 1 campanha sazonal, 1 fechamento de caixa e 0 cupons. **Três imagens** ainda precisam ser transferidas para o Storage. Usuários PocketBase (senhas e tokens) não foram importados por segurança. O frontend Vercel ainda não consulta o Supabase; PocketBase/Skip permanece intacto. Tenant em DRAFT, sem usuários Auth nem vinculações. Publicação na Vercel depende de deploy homologado.
