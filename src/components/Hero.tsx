@@ -153,7 +153,7 @@ export default function Hero() {
               >
                 <h1 className="font-heading font-extrabold text-3xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.08] text-white">
                   {currentHeadline.prefix} <br />
-                  <span className="text-[#E2E8F0] font-bold underline decoration-[#8F0F1B]/60 decoration-wavy decoration-2 underline-offset-8">
+                  <span className="text-[#E2E8F0] font-bold">
                     {currentHeadline.highlight}
                   </span>
                 </h1>
