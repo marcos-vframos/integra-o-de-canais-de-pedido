@@ -37,7 +37,6 @@ import { ClosureModal } from '@/components/ClosureModal'
 import { ConnectionStatusBadge } from '@/components/ConnectionStatusBadge'
 import { StoreCloseChoiceModal } from '@/components/StoreCloseChoiceModal'
 import { OfflineQueueModal } from '@/components/OfflineQueueModal'
-import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import type { OfflineOrderItem } from '@/types/offline'
 import {
@@ -127,14 +126,25 @@ export default function Gestao() {
   // Load initial data
   const loadInitialData = useCallback(async () => {
     if (demoGestaoMode) {
-      // Work offline with sample menu/stock without exposing or depending on the legacy database.
-      setMenu(getMenuCache() ?? seedMenu().map(item => ({ ...item, id: item.code })))
-      setStock(getStockCache() ?? seedStock().map(item => ({ ...item, id: item.code })))
-      const saved = getSettingsCache()
-      if (saved) {
-        setCartName(saved.storeName)
-        setIsOpen(saved.isOpen)
-        setTicketCounter(saved.ticketCounter || 1)
+      // Read ONLY public storefront data. Private stock/orders/clients require authenticated staff.
+      // The demo must never silently replace the 87 imported products with fictitious seed data.
+      try {
+        const [catalog, publicSettings] = await Promise.all([
+          pb.collection('menu').getFullList<MenuItem>({ sort: 'name' }),
+          pb.collection('settings').getFullList<{ id: string; key: string; value: string }>().catch(() => []),
+        ])
+        setMenu(catalog)
+        if (catalog.length) saveMenuCache(catalog)
+        const name = publicSettings.find(x => x.key === 'store_name')
+        const open = publicSettings.find(x => x.key === 'is_open')
+        if (name) setCartName(name.value)
+        if (open) setIsOpen(open.value === 'true')
+        setStock([]) // Never display invented/private inventory as if it were real.
+      } catch (error) {
+        console.error('Falha ao carregar catálogo público do Supabase:', error)
+        setMenu(getMenuCache() || [])
+        setStock([])
+        setBanner('Falha ao consultar cardápio do Supabase. Tente atualizar a página.')
       }
       setLoaded(true)
       return
@@ -1243,10 +1253,24 @@ export default function Gestao() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <PWAInstallBanner variant="header" />
-
-              <ConnectionStatusBadge
+            <div className="sc-header-actions">
+              <div className="sc-header-icons">
+                <Link
+                  to="/adm-landing"
+                  state={{ returnTo: '/gestao' }}
+                  className="sc-icon-btn"
+                  title="Abrir ADM da Landing"
+                  aria-label="Abrir ADM da Landing"
+                ><StoreIcon size={15} /></Link>
+                <Link
+                  to="/config"
+                  className="sc-icon-btn"
+                  title="Configurações e instalação"
+                  aria-label="Configurações e instalação"
+                ><SettingsIcon size={15} /></Link>
+              </div>
+              <div className="sc-header-statuses">
+                <ConnectionStatusBadge
                 isOnline={isOnline}
                 isSyncing={isSyncing}
                 pendingCount={
@@ -1268,30 +1292,12 @@ export default function Gestao() {
                 {isOpen ? 'Aberto' : 'Fechado'}
               </button>
 
-              <Link
-                to="/adm-landing"
-                state={{ returnTo: '/gestao' }}
-                className="sc-icon-btn"
-                title="Abrir ADM da Landing"
-                aria-label="Abrir ADM da Landing"
-              >
-                <StoreIcon size={15} />
-              </Link>
-
-              <Link
-                to="/config"
-                className="sc-icon-btn"
-                title="Configurações da lanchonete"
-                aria-label="Configurações"
-              >
-                <SettingsIcon size={15} />
-              </Link>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Banner de Instalação do PWA (discreto, preto e vermelho) */}
-        <PWAInstallBanner variant="banner" />
+
 
         {/* Banner */}
         {banner && (
