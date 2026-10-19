@@ -3,7 +3,7 @@ import { Download, Share, PlusSquare, Check, X, Smartphone } from 'lucide-react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 
 interface PWAInstallButtonProps {
-  variant?: 'header' | 'banner' | 'card'
+  variant?: 'header' | 'banner' | 'card' | 'settings'
   className?: string
 }
 
@@ -12,6 +12,34 @@ export const PWAInstallBanner: React.FC<PWAInstallButtonProps> = ({ variant = 'b
   const [dismissed, setDismissed] = useState(false)
   const [showIOSInstructions, setShowIOSInstructions] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
+
+  if (variant === 'settings') {
+    return (
+      <section className="rounded-xl border border-[#E10600]/30 bg-[#151516] p-4 space-y-3" aria-label="Instalação do aplicativo">
+        <div className="flex items-center gap-2">
+          <Download className="text-[#E10600]" size={19}/>
+          <h3 className="text-sm font-bold text-white">Instalar o Gestor no dispositivo</h3>
+        </div>
+        <p className="text-xs leading-relaxed text-zinc-300">Instale este painel como aplicativo para acesso rápido na tela inicial. A instalação não altera dados no Supabase.</p>
+        {isInstalled ? (
+          <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400"><Check size={16}/> Aplicativo já instalado neste modo de exibição</div>
+        ) : isInstallable ? (
+          <button type="button" onClick={async()=>{setIsInstalling(true);try{await promptInstall()}finally{setIsInstalling(false)}}} disabled={isInstalling}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#E10600] px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">
+            <Download size={16}/>{isInstalling?'Aguardando…':'Instalar Gestor'}
+          </button>
+        ) : (
+          <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-xs text-zinc-200 space-y-2">
+            <p className="font-semibold">Instalação pelo menu do navegador</p>
+            <p><strong>Android:</strong> abra este endereço no Chrome (fora do navegador interno de apps) → menu ⋮ → Instalar app ou Adicionar à tela inicial.</p>
+            <p><strong>iPhone:</strong> abra no Safari → Compartilhar → Adicionar à Tela de Início.</p>
+            <p><strong>Computador:</strong> abra no Chrome ou Edge → menu → Instalar aplicativo.</p>
+            <p className="text-amber-200">Se estiver no navegador interno do ChatGPT, toque no menu do navegador e escolha abrir no Chrome/Safari antes de instalar.</p>
+          </div>
+        )}
+      </section>
+    )
+  }
 
   // Não exibe se já instalado como PWA ou fechado pelo operador
   if (isInstalled || dismissed) {
