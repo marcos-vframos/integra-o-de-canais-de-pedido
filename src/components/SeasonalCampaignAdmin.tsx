@@ -7,7 +7,9 @@ import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { DEFAULT_THEME_COLORS, type LandingThemeColors, useLandingContent } from '@/context/LandingContentContext'
 import { OCCASION_PALETTES } from '@/lib/occasionPalettes'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
+import type { MenuItem, InventoryItem } from '@/types/loyolas'
 
+type CampaignOffer = { productId: string; unitPrice?: number; included: { ingredientId: string; qty: number }[] }
 interface CampaignRow {
   id: string
   title: string
@@ -21,6 +23,7 @@ interface CampaignRow {
   palette?: Partial<LandingThemeColors>
   images?: string[]
   media?: string
+  offer?: CampaignOffer
   created?: string
 }
 interface CampaignDraft {
@@ -36,11 +39,13 @@ interface CampaignDraft {
   imageUrl: string
   palette: LandingThemeColors
   existingMedia?: string
+  offer: CampaignOffer
 }
 const emptyDraft = (): CampaignDraft => ({
   title: '', badge: '', description: '', active: false, startDate: '', endDate: '',
   ctaText: 'Ver oferta', ctaUrl: '#fazer-pedido', imageUrl: '',
   palette: { ...DEFAULT_THEME_COLORS },
+  offer: { productId: '', included: [] },
 })
 const toInputDate = (value?: string) => {
   if (!value) return ''
@@ -63,6 +68,8 @@ const validCta = (value: string) => value.startsWith('/') || value.startsWith('#
 export default function SeasonalCampaignAdmin() {
   const { content, saveTheme } = useLandingContent()
   const [items, setItems] = useState<CampaignRow[]>([])
+  const [products, setProducts] = useState<MenuItem[]>([])
+  const [ingredients, setIngredients] = useState<InventoryItem[]>([])
   const [draft, setDraft] = useState<CampaignDraft>(emptyDraft)
   const [savedPromos, setSavedPromos] = useState<SavedPromotionPalette[]>([])
   const [paletteName, setPaletteName] = useState('')
@@ -95,7 +102,15 @@ export default function SeasonalCampaignAdmin() {
     try { setSavedPromos(await loadPromotionPalettes()) }
     catch (e: unknown) { setError('Falha ao carregar paletas de promoção: ' + getErrorMessage(e)) }
   }
-  useEffect(() => { void load(); void reloadPalettes() }, [])
+  useEffect(() => {
+    void load(); void reloadPalettes()
+    if (!pb.authStore.isValid) return
+    void Promise.all([
+      pb.collection('menu').getFullList<MenuItem>({ sort: 'name' }),
+      pb.collection('inventory').getFullList<InventoryItem>({ sort: 'name' }),
+    ]).then(([menu, stock]) => { setProducts(menu.filter(p => p.active)); setIngredients(stock.filter(s => s.group === 'Ingrediente')) })
+      .catch(e => setError('Não foi possível carregar os produtos e ingredientes: '+getErrorMessage(e)))
+  }, [])
   useRealtime('seasonal_campaigns', () => { void load() })
   useRealtime('landing_content', () => { void reloadPalettes() })
   useEffect(() => {
@@ -115,6 +130,7 @@ export default function SeasonalCampaignAdmin() {
       imageUrl: Array.isArray(row.images) ? row.images[0] || '' : '',
       existingMedia: row.media ? pb.files.getURL(row, row.media) : '',
       palette: { ...DEFAULT_THEME_COLORS, ...(row.palette || {}) },
+      offer: { productId: row.offer?.productId || '', unitPrice: row.offer?.unitPrice, included: Array.isArray(row.offer?.included) ? row.offer.included : [] },
     })
     setMediaFile(null); setError(''); setSuccess(''); setFieldErrors({})
   }
@@ -167,6 +183,16 @@ export default function SeasonalCampaignAdmin() {
     }
     if (!backendConfigured) { setError(backendConfigMessage + ' A campanha não foi salva: o Gestor e a Landing ainda não compartilham um banco operacional.'); return }
     if (!pb.authStore.isValid) { setError('A campanha não foi salva: o backend exige um operador autenticado. O modo sem login é apenas demonstrativo.'); return }
+    if (draft.offer.productId) {
+      const product = products.find(p => p.id === draft.offer.productId)
+      if (!product) { setError('Escolha um produto válido na lista de ofertas.'); return }
+      if (draft.offer.unitPrice !== undefined && (!Number.isFinite(draft.offer.unitPrice) || draft.offer.unitPrice < 0 || draft.offer.unitPrice > product.price)) {
+        setError('O preço anunciado deve estar entre R$ 0,00 e o preço normal do produto.'); return
+      }
+      if (draft.offer.included.some(i=>!ingredients.some(s=>s.id===i.ingredientId) || !Number.isInteger(i.qty) || i.qty<1 || i.qty>10)) {
+        setError('Verifique os ingredientes gratuitos e quantidades da oferta.'); return
+      }
+    }
     setSaving(true)
     try {
       const payload = new FormData()
@@ -179,6 +205,7 @@ export default function SeasonalCampaignAdmin() {
       payload.append('ctaText', draft.ctaText.trim() || 'Ver oferta')
       payload.append('ctaUrl', draft.ctaUrl.trim() || '#fazer-pedido')
       payload.append('palette', JSON.stringify(draft.palette))
+      payload.append('offer', JSON.stringify(draft.offer.productId ? draft.offer : {}))
       payload.append('images', JSON.stringify(draft.imageUrl.trim() ? [draft.imageUrl.trim()] : []))
       if (mediaFile) payload.append('media', mediaFile)
       const record = draft.id
@@ -187,7 +214,7 @@ export default function SeasonalCampaignAdmin() {
       const rows = await load()
       if (!rows.some(r => r.id === record.id)) throw new Error('O banco não confirmou a campanha criada. Atualize e confira.')
       setDraft(emptyDraft()); setMediaFile(null)
-      setSuccess('Campanha salva e confirmada no PocketBase. A Landing e o carrossel lerão esta informação.')
+      setSuccess('Campanha salva no Supabase. A oferta vinculada será aplicada ao carrinho sem cobrança dos brindes.')
     } catch (e: unknown) {
       setFieldErrors(extractFieldErrors(e))
       setError('Não foi possível criar a campanha: ' + getErrorMessage(e))
@@ -246,6 +273,34 @@ export default function SeasonalCampaignAdmin() {
         </div>
         {preview && <div className="md:col-span-2 max-h-48 overflow-hidden rounded-lg border border-zinc-700 bg-black">{isVideo ? <video src={preview} controls className="max-h-48 w-full object-contain"/> : !preview.toLowerCase().endsWith('.pdf') ? <img src={preview} alt="Prévia da campanha" className="max-h-48 w-full object-contain"/> : <span className="p-4 text-xs text-zinc-300">PDF selecionado para a campanha</span>}</div>}
         <label className="md:col-span-2 text-xs text-zinc-300">Descrição<textarea value={draft.description} onChange={e=>update('description',e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
+      </div>
+      <div className="space-y-3 rounded-xl border border-amber-500/20 bg-zinc-950/70 p-4">
+        <h3 className="text-sm font-bold text-white">Oferta vinculada ao carrinho</h3>
+        <p className="text-xs text-zinc-400">Configure o produto anunciado e os ingredientes oferecidos sem custo. O checkout confirma preço e cortesia diretamente no banco.</p>
+        <label className="block text-xs text-zinc-200">Produto da oferta
+          <select value={draft.offer.productId} onChange={e => update('offer',{productId:e.target.value,included:[]})} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white">
+            <option value="">Somente campanha institucional (sem produto)</option>
+            {products.map(p=><option key={p.id} value={p.id}>{p.name} — R$ {Number(p.price).toFixed(2)}</option>)}
+          </select>
+        </label>
+        {draft.offer.productId && <>
+          <label className="block text-xs text-zinc-200">Preço anunciado por unidade (R$)
+            <input type="number" min="0" step="0.01" value={draft.offer.unitPrice ?? products.find(p=>p.id===draft.offer.productId)?.price ?? ''} onChange={e=>update('offer',{...draft.offer,unitPrice:e.target.value===''?undefined:Number(e.target.value)})} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white"/>
+          </label>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-zinc-200">Adicionais incluídos no anúncio — sem custo</div>
+            {draft.offer.included.map((entry,idx)=><div key={idx} className="flex flex-wrap items-center gap-2">
+              <select value={entry.ingredientId} onChange={e=>update('offer',{...draft.offer,included:draft.offer.included.map((a,i)=>i===idx?{...a,ingredientId:e.target.value}:a)})} className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-xs text-white">
+                <option value="">Escolha um ingrediente</option>
+                {ingredients.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <input type="number" aria-label="Quantidade gratuita por unidade" min="1" max="10" value={entry.qty} onChange={e=>update('offer',{...draft.offer,included:draft.offer.included.map((a,i)=>i===idx?{...a,qty:Number(e.target.value)}:a)})} className="w-16 rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-xs text-white"/>
+              <button type="button" onClick={()=>update('offer',{...draft.offer,included:draft.offer.included.filter((_,i)=>i!==idx)})} className="rounded-lg bg-zinc-800 p-2 text-red-300" aria-label="Remover ingrediente gratuito"><Trash2 size={14}/></button>
+            </div>)}
+            <button type="button" onClick={()=>update('offer',{...draft.offer,included:[...draft.offer.included,{ingredientId:'',qty:1}]})} className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-white"><Plus size={13} className="inline"/> Adicionar ingrediente gratuito</button>
+          </div>
+          <p className="text-xs text-amber-200">A cortesia integra a descrição e a baixa de estoque, mas não o valor cobrado. Outros adicionais escolhidos fora da oferta seguem o preço normal.</p>
+        </>}
       </div>
       <div className="space-y-3 border-t border-white/10 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
