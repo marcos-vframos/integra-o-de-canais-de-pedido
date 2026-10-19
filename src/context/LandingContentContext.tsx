@@ -406,10 +406,12 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             } else if (data.storyImage) {
               next.storyImage = data.storyImage
             }
-            if (Array.isArray(data.storyImages) && data.storyImages.length > 0) {
+            // Prefer the original uploaded image recovered from PocketBase over outdated external URLs.
+            if (next.storyImage) {
+              const others = Array.isArray(data.storyImages) ? data.storyImages.filter((src: string) => src && src !== next.storyImage) : []
+              next.storyImages = [next.storyImage, ...others]
+            } else if (Array.isArray(data.storyImages)) {
               next.storyImages = data.storyImages
-            } else if (next.storyImage) {
-              next.storyImages = [next.storyImage]
             }
             if (data.storyCard1Title) next.storyCard1Title = data.storyCard1Title
             if (data.storyCard1Desc) next.storyCard1Desc = data.storyCard1Desc
@@ -455,6 +457,17 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             }
           }
         })
+
+        // Legacy PocketBase stored two uploaded Hero images in separate landing_content
+        // sections. Their binaries and image_path have now been restored to Supabase Storage.
+        const slides = [...(next.heroSlides || [])]
+        records.filter((rec: any) => /^slide_\d+$/.test(String(rec.section))).forEach((rec: any) => {
+          const index = Number(String(rec.section).replace('slide_', ''))
+          if (!Number.isInteger(index) || index < 0 || index > 20 || !rec.image) return
+          const fallback = slides[index] || { image: '', title: 'Destaque da Casa', price: '', tag: '', subtitle: '' }
+          slides[index] = { ...fallback, image: pb.files.getURL(rec, rec.image) }
+        })
+        if (slides.length) next.heroSlides = slides
 
         return next
       })
