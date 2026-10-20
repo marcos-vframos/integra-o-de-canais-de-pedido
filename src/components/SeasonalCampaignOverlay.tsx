@@ -4,7 +4,7 @@ import { X, ArrowUpRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { notifyOffer, type CampaignOffer } from '@/lib/campaignOffer'
 import useRealtime from '@/hooks/use-realtime'
-import { DEFAULT_THEME_COLORS, LandingThemeColors, useLandingContent } from '@/context/LandingContentContext'
+import type { LandingThemeColors } from '@/context/LandingContentContext'
 
 interface SeasonalCampaign {
   id: string
@@ -30,7 +30,6 @@ function isCampaignLive(c: SeasonalCampaign, now = new Date()) {
 }
 
 export default function SeasonalCampaignOverlay() {
-  const { content } = useLandingContent()
   const [campaigns, setCampaigns] = useState<SeasonalCampaign[]>([])
   const [dismissedId, setDismissedId] = useState<string | null>(null)
 
@@ -48,27 +47,8 @@ export default function SeasonalCampaignOverlay() {
 
   const active = useMemo(() => campaigns.find((c) => isCampaignLive(c)) || null, [campaigns])
 
-  useEffect(() => {
-    const base = content.activeColors || DEFAULT_THEME_COLORS
-    const palette = active?.palette || {}
-    const colors = { ...base, ...palette }
-    const root = document.documentElement
-    root.style.setProperty('--landing-bg-primary', colors.bgPrimary)
-    root.style.setProperty('--landing-bg-secondary', colors.bgSecondary)
-    root.style.setProperty('--landing-bg-card', colors.bgCard)
-    root.style.setProperty('--landing-vinho', colors.accentVinho)
-    root.style.setProperty('--landing-vinho-hover', colors.accentVinhoHover)
-    root.style.setProperty('--landing-silver', colors.accentSilver)
-
-    return () => {
-      root.style.setProperty('--landing-bg-primary', base.bgPrimary)
-      root.style.setProperty('--landing-bg-secondary', base.bgSecondary)
-      root.style.setProperty('--landing-bg-card', base.bgCard)
-      root.style.setProperty('--landing-vinho', base.accentVinho)
-      root.style.setProperty('--landing-vinho-hover', base.accentVinhoHover)
-      root.style.setProperty('--landing-silver', base.accentSilver)
-    }
-  }, [active, content.activeColors])
+  // Promoções podem trocar texto/imagens, mas NUNCA a paleta global da Landing.
+  // Só o ADM da Landing, por meio de saveTheme(), altera as cores persistidas.
 
   if (!active || dismissedId === active.id) return null
 
