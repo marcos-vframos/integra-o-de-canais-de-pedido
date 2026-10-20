@@ -1,4 +1,6 @@
 import React, { useRef } from 'react'
+import { Link } from 'react-router-dom'
+import pb from '@/lib/pocketbase/client'
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 
 interface ImageUploadFieldProps {
@@ -59,6 +61,11 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         </button>
       </div>
 
+      {!pb.authStore.isValid && (
+        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-[11px] text-amber-200">
+          Upload real protegido pelo Supabase. <Link to="/login" className="underline font-bold">Entrar como administrador</Link>
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"
