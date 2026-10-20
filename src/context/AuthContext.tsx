@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { AuthModel } from 'pocketbase'
+type AuthModel = { id: string; email?: string; role?: string; [key: string]: any }
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 
 interface AuthContextType {
@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       pb.authStore.clear()
       setUser(null)
       setLoading(false)
-    } else if (!pb.authStore.isValid) {
+    } else if (!pb.authStore.hasSession) {
       pb.authStore.clear()
       setUser(null)
       setLoading(false)
@@ -34,7 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // A token from an earlier backend must never unlock the manager.
       pb.collection('users').authRefresh()
         .then(() => { if (active) setUser(pb.authStore.record) })
-        .catch(() => { pb.authStore.clear(); if (active) setUser(null) })
+        .catch((error) => {
+          // A temporary network failure must not destroy a renewable session.
+          if ([400,401,403].includes(error?.status) || error?.message?.includes('sem autorização')) pb.authStore.clear()
+          if (active) setUser(null)
+        })
         .finally(() => { if (active) setLoading(false) })
     }
     return () => { active = false; unsubscribe() }

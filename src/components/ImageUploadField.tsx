@@ -51,8 +51,8 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         <button
           type="button"
           disabled={disabled || uploading}
-          title={!pb.authStore.isValid ? 'Ativar edição para carregar imagem' : 'Enviar foto para o Supabase'}
-          onClick={() => { if(!pb.authStore.isValid){ navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
+          title={!pb.authStore.hasSession ? 'Ativar edição para carregar imagem' : 'Enviar foto para o Supabase'}
+          onClick={() => { if(!pb.authStore.hasSession){ navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
         >
           {uploading ? (
@@ -63,13 +63,13 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           ) : (
             <>
               <Upload className="w-3.5 h-3.5" />
-              <span>{pb.authStore.isValid ? 'Carregar arquivo' : 'Ativar edição'}</span>
+              <span>{pb.authStore.hasSession ? 'Carregar arquivo' : 'Ativar edição'}</span>
             </>
           )}
         </button>
       </div>
 
-      {!pb.authStore.isValid && (
+      {!pb.authStore.hasSession && (
         <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-[11px] text-amber-200">
           Upload real protegido pelo Supabase. <Link to="/login?returnTo=/adm-landing" className="underline font-bold">Entrar como administrador</Link>
         </div>

@@ -401,8 +401,8 @@ export default function AdmLanding() {
 
   const handleSaveAdobeForPromotion = async () => {
     if (!newPresetName.trim()) { alert('Informe o nome da paleta.'); return }
-    if (!backendConfigured || !pb.authStore.isValid) {
-      alert('Ainda não é possível salvar paletas compartilhadas: conecte o novo PocketBase e autentique um operador.')
+    if (!backendConfigured || !pb.authStore.hasSession) {
+      alert('Ainda não é possível salvar paletas compartilhadas: configure o Supabase e autentique um operador.')
       return
     }
     try {
@@ -516,7 +516,7 @@ export default function AdmLanding() {
       </header>
 
       {/* Acesso de visualização continua livre; escrita exige operador vinculado ao tenant. */}
-      {!pb.authStore.isValid && <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs text-amber-300">
+      {!pb.authStore.hasSession && <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs text-amber-300">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
           <span>

@@ -27,7 +27,7 @@ export async function savePromotionPalette(
   palette: SavedPromotionPalette,
 ): Promise<SavedPromotionPalette[]> {
   if (!backendConfigured) throw new Error('Banco ainda não configurado: ' + backendConfigMessage)
-  if (!pb.authStore.isValid) throw new Error('Para salvar paletas compartilhadas, autentique um operador após conectar o PocketBase.')
+  if (!pb.authStore.hasSession) throw new Error('Para salvar paletas compartilhadas, autentique um operador no Supabase.')
   const previous = await loadPromotionPalettes()
   const updated = [...previous.filter(p => p.id !== palette.id && p.name.toLowerCase() !== palette.name.toLowerCase()), palette]
   try {

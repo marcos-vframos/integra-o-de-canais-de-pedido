@@ -49,7 +49,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setTheme = (newTheme: Theme) => {
     // Save immediately so navigation, refresh and hero transitions cannot reset it.
-    try { localStorage.setItem(THEME_STORAGE_KEY, newTheme) } catch {}
+    try { localStorage.setItem(THEME_STORAGE_KEY, newTheme) } catch { /* Keep the current theme when device storage is unavailable. */ }
     setThemeState(newTheme)
     ;(async () => {
       try {

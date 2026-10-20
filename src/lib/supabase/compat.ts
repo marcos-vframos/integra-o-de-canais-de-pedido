@@ -17,25 +17,56 @@ export const backendConfigMessage = backendConfigured
 
 const SESSION_KEY = 'loyolas_supabase_auth_v1'
 type JsonRow=Record<string,any>
-type AuthToken={access_token:string;refresh_token:string;expires_at?:number;user?:JsonRow}
+type Operator = JsonRow & { id: string }
+type AuthToken={access_token:string;refresh_token:string;expires_at?:number;user?:Operator}
 let session:AuthToken|null=null
 try {
   const raw=localStorage.getItem(SESSION_KEY)
-  if(raw){const x=JSON.parse(raw) as AuthToken; if(x?.access_token && Number(x.expires_at||0)>Date.now()/1000) session=x}
+  if(raw){const x=JSON.parse(raw) as AuthToken; if(x?.access_token && x?.refresh_token) session=x}
 } catch { /* private browsing, etc */ }
 const listeners=new Set<(token:string,model:any)=>void>()
 const inform=()=>listeners.forEach(fn=>fn(session?.access_token||'',session?.user||null))
 const setSession=(v:AuthToken|null)=>{
   session=v
-  try { if(v)localStorage.setItem(SESSION_KEY,JSON.stringify(v)); else localStorage.removeItem(SESSION_KEY) } catch{}
+  try { if(v)localStorage.setItem(SESSION_KEY,JSON.stringify(v)); else localStorage.removeItem(SESSION_KEY) } catch { /* Storage may be unavailable in private browsing. */ }
   inform()
 }
 const authStore={
   get record(){return session?.user||null},
+  get hasSession(){return !!session?.refresh_token},
   get isValid(){return !!session?.access_token && Number(session.expires_at||0)>Date.now()/1000},
   get token(){return session?.access_token||''},
   clear(){setSession(null)},
   onChange(callback:(token:string,model:any)=>void){listeners.add(callback);return ()=>listeners.delete(callback)},
+}
+// Serialize refreshes: gallery uploads and polling can request a token concurrently.
+let refreshing: Promise<void> | null = null
+async function refreshSession(force = false): Promise<void> {
+  if (!session?.refresh_token) return
+  if (!force && Number(session.expires_at || 0) > Date.now()/1000 + 60) return
+  if (refreshing) return refreshing
+  const previous = session
+  refreshing = (async () => {
+    try {
+      const next = await request('/auth/v1/token?grant_type=refresh_token', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:previous.refresh_token}),
+      }, false)
+      // A response arriving after logout must never restore the previous session.
+      if (session !== previous) return
+      setSession({access_token:next.access_token,refresh_token:next.refresh_token,
+        expires_at:Math.floor(Date.now()/1000)+next.expires_in,
+        user:{...next.user,role:previous.user?.role}})
+    } catch (error: any) {
+      if (session === previous && [400,401,403].includes(error?.status)) setSession(null)
+      throw error
+    }
+  })().finally(() => { refreshing = null })
+  return refreshing
+}
+export async function ensureOperatorSession(): Promise<void> {
+  await refreshSession()
+  if (!authStore.isValid) throw new Error('Entre no Gestor antes de salvar dados reais.')
 }
 const fieldAliases:Record<string,Record<string,string>>={
   categories:{order:'sort_order'},
@@ -80,6 +111,7 @@ const tableOf=(name:string)=>{
 const urlFor=(path:string)=>serverUrl+path
 const request=async(path:string, options:RequestInit={},preferAuth=true)=>{
   if(!backendConfigured)throw new Error(backendConfigMessage)
+  if (preferAuth) await refreshSession()
   const headers:Record<string,string>={apikey:publishableKey,...(options.headers as Record<string,string> ||{})}
   if(preferAuth&&authStore.isValid) headers.Authorization='Bearer '+authStore.token
   else headers.Authorization='Bearer '+publishableKey
@@ -138,7 +170,7 @@ const fromRow=(name:string,data:JsonRow)=>{
 const publicUrl=(path:string)=>/^https?:\/\//.test(path)?path:
   urlFor('/storage/v1/object/public/loyolas-public-media/'+path.split('/').map(encodeURIComponent).join('/'))
 async function upload(collection:string, file:File, section:string){
-  if(!authStore.isValid)throw new Error('Faça login para enviar imagens ao Supabase.')
+  await ensureOperatorSession()
   if(!file || file.size>15*1024*1024)throw new Error('Imagem/vídeo deve ter no máximo 15 MB.')
   if(!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm)|application\/pdf)$/.test(file.type))
     throw new Error('Formato de arquivo não permitido.')
@@ -152,15 +184,14 @@ async function upload(collection:string, file:File, section:string){
 }
 /** Upload a single gallery asset. Server Storage RLS requires an authenticated owner/manager. */
 export async function uploadLandingGalleryImage(file: File): Promise<string> {
-  if (!authStore.isValid) throw new Error('Para publicar fotos reais, entre como administrador no Gestor. A navegação de testes não autoriza uploads.')
+  await ensureOperatorSession()
   if (!file.type.startsWith('image/')) throw new Error('Selecione somente imagens JPG, PNG, WebP ou GIF.')
   const path=await upload('landing_content',file,'landing')
   return publicUrl(path)
 }
 
 const collection=(name:string)=>{
-  const table=tableOf(name)
-  const api='/rest/v1/'+table
+  const apiPath=async()=>{ await refreshSession(); return '/rest/v1/'+tableOf(name) }
   return {
     async getFullList<T=any>(opts?:{filter?:string;sort?:string;expand?:string;fields?:string}):Promise<T[]>{
       if(name==='users')throw new Error('A coleção users foi substituída pelo Supabase Auth.')
@@ -169,14 +200,14 @@ const collection=(name:string)=>{
       if(opts?.sort){
         q.set('order',opts.sort.split(',').map(s=>(s.startsWith('-')?cols(name,s.slice(1))+'.desc':cols(name,s)+'.asc')).join(','))
       }
-      const result=await request(api+'?'+q)
+      const result=await request((await apiPath())+'?'+q)
       return (Array.isArray(result)?result:[]).map(x=>toRow(name,x)) as T[]
     },
     async getFirstListItem<T=any>(filter:string,opts?:{sort?:string}):Promise<T>{
       const q=new URLSearchParams({select:'*',tenant_id:'eq.'+tenantId,limit:'1'})
       extractWhere(name,filter,q)
       if(opts?.sort)q.set('order',opts.sort.split(',').map(s=>(s.startsWith('-')?cols(name,s.slice(1))+'.desc':cols(name,s)+'.asc')).join(','))
-      const res=await request(api+'?'+q)
+      const res=await request((await apiPath())+'?'+q)
       if(!Array.isArray(res)||!res.length){
         const e=new Error('Registro não encontrado') as Error & {status:number}
         e.status=404
@@ -186,51 +217,51 @@ const collection=(name:string)=>{
     },
     async getOne<T=any>(id:string):Promise<T>{
       const q=new URLSearchParams({select:'*',tenant_id:'eq.'+tenantId,id:'eq.'+id,limit:'1'})
-      const rows=await request(api+'?'+q)
+      const rows=await request((await apiPath())+'?'+q)
       if(!rows?.[0]){const e=new Error('Registro não encontrado') as Error & {status:number};e.status=404;throw e}
       return toRow(name,rows[0]) as T
     },
     async create<T=any>(data:FormData|Record<string,any>):Promise<T>{
-      if(!authStore.isValid)throw new Error('Entre no Gestor antes de salvar dados reais.')
+      await ensureOperatorSession()
       if(['orders','customers','closures','users'].includes(name))
         throw new Error('Esta operação exige uma API segura dedicada; gravação direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
       if(name==='seasonal_campaigns'&&raw.media instanceof File)raw.media_path=await upload(name,raw.media,'campaigns')
       for(const key of ['data','palette','images','recipe','items','offer']){
-        if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch{}
+        if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch { /* Preserve non-JSON legacy values. */ }
       }
       const payload=fromRow(name,raw)
       if(raw.image_path)payload.image_path=raw.image_path
       if(raw.media_path)payload.media_path=raw.media_path
       const q=new URLSearchParams({select:'*'})
-      const rows=await request(api+'?'+q,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)})
+      const rows=await request((await apiPath())+'?'+q,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)})
       return toRow(name,Array.isArray(rows)?rows[0]:rows) as T
     },
     async update<T=any>(id:string,data:FormData|Record<string,any>):Promise<T>{
-      if(!authStore.isValid)throw new Error('Entre no Gestor antes de alterar dados reais.')
+      await ensureOperatorSession()
       if(['orders','customers','closures','users'].includes(name))
         throw new Error('Esta operação exige permissão específica do servidor; alteração direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
       if(name==='seasonal_campaigns'&&raw.media instanceof File)raw.media_path=await upload(name,raw.media,'campaigns')
       for(const key of ['data','palette','images','recipe','items','offer']){
-        if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch{}
+        if(typeof raw[key]==='string')try{raw[key]=JSON.parse(raw[key])}catch { /* Preserve non-JSON legacy values. */ }
       }
       const payload=fromRow(name,raw)
       if(raw.image_path)payload.image_path=raw.image_path
       if(raw.media_path)payload.media_path=raw.media_path
       const q=new URLSearchParams({tenant_id:'eq.'+tenantId,id:'eq.'+id,select:'*'})
-      const rows=await request(api+'?'+q,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)})
+      const rows=await request((await apiPath())+'?'+q,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)})
       if(!Array.isArray(rows)||rows.length!==1)throw new Error('Supabase não confirmou a alteração.')
       return toRow(name,rows[0]) as T
     },
     async delete(id:string):Promise<boolean>{
-      if(!authStore.isValid)throw new Error('Entre no Gestor antes de excluir dados reais.')
+      await ensureOperatorSession()
       if(['orders','customers','closures','users'].includes(name))
         throw new Error('Exclusão sensível bloqueada; requer procedimento administrativo.')
       const q=new URLSearchParams({tenant_id:'eq.'+tenantId,id:'eq.'+id})
-      await request(api+'?'+q,{method:'DELETE',headers:{'Prefer':'return=minimal'}})
+      await request((await apiPath())+'?'+q,{method:'DELETE',headers:{'Prefer':'return=minimal'}})
       return true
     },
     async subscribe(_topic:string, callback:(event:any)=>void):Promise<()=>Promise<void>>{
@@ -249,14 +280,14 @@ const collection=(name:string)=>{
       return {record:session?.user,token:session?.access_token}
     },
     async authRefresh(){
-      if(name!=='users'||!session?.access_token)throw new Error('Sessão inexistente')
-      let user:JsonRow
+      if(name!=='users'||!session?.refresh_token)throw new Error('Sessão inexistente')
+      await ensureOperatorSession()
+      let user:Operator
       try {user=await request('/auth/v1/user',{},true)}
-      catch{
-        if(!session.refresh_token)throw new Error('Sessão expirada')
-        const next=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:session.refresh_token})},false)
-        setSession({access_token:next.access_token,refresh_token:next.refresh_token,expires_at:Math.floor(Date.now()/1000)+next.expires_in,user:next.user})
-        user=next.user
+      catch(error: any){
+        if (error?.status !== 401) throw error
+        await refreshSession(true)
+        user=await request('/auth/v1/user',{},true)
       }
       const q=new URLSearchParams({select:'role',tenant_id:'eq.'+tenantId,user_id:'eq.'+user.id,active:'eq.true',limit:'1'})
       const membership=await request('/rest/v1/tenant_memberships?'+q)
@@ -269,7 +300,7 @@ const collection=(name:string)=>{
       await request('/auth/v1/recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})},false)
       return true
     },
-    async confirmPasswordReset(){
+    async confirmPasswordReset(_token?:string, _password?:string, _passwordConfirm?:string){
       throw new Error('Use o link de recuperação enviado pelo Supabase Auth; o token antigo do PocketBase não é compatível.')
     },
   }

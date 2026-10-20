@@ -503,13 +503,14 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
 
   const saveSection = async (section: string, data: any, imageFile?: File | null) => {
     if (!backendConfigured) throw new Error(backendConfigMessage);
-    if (!pb.authStore.isValid) throw new Error('O PocketBase independente exige conta autorizada para publicar na Landing.');
+    if (!pb.authStore.hasSession) throw new Error('O Supabase exige conta autorizada para publicar na Landing.');
     let existingRecord: any = null
     try {
       existingRecord = await pb
         .collection('landing_content')
         .getFirstListItem(`section="${section}"`)
-    } catch (_) {
+    } catch (error: any) {
+      if (error?.status !== 404) throw error
       existingRecord = null
     }
 

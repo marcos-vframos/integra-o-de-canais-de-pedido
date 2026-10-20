@@ -35,7 +35,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
     if (!files.length) return
     setError('')
     setPendingImages(null)
-    if (!pb.authStore.isValid) {
+    if (!pb.authStore.hasSession) {
       setError('Para publicar fotos, é preciso entrar com uma conta de operador vinculada ao Loyola’s Lanches. A navegação sem login permite somente visualizar.')
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
@@ -150,8 +150,8 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
           <button
             type="button"
             disabled={disabled || uploading}
-            title={!pb.authStore.isValid ? 'Ativar edição segura para enviar até 30 imagens de uma vez' : 'Adicionar uma ou várias imagens'}
-            onClick={() => { if (!pb.authStore.isValid) { navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
+            title={!pb.authStore.hasSession ? 'Ativar edição segura para enviar até 30 imagens de uma vez' : 'Adicionar uma ou várias imagens'}
+            onClick={() => { if (!pb.authStore.hasSession) { navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
           >
             {uploading ? (
@@ -162,7 +162,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
             ) : (
               <>
                 <Upload className="w-3.5 h-3.5" />
-                <span>{pb.authStore.isValid ? 'Enviar imagens' : 'Ativar edição e enviar'}</span>
+                <span>{pb.authStore.hasSession ? 'Enviar imagens' : 'Ativar edição e enviar'}</span>
               </>
             )}
           </button>
@@ -179,7 +179,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       </div>
 
       <p className="text-xs text-zinc-400 leading-relaxed">{description} Você pode selecionar 9 imagens ou mais na mesma operação; cada foto aceita até 15 MB.</p>
-      {!pb.authStore.isValid && (
+      {!pb.authStore.hasSession && (
         <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
           A visualização é livre, mas para publicar as nove imagens você precisa ativar o acesso de edição no Supabase uma única vez neste dispositivo.
           <Link to="/login?returnTo=/adm-landing" className="ml-2 font-bold underline">Entrar para editar</Link>
