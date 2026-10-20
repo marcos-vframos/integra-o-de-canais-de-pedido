@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const login = async (email: string, pass: string) => {
-    if (!backendConfigured) throw new Error('Configure o backend PocketBase independente antes de entrar.')
+    if (!backendConfigured) throw new Error('Configure o Supabase independente para entrar como operador.')
     await pb.collection('users').authWithPassword(email, pass)
   }
 
