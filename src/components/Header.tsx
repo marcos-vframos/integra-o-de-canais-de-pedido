@@ -18,7 +18,6 @@ const navLinks = [
 ]
 
 export default function Header({ activeSection = 'inicio' }: HeaderProps) {
-  const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [status, setStatus] = useState(() => checkIsOpenNow())
   const [isOpenSetting, setIsOpenSetting] = useState<boolean>(true)
@@ -42,25 +41,6 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
       })
       .catch(() => {})
   }
-
-  useEffect(() => {
-    const container = document.getElementById('landing-container')
-    const handleScroll = () => {
-      const top = container ? container.scrollTop : window.scrollY
-      setIsScrolled(top > 40)
-    }
-    handleScroll()
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true })
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll)
-      }
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
 
   useEffect(() => {
     checkStatus()
@@ -111,11 +91,8 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
     <>
       <header
         role="banner"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-[#0A150D]/95 backdrop-blur-md border-b border-white/[0.07] py-3.5 shadow-lg shadow-black/40'
-            : 'bg-transparent border-b border-transparent py-5 sm:py-6'
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.07] py-3.5 shadow-lg shadow-black/30 backdrop-blur-md"
+        style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <a
