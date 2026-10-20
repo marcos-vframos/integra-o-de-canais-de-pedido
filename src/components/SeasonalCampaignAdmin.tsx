@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Plus, Save, Trash2, Pencil, Palette, AlertTriangle, Upload, CheckCircle2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { getErrorMessage, extractFieldErrors } from '@/lib/pocketbase/errors'
@@ -66,6 +67,7 @@ const fields: { key: keyof LandingThemeColors; label: string; role: string }[] =
 const validCta = (value: string) => value.startsWith('/') || value.startsWith('#') || /^https:\/\//i.test(value)
 
 export default function SeasonalCampaignAdmin() {
+  const navigate = useNavigate()
   const { content, saveTheme } = useLandingContent()
   const [items, setItems] = useState<CampaignRow[]>([])
   const [products, setProducts] = useState<MenuItem[]>([])
@@ -182,7 +184,10 @@ export default function SeasonalCampaignAdmin() {
       return
     }
     if (!backendConfigured) { setError(backendConfigMessage + ' A campanha não foi salva: o Gestor e a Landing ainda não compartilham um banco operacional.'); return }
-    if (!pb.authStore.isValid) { setError('A campanha não foi salva: o backend exige um operador autenticado. O modo sem login é apenas demonstrativo.'); return }
+    if (!pb.authStore.isValid) {
+      setError('Campanha não salva. Para publicar dados reais, entre com uma conta de operador autorizada no Supabase. Você poderá retornar aqui com os dados preenchidos.')
+      return
+    }
     if (draft.offer.productId) {
       const product = products.find(p => p.id === draft.offer.productId)
       if (!product) { setError('Escolha um produto válido na lista de ofertas.'); return }
@@ -249,7 +254,7 @@ export default function SeasonalCampaignAdmin() {
         </div>
       )}
       {backendConfigured && !pb.authStore.isValid && (
-        <p className="rounded-lg border border-amber-500/30 p-3 text-xs text-amber-200">Backend configurado. Para gravar campanhas e paletas, entre com a conta autorizada do Gestor. O modo sem login não dá permissão de gravação.</p>
+        <p className="rounded-lg border border-amber-500/30 p-3 text-xs text-amber-200">A prévia está disponível, mas salvar campanhas, paletas e imagens exige ativar uma conta de operador autorizada. <Link to="/login?returnTo=/adm-landing" className="font-bold underline ml-1">Ativar edição no Gestor</Link>.</p>
       )}
       {error && <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{error}
         {Object.keys(fieldErrors).length > 0 && <ul className="mt-2 list-disc pl-4">{Object.entries(fieldErrors).map(([field,message])=><li key={field}>{field}: {message}</li>)}</ul>}
@@ -327,7 +332,7 @@ export default function SeasonalCampaignAdmin() {
         </div>
       </div>
       <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" checked={draft.active} onChange={e=>update('active',e.target.checked)}/>Campanha ativa</label>
-      <button type="button" disabled={saving || !draft.title.trim()} onClick={save} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Save size={16}/>{saving?'Salvando...':draft.id?'Atualizar campanha':'Criar campanha'}</button>
+      <button type="button" disabled={saving || !draft.title.trim()} onClick={() => { if (!pb.authStore.isValid) { navigate('/login?returnTo=/adm-landing'); return } void save() }} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Save size={16}/>{saving?'Salvando...':!pb.authStore.isValid?'Ativar edição para publicar':draft.id?'Atualizar campanha':'Criar campanha'}</button>
       <div className="border-t border-white/10 pt-4">
         <h3 className="text-xs font-bold uppercase text-zinc-300">Campanhas cadastradas {loading ? '— carregando' : '('+items.length+')'}</h3>
         {items.length>0 && <div className="mt-3 grid gap-3 md:grid-cols-2">{items.map(row=><div key={row.id} className="rounded-xl border border-white/10 bg-zinc-900 p-3"><div className="flex justify-between gap-2"><button type="button" onClick={()=>edit(row)} className="flex-1 text-left"><span className="block text-sm font-bold text-white">{row.title}</span><span className="block text-[11px] text-zinc-400">{row.active?'Ativa':'Inativa'} • {row.startDate?new Date(row.startDate).toLocaleDateString('pt-BR'):'Sem início'} a {row.endDate?new Date(row.endDate).toLocaleDateString('pt-BR'):'sem fim'}</span><span className="mt-1 flex items-center gap-1 text-xs text-emerald-400"><Pencil size={12}/> Editar campanha e cores</span></button><button type="button" aria-label={'Excluir campanha '+row.title} onClick={()=>void remove(row.id)} className="text-zinc-400 hover:text-red-400"><Trash2 size={16}/></button></div></div>)}</div>}
