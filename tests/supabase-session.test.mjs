@@ -9,13 +9,14 @@ const source = ts.transpileModule(original.replaceAll('import.meta.env', 'ENV'),
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
 }).outputText
 const expired = () => ({access_token:'old',refresh_token:'refresh',expires_at:1,user:{id:'operator',role:'owner'}})
-function adapter(saved, handler) {
+function adapter(saved, handler, overrides = {}) {
   const store = new Map(saved ? [['loyolas_supabase_auth_v1',JSON.stringify(saved)]] : [])
   const calls=[]
   const context = {exports:{}, ENV:{VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test'},
     localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},
     URLSearchParams, File, FormData, crypto, setInterval, clearInterval,
     fetch:async(url,opts)=>{ calls.push({url,opts}); return handler(url,opts) },
+    ...overrides,
   }
   vm.runInNewContext(source,context)
   return {pb:context.exports.default,...context.exports,calls,store}
@@ -121,4 +122,53 @@ test('invalid campaign dates are rejected before contacting the database',async(
   const a=adapter({...expired(),expires_at:Date.now()/1000+3600},()=>{throw Error('Unexpected write')})
   await assert.rejects(a.pb.collection('seasonal_campaigns').create({title:'Invalid',startDate:'invalid'}),/data válida/)
   assert.equal(a.calls.length,0)
+})
+
+
+test('campaign activation and deactivation survive independent reads without changing its content',async()=>{
+  let stored={id:'campaign',title:'Black do Loyola',active:false,start_date:null,end_date:null,offer:{},description:'Original'}
+  const server=async(_url,opts)=>{
+    if(opts.method==='PATCH') {
+      const body=JSON.parse(opts.body)
+      assert.deepEqual(Object.keys(body).sort(),['active','tenant_id'])
+      stored={...stored,...body}
+    }
+    return json([stored])
+  }
+  const session={...expired(),expires_at:Date.now()/1000+3600}
+  const operator=adapter(session,server)
+  for(const active of [true,false]) {
+    await operator.pb.collection('seasonal_campaigns').update('campaign',{active})
+    const reloaded=await adapter(session,server).pb.collection('seasonal_campaigns').getOne('campaign')
+    assert.equal(reloaded.active,active)
+    assert.equal(reloaded.description,'Original')
+    assert.equal(reloaded.startDate,null)
+    assert.equal(reloaded.endDate,null)
+  }
+})
+
+test('campaign subscription refreshes every three seconds and on return to a visible tab',async()=>{
+  const window=new EventTarget()
+  const document=Object.assign(new EventTarget(),{visibilityState:'visible'})
+  let timer,period,cleared=false,notifications=0
+  const a=adapter(null,()=>json([]),{
+    window,document,setInterval:(fn,ms)=>{timer=fn;period=ms;return 42},clearInterval:id=>{assert.equal(id,42);cleared=true},
+  })
+  const unsubscribe=await a.pb.collection('seasonal_campaigns').subscribe('*',()=>{notifications++})
+  assert.equal(period,3000)
+  timer()
+  window.dispatchEvent(new Event('focus'))
+  assert.equal(notifications,2)
+  document.visibilityState='hidden'
+  timer()
+  assert.equal(notifications,2)
+  document.visibilityState='visible'
+  document.dispatchEvent(new Event('visibilitychange'))
+  assert.equal(notifications,3)
+  await unsubscribe()
+  timer()
+  window.dispatchEvent(new Event('focus'))
+  document.dispatchEvent(new Event('visibilitychange'))
+  assert.equal(notifications,3)
+  assert.equal(cleared,true)
 })

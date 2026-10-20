@@ -1,7 +1,7 @@
 import type { PromotionalCampaign } from '@/lib/campaignOffer'
 
 /** Active flag and validity window both apply, regardless of operator permissions. */
-export function isCampaignLive(campaign: PromotionalCampaign, now = Date.now()): boolean {
+export function isCampaignLive(campaign: Pick<PromotionalCampaign, 'active' | 'startDate' | 'endDate'>, now = Date.now()): boolean {
   const start = campaign.startDate ? Date.parse(campaign.startDate) : -Infinity
   const end = campaign.endDate ? Date.parse(campaign.endDate) : Infinity
   return !!campaign.active && now >= start && now <= end

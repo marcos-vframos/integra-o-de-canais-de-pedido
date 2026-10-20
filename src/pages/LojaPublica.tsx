@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ShoppingBag,
@@ -426,28 +426,28 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     })
   }
 
-  // Promotion is bound to its server record, not a client-controlled free addition.
-  useEffect(() => {
-    let cancelled = false
-    const loadOffers = () => {
-      if (!backendConfigured) return
-      pb.collection('seasonal_campaigns').getFullList<PromotionalCampaign>()
-        .then(rows => { if(!cancelled) setAvailableOffers(rows.filter(activeOffer)) })
-        .catch(() => { if(!cancelled) setAvailableOffers([]) })
-    }
-    loadOffers()
-    const timer = window.setInterval(loadOffers, 60000)
-    return () => { cancelled = true; window.clearInterval(timer) }
+  // Activation and removal propagate with the same campaign subscription as the carousel.
+  const loadOffers = useCallback(() => {
+    if (!backendConfigured) return
+    return pb.collection('seasonal_campaigns').getFullList<PromotionalCampaign>()
+      .then(rows => setAvailableOffers(rows.filter(activeOffer)))
+      .catch(() => setAvailableOffers([]))
   }, [])
+  useEffect(() => { void loadOffers() }, [loadOffers])
+  useRealtime('seasonal_campaigns', () => { void loadOffers() })
 
   useEffect(() => {
-    const addOffer = (event: Event) => {
+    const addOffer = async (event: Event) => {
       const {campaignId,itemId}=(event as CustomEvent<{campaignId?:string;itemId?:string}>).detail || {}
-      const promo = availableOffers.find(p => p.id === campaignId && activeOffer(p))
-      if (!promo?.offer || !itemId || promo.offer.productId !== itemId) {
+      let promo: PromotionalCampaign | undefined
+      try {
+        if (campaignId) promo = await pb.collection('seasonal_campaigns').getOne<PromotionalCampaign>(campaignId)
+      } catch { /* Missing or newly deactivated campaigns must never authorize an offer. */ }
+      if (!promo || !activeOffer(promo) || !promo.offer || !itemId || promo.offer.productId !== itemId) {
         setErrorMsg('Oferta indisponível ou encerrada. Atualize a página para verificar as ofertas.')
         setCartOpen(true); return
       }
+      setAvailableOffers(previous => [...previous.filter(item => item.id !== promo!.id), promo!])
       const product = menuById(itemId)
       if (!product) {
         setErrorMsg('O produto da oferta não está disponível no cardápio.')
@@ -470,7 +470,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     }
     window.addEventListener('loyolas:select-offer',addOffer)
     return () => window.removeEventListener('loyolas:select-offer',addOffer)
-  }, [availableOffers,menu])
+  }, [menu])
 
   const handleCartQtyChange = (cartLineId: string, delta: number) => {
     setCart((prev) =>

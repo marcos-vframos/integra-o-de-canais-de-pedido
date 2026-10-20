@@ -278,8 +278,15 @@ const collection=(name:string)=>{
       // HTTP polling fallback while Realtime replication/publication is not configured.
       // Always refetch through RLS rather than trusting a browser-supplied record.
       let alive=true
-      const interval=setInterval(()=>{if(alive&&document.visibilityState==='visible')callback({action:'update',record:{}})},12000)
-      return async()=>{alive=false;clearInterval(interval)}
+      const notify = () => { if(alive && document.visibilityState === 'visible') callback({action:'update',record:{}}) }
+      const interval=setInterval(notify,name === 'seasonal_campaigns' ? 3000 : 12000)
+      window.addEventListener('focus', notify)
+      document.addEventListener('visibilitychange', notify)
+      return async()=>{
+        alive=false;clearInterval(interval)
+        window.removeEventListener('focus', notify)
+        document.removeEventListener('visibilitychange', notify)
+      }
     },
     async authWithPassword(email:string,password:string){
       if(name!=='users')throw new Error('Autenticação não disponível nesta coleção')

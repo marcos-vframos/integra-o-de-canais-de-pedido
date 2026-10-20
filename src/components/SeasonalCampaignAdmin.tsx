@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, Save, Trash2, Pencil, Palette, AlertTriangle, Upload, CheckCircle2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
@@ -9,6 +9,7 @@ import { DEFAULT_THEME_COLORS, type LandingThemeColors, useLandingContent } from
 import { OCCASION_PALETTES } from '@/lib/occasionPalettes'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
+import { isCampaignLive } from '@/lib/campaignDisplay'
 
 type CampaignOffer = { productId: string; unitPrice?: number; included: { ingredientId: string; qty: number }[] }
 interface CampaignRow {
@@ -80,6 +81,8 @@ export default function SeasonalCampaignAdmin() {
   const [localPreview, setLocalPreview] = useState('')
   const [saving, setSaving] = useState(false)
   const [paletteSaving, setPaletteSaving] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const toggleLock = useRef(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({})
@@ -225,6 +228,27 @@ export default function SeasonalCampaignAdmin() {
       setError('Não foi possível criar a campanha: ' + getErrorMessage(e))
     } finally { setSaving(false) }
   }
+  const toggleCampaign = async (row: CampaignRow) => {
+    if (toggleLock.current || saving) return
+    if (!canWrite) { navigate('/login?returnTo=/adm-landing'); return }
+    toggleLock.current = true
+    setTogglingId(row.id); setError(''); setSuccess('')
+    const active = !row.active
+    try {
+      await pb.collection('seasonal_campaigns').update(row.id, { active })
+      const confirmed = await pb.collection('seasonal_campaigns').getOne<CampaignRow>(row.id)
+      if (confirmed.active !== active) throw new Error('O Supabase não confirmou a alteração de status.')
+      setItems(previous => previous.map(item => item.id === row.id ? confirmed : item))
+      setDraft(previous => previous.id === row.id ? { ...previous, active } : previous)
+      if (!active) setSuccess('Campanha desativada. A Landing será atualizada automaticamente em poucos segundos.')
+      else if (isCampaignLive(confirmed)) setSuccess('Campanha ativada. Ela aparecerá automaticamente na Landing em poucos segundos.')
+      else if (confirmed.startDate && new Date(confirmed.startDate).getTime() > Date.now()) {
+        setSuccess('Campanha ativada e agendada. Ela aparecerá automaticamente na Landing no início do período cadastrado.')
+      } else setSuccess('Campanha marcada como ativa, mas o período terminou. Edite as datas para publicá-la na Landing.')
+    } catch (error: unknown) {
+      setError('Não foi possível confirmar o status da campanha: ' + getErrorMessage(error))
+    } finally { toggleLock.current = false; setTogglingId(null) }
+  }
   const remove = async (id: string) => {
     if (!confirm('Excluir esta campanha sazonal?')) return
     if (!canWrite) { setError('A exclusão exige backend próprio e autenticação.'); return }
@@ -332,10 +356,31 @@ export default function SeasonalCampaignAdmin() {
         </div>
       </div>
       <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" checked={draft.active} onChange={e=>update('active',e.target.checked)}/>Campanha ativa</label>
-      <button type="button" disabled={saving || !draft.title.trim()} onClick={() => { if (!pb.authStore.hasSession) { navigate('/login?returnTo=/adm-landing'); return } void save() }} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Save size={16}/>{saving?'Salvando...':!pb.authStore.hasSession?'Ativar edição para publicar':draft.id?'Atualizar campanha':'Criar campanha'}</button>
+      <button type="button" disabled={saving || !!togglingId || !draft.title.trim()} onClick={() => { if (!pb.authStore.hasSession) { navigate('/login?returnTo=/adm-landing'); return } void save() }} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Save size={16}/>{saving?'Salvando...':!pb.authStore.hasSession?'Ativar edição para publicar':draft.id?'Atualizar campanha':'Criar campanha'}</button>
       <div className="border-t border-white/10 pt-4">
         <h3 className="text-xs font-bold uppercase text-zinc-300">Campanhas cadastradas {loading ? '— carregando' : '('+items.length+')'}</h3>
-        {items.length>0 && <div className="mt-3 grid gap-3 md:grid-cols-2">{items.map(row=><div key={row.id} className="rounded-xl border border-white/10 bg-zinc-900 p-3"><div className="flex justify-between gap-2"><button type="button" onClick={()=>edit(row)} className="flex-1 text-left"><span className="block text-sm font-bold text-white">{row.title}</span><span className="block text-[11px] text-zinc-400">{row.active?'Ativa':'Inativa'} • {row.startDate?new Date(row.startDate).toLocaleDateString('pt-BR'):'Sem início'} a {row.endDate?new Date(row.endDate).toLocaleDateString('pt-BR'):'sem fim'}</span><span className="mt-1 flex items-center gap-1 text-xs text-emerald-400"><Pencil size={12}/> Editar campanha e cores</span></button><button type="button" aria-label={'Excluir campanha '+row.title} onClick={()=>void remove(row.id)} className="text-zinc-400 hover:text-red-400"><Trash2 size={16}/></button></div></div>)}</div>}
+        {items.length > 0 && <div className="mt-3 grid gap-3 md:grid-cols-2">{items.map(row => {
+          const live = isCampaignLive(row)
+          const scheduled = !!row.active && !!row.startDate && new Date(row.startDate).getTime() > Date.now()
+          const status = !row.active ? 'Inativa' : live ? 'Ativa na Landing' : scheduled ? 'Agendada' : 'Período encerrado'
+          return <article key={row.id} aria-label={'Campanha ' + row.title} className="rounded-xl border border-white/10 bg-zinc-900 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <button type="button" onClick={() => edit(row)} className="min-w-0 flex-1 text-left">
+                <span className="block break-words text-sm font-bold text-white">{row.title}</span>
+                <span className={'mt-1 block text-[11px] ' + (live ? 'text-emerald-300' : 'text-zinc-400')}>{status} • {row.startDate ? new Date(row.startDate).toLocaleDateString('pt-BR') : 'Sem início'} a {row.endDate ? new Date(row.endDate).toLocaleDateString('pt-BR') : 'sem fim'}</span>
+                <span className="mt-2 flex items-center gap-1 text-xs text-emerald-400"><Pencil size={12}/> Editar campanha e cores</span>
+              </button>
+              <button type="button" disabled={!!togglingId || saving} aria-label={'Excluir campanha ' + row.title} onClick={() => void remove(row.id)} className="p-1 text-zinc-400 hover:text-red-400 disabled:opacity-40"><Trash2 size={16}/></button>
+            </div>
+            <button type="button" aria-label={(row.active ? 'Desativar' : 'Ativar') + ' campanha ' + row.title}
+              aria-pressed={!!row.active} aria-busy={togglingId === row.id}
+              disabled={!!togglingId || saving} onClick={() => void toggleCampaign(row)}
+              className={'mt-3 w-full rounded-lg border px-3 py-2 text-xs font-bold disabled:cursor-wait disabled:opacity-50 ' + (row.active ? 'border-amber-500/40 bg-amber-500/10 text-amber-200' : 'border-emerald-500/40 bg-emerald-600 text-white')}>
+              {togglingId === row.id ? 'Salvando status…' : row.active ? 'Desativar campanha' : 'Ativar campanha'}
+            </button>
+            {scheduled && <p className="mt-2 text-[11px] text-amber-200">Aparecerá na Landing no início do período. Para exibir agora, altere a data de início.</p>}
+          </article>
+        })}</div>}
       </div>
     </section>
   )
