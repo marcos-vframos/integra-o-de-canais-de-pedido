@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { LogIn } from 'lucide-react'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const next = searchParams.get('returnTo') === '/adm-landing' ? '/adm-landing' : '/gestao'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -22,7 +24,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(email.trim(), password)
-      navigate('/gestao')
+      navigate(next)
     } catch (err: any) {
       setError(err?.message || 'Falha ao autenticar. Verifique suas credenciais.')
     } finally {
@@ -43,7 +45,7 @@ export default function Login() {
             Loyola's Lanches
           </h1>
           <p className="sc-tagline text-[#E10600] text-base mt-0.5">Gestão de Pedidos</p>
-          <p className="text-xs text-[#9A9CA0] mt-1.5">Painel operacional e de controle</p>
+          <p className="text-xs text-[#9A9CA0] mt-1.5">Acesso de edição com Supabase Auth</p>
         </div>
 
         {error && (
@@ -52,6 +54,9 @@ export default function Login() {
           </div>
         )}
 
+        <div className="mb-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
+          Você pode navegar pelo Gestor sem login. Para <strong>salvar imagens, campanhas e dados reais</strong>, precisa de uma conta do Supabase vinculada à empresa. Se ainda não possui, configure o primeiro operador em <a href="https://supabase.com/dashboard/project/awgqpfdfsyslpqpfzoul/auth/users" target="_blank" rel="noopener noreferrer" className="font-bold underline">Authentication → Users</a>.
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-[#9A9CA0] mb-1.5">E-mail</label>
