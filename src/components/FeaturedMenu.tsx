@@ -6,7 +6,6 @@ import type { MenuItem } from '@/types/loyolas'
 import { fmtBRL, seedMenu } from '@/lib/seeds'
 
 import { useLandingContent } from '@/context/LandingContentContext'
-import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 
 export default function FeaturedMenu() {
   const { content } = useLandingContent()
@@ -214,7 +213,6 @@ export default function FeaturedMenu() {
               className="w-full rounded-lg border border-white/10 bg-[#101417] px-10 py-3 text-sm text-white outline-none focus:border-[#E10600]" />
           </div>
         </div>
-        <StorePromotionCarousel />
 
         {loading ? (
           <div className="py-16 text-center text-[#C4C4C4]">Carregando cardápio atualizado...</div>

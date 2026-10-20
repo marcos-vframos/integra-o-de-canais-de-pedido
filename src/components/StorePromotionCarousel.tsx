@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pause, Play, Tag } from 'lucide-react'
+import { Tag } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { notifyOffer, type CampaignOffer } from '@/lib/campaignOffer'
 import { campaignDestination, campaignMediaIsVideo, isCampaignLive } from '@/lib/campaignDisplay'
@@ -24,20 +24,12 @@ const dateLabel = (value: string) => new Intl.DateTimeFormat('pt-BR', {
 
 export default function StorePromotionCarousel() {
   const [items, setItems] = useState<Promo[]>([])
-  const [index, setIndex] = useState(0)
   const [now, setNow] = useState(Date.now)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [paused, setPaused] = useState(false)
-  const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
-  const [reducedMotion, setReducedMotion] = useState(false)
   const [error, setError] = useState('')
   const [catalog, setCatalog] = useState<CatalogEntry[]>([])
   const [ingredients, setIngredients] = useState<CatalogEntry[]>([])
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const touch = useRef<{ x: number; y: number } | null>(null)
-  const swiped = useRef(false)
 
   const load = async () => {
     try {
@@ -53,16 +45,10 @@ export default function StorePromotionCarousel() {
   useRealtime('seasonal_campaigns', load)
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 15000)
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const change = () => setReducedMotion(query.matches)
-    change()
-    query.addEventListener('change', change)
-    return () => { clearInterval(timer); query.removeEventListener('change', change) }
+    return () => clearInterval(timer)
   }, [])
 
   const promos = items.filter(campaign => isCampaignLive(campaign, now))
-  const currentIndex = promos.length ? index % promos.length : 0
-  const current = promos[currentIndex]
   const selected = promos.find(campaign => campaign.id === selectedId)
   const selectedProductId = selected?.offer?.productId
   useEffect(() => {
@@ -84,72 +70,37 @@ export default function StorePromotionCarousel() {
     return () => { alive = false }
   }, [selectedProductId])
 
-  useEffect(() => {
-    if (promos.length < 2 || paused || hovered || focused || selectedId || reducedMotion) return
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') setIndex(value => (value + 1) % promos.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [promos.length, paused, hovered, focused, selectedId, reducedMotion])
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (paused || hovered || focused || selectedId || reducedMotion) video.pause()
-    else void video.play().catch(() => { /* Browsers may block autoplay. */ })
-  }, [current?.id, paused, hovered, focused, selectedId, reducedMotion])
-
-  const move = (offset: number) => setIndex((currentIndex + offset + promos.length) % promos.length)
-  if (!current) return error ? <p role="status" className="mb-4 text-sm text-amber-200">{error} <button type="button" className="underline" onClick={() => void load()}>Tentar novamente</button></p> : null
-  const media = mediaFor(current)
+  if (!promos.length) return error ? <p role="status" className="mb-4 text-sm text-amber-200">{error} <button type="button" className="underline" onClick={() => void load()}>Tentar novamente</button></p> : null
   const selectedMedia = selected ? mediaFor(selected) : ''
   const product = catalog.find(item => item.id === selectedProductId)
   const offerPrice = selected?.offer?.unitPrice ?? product?.price
   const destination = campaignDestination(selected?.ctaUrl)
-  const accent = current.palette?.accentVinho || '#E10600'
 
   return <>
-    <section aria-label="Campanhas ativas" aria-roledescription="carrossel"
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false) }}
-      className="relative mb-5 overflow-hidden rounded-2xl border border-white/10 bg-[#121215]">
-      <button ref={triggerRef} type="button" aria-label={`Ver detalhes da campanha ${current.title}`}
-        onTouchStart={event => { const point = event.touches[0]; touch.current = { x: point.clientX, y: point.clientY }; swiped.current = false }}
-        onTouchEnd={event => {
-          const point = event.changedTouches[0], start = touch.current
-          touch.current = null
-          if (start && Math.abs(point.clientX - start.x) > 50 && Math.abs(point.clientX - start.x) > Math.abs(point.clientY - start.y) && promos.length > 1) {
-            swiped.current = true
-            move(point.clientX < start.x ? 1 : -1)
-          }
-        }}
-        onClick={() => { if (swiped.current) { swiped.current = false; return }; setSelectedId(current.id) }}
-        className="relative block min-h-[190px] w-full overflow-hidden p-5 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white sm:p-7">
-        {media && (campaignMediaIsVideo(media)
-          ? <video ref={videoRef} key={current.id} src={media} muted loop playsInline autoPlay={!reducedMotion && !paused && !hovered && !focused && !selectedId} className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40" />
-          : <img src={media} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />)}
-        <span className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/30" />
-        <span className="relative z-10 block max-w-2xl">
-          <span className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}><Tag size={12} />{current.badge || 'Campanha ativa'}</span>
-          <span className="block text-xl font-black sm:text-2xl">{current.title}</span>
-          {current.description && <span className="mt-2 block line-clamp-2 text-sm text-zinc-200">{current.description}</span>}
-          <span className="mt-4 inline-block rounded-md px-4 py-2 text-xs font-bold text-white" style={{ backgroundColor: accent }}>Ver campanha e benefícios</span>
-        </span>
-      </button>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
-        <span className="text-xs text-zinc-300">{currentIndex + 1} de {promos.length} {promos.length === 1 ? 'campanha ativa' : 'campanhas ativas'}</span>
-        {promos.length > 1 && <div className="flex max-w-full flex-wrap items-center gap-2">
-          <button type="button" onClick={() => move(-1)} aria-label="Campanha anterior" className="rounded-full bg-white/10 p-2 text-white"><ChevronLeft size={18} /></button>
-          {promos.map((campaign, position) => <button key={campaign.id} type="button"
-            onClick={() => setIndex(position)} aria-label={`Mostrar campanha ${position + 1}: ${campaign.title}`}
-            aria-current={position === currentIndex ? 'true' : undefined}
-            className={`h-3 w-3 rounded-full ${position === currentIndex ? 'bg-white' : 'bg-white/30'}`} />)}
-          <button type="button" onClick={() => move(1)} aria-label="Próxima campanha" className="rounded-full bg-white/10 p-2 text-white"><ChevronRight size={18} /></button>
-          <button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? 'Retomar carrossel' : 'Pausar carrossel'} className="rounded-full bg-white/10 p-2 text-white">{paused ? <Play size={16} /> : <Pause size={16} />}</button>
-        </div>}
+    <section aria-label="Campanhas ativas" className="mb-5">
+      <h2 className="mb-4 text-xl font-black text-white">Campanhas e benefícios</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {promos.map(campaign => {
+          const media = mediaFor(campaign)
+          const accent = campaign.palette?.accentVinho || '#E10600'
+          return <button key={campaign.id} type="button"
+            aria-label={`Ver detalhes da campanha ${campaign.title}`}
+            onClick={event => { triggerRef.current = event.currentTarget; setSelectedId(campaign.id) }}
+            className="relative flex min-h-[230px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#121215] p-5 text-left text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+            {media && (campaignMediaIsVideo(media)
+              ? <video src={media} muted playsInline preload="metadata" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40" />
+              : <img src={media} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-40" />)}
+            <span className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/65 to-black/30" />
+            <span className="relative z-10 flex h-full flex-1 flex-col">
+              <span className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}><Tag size={12} />{campaign.badge || 'Campanha ativa'}</span>
+              <span className="block text-xl font-black">{campaign.title}</span>
+              {campaign.description && <span className="mb-4 mt-2 block line-clamp-3 text-sm text-zinc-200">{campaign.description}</span>}
+              <span className="mt-auto self-start rounded-md px-4 py-2 text-xs font-bold text-white" style={{ backgroundColor: accent }}>Ver campanha e benefícios</span>
+            </span>
+          </button>
+        })}
       </div>
-      {error && <p role="status" className="px-4 pb-3 text-xs text-amber-200">{error}</p>}
+      {error && <p role="status" className="pt-3 text-xs text-amber-200">{error}</p>}
     </section>
     <Dialog open={!!selected} onOpenChange={open => { if (!open) setSelectedId(null) }}>
       <DialogContent className="w-[calc(100%_-_2rem)] max-w-2xl rounded-2xl border-white/15 bg-[#121215] p-5 text-white sm:p-7"

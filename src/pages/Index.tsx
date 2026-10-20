@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
+import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 import Marquee from '@/components/Marquee'
 import Story from '@/components/Story'
 import FeaturedMenu from '@/components/FeaturedMenu'
@@ -61,6 +62,7 @@ export default function Index() {
       {/* 2. Hero 100vh com textos alternados e crossfade de imagens */}
       <main className="w-full">
         <Hero />
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6"><StorePromotionCarousel /></div>
         {/* 3. Faixa Marquee contínua fixada entre o topo ou na transição da história */}
         <Marquee />
         {/* 4. História e Tradição (100vh) */}

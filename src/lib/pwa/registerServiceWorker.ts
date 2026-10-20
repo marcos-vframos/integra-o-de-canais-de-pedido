@@ -31,7 +31,7 @@ export function registerServiceWorker() {
     window.addEventListener('load', () => {
       updateManifestForRoute()
       navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
+        .register('/sw.js', { scope: '/', updateViaCache: 'none' })
         .then((registration) => {
           // Check for an updated worker at every F5/refresh.
           void registration.update().catch(() => {})
