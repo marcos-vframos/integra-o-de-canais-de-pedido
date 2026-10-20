@@ -43,6 +43,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme])
 
   useEffect(() => {
+    // A manual choice saved on this device takes precedence over the server default.
+    // Never change the visible theme asynchronously after the operator has chosen it.
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY)
+      if (saved === 'light' || saved === 'dark') return
+    } catch {
+      // Storage not available: server preference can still be used.
+    }
     let active = true
     ;(async () => {
       try {
@@ -63,6 +71,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [])
 
   const setTheme = (newTheme: Theme) => {
+    // Save immediately so navigation, refresh and hero transitions cannot reset it.
+    try { localStorage.setItem(THEME_STORAGE_KEY, newTheme) } catch {}
     setThemeState(newTheme)
     ;(async () => {
       try {
