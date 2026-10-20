@@ -150,6 +150,14 @@ async function upload(collection:string, file:File, section:string){
   })
   return path
 }
+/** Upload a single gallery asset. Server Storage RLS requires an authenticated owner/manager. */
+export async function uploadLandingGalleryImage(file: File): Promise<string> {
+  if (!authStore.isValid) throw new Error('Para publicar fotos reais, entre como administrador no Gestor. A navegação de testes não autoriza uploads.')
+  if (!file.type.startsWith('image/')) throw new Error('Selecione somente imagens JPG, PNG, WebP ou GIF.')
+  const path=await upload('landing_content',file,'landing')
+  return publicUrl(path)
+}
+
 const collection=(name:string)=>{
   const table=tableOf(name)
   const api='/rest/v1/'+table
