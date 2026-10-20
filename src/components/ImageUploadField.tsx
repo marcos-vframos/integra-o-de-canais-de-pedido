@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 
@@ -18,6 +18,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   onUpload,
   disabled = false,
 }) => {
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -49,9 +50,9 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         <span className="text-xs font-semibold text-zinc-300">{label}</span>
         <button
           type="button"
-          disabled={disabled || uploading || !pb.authStore.isValid}
-          title={!pb.authStore.isValid ? 'Entre no Gestor com um operador autorizado para carregar fotos' : 'Enviar foto para o Supabase'}
-          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || uploading}
+          title={!pb.authStore.isValid ? 'Ativar edição para carregar imagem' : 'Enviar foto para o Supabase'}
+          onClick={() => { if(!pb.authStore.isValid){ navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
         >
           {uploading ? (
@@ -62,7 +63,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           ) : (
             <>
               <Upload className="w-3.5 h-3.5" />
-              <span>Carregar arquivo</span>
+              <span>{pb.authStore.isValid ? 'Carregar arquivo' : 'Ativar edição'}</span>
             </>
           )}
         </button>
