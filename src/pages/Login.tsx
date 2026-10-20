@@ -55,7 +55,7 @@ export default function Login() {
         )}
 
         <div className="mb-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
-          <strong>Visualizar é livre. Publicar é protegido.</strong> O Supabase ainda não tem um operador configurado para o Loyola's. Para enviar nove fotos de uma vez ou publicar campanhas, crie a primeira conta em <a href="https://supabase.com/dashboard/project/awgqpfdfsyslpqpfzoul/auth/users" target="_blank" rel="noopener noreferrer" className="font-bold underline">Supabase → Authentication → Users</a> (botão Add user / Invite user). Após confirmar o e-mail, essa conta precisa ser vinculada ao Loyola's com papel de proprietário. <strong>Não envie senhas aqui.</strong>
+          <strong>Visualizar é livre. Publicar é protegido.</strong> Entre com o e-mail e a senha da sua conta de operador vinculada ao Loyola’s Lanches. O acesso autorizado permite salvar campanhas, imagens e stories no Supabase. Se você já tem uma conta, não precisa criar outra. Para recuperar o acesso, use “Esqueci minha senha”.
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
