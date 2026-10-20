@@ -29,6 +29,7 @@ import { TabEstoque } from '@/components/TabEstoque'
 import { TabCaixa } from '@/components/TabCaixa'
 import { TabMotoboys } from '@/components/TabMotoboys'
 import { TabClientes } from '@/components/TabClientes'
+import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { TabPedidosOnline } from '@/components/TabPedidosOnline'
 import { CustomizeModal } from '@/components/CustomizeModal'
@@ -1232,6 +1233,7 @@ export default function Gestao() {
     { id: 'motoboys', label: 'Motoboys', icon: Bike },
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'promocoes', label: 'Promoções', icon: Tag },
+    { id: 'stories', label: 'Stories da Landing', icon: Tag },
   ]
 
   return (
@@ -1411,6 +1413,7 @@ export default function Gestao() {
         {currentTab === 'clientes' && <TabClientes menu={menu} />}
 
         {currentTab === 'promocoes' && <SeasonalCampaignAdmin />}
+        {currentTab === 'stories' && <LandingStoriesAdmin />}
 
         {/* Modal de Escolha de Fechamento de Loja */}
         <StoreCloseChoiceModal

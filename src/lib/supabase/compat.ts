@@ -193,6 +193,10 @@ async function upload(collection:string, file:File, section:string){
   return path
 }
 /** Upload a single gallery asset. Server Storage RLS requires an authenticated owner/manager. */
+export async function uploadLandingStoryMedia(file: File): Promise<string> {
+  if (!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm))$/.test(file.type)) throw new Error('Use JPG, PNG, WebP, GIF, MP4 ou WebM.')
+  return publicUrl(await upload('landing_content',file,'stories'))
+}
 export async function uploadLandingGalleryImage(file: File): Promise<string> {
   await ensureOperatorSession()
   if (!file.type.startsWith('image/')) throw new Error('Selecione somente imagens JPG, PNG, WebP ou GIF.')
@@ -279,7 +283,7 @@ const collection=(name:string)=>{
       // Always refetch through RLS rather than trusting a browser-supplied record.
       let alive=true
       const notify = () => { if(alive && document.visibilityState === 'visible') callback({action:'update',record:{}}) }
-      const interval=setInterval(notify,name === 'seasonal_campaigns' ? 3000 : 12000)
+      const interval=setInterval(notify,(name === 'seasonal_campaigns' || name === 'landing_stories') ? 3000 : 12000)
       window.addEventListener('focus', notify)
       document.addEventListener('visibilitychange', notify)
       return async()=>{

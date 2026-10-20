@@ -1,5 +1,5 @@
 // Service Worker compartilhado; cada aplicacao vive em dominio diferente.
-const CACHE_NAME = 'loyolas-separated-v3-refresh'
+const CACHE_NAME = 'loyolas-separated-v4-stories'
 
 // Recursos essenciais para shell do app offline
 const PRECACHE_ASSETS = [

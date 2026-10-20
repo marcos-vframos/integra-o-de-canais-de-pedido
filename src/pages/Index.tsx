@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
+import LandingStories from '@/components/LandingStories'
 import Hero from '@/components/Hero'
 import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 import Marquee from '@/components/Marquee'
@@ -56,6 +57,7 @@ export default function Index() {
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       <SeasonalCampaignOverlay />
+      <LandingStories />
       {/* 1. Header Fixo com acesso ao cardápio nativo */}
       <Header activeSection={activeSection} />
 

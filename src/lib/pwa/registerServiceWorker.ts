@@ -28,7 +28,7 @@ export function registerServiceWorker() {
   updateManifestForRoute()
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    const register = () => {
       updateManifestForRoute()
       navigator.serviceWorker
         .register('/sw.js', { scope: '/', updateViaCache: 'none' })
@@ -49,6 +49,8 @@ export function registerServiceWorker() {
         .catch((err) => {
           console.warn('[PWA] Falha ao registrar Service Worker:', err)
         })
-    })
+    }
+    if (document.readyState === 'complete') register()
+    else window.addEventListener('load', register, { once: true })
   }
 }

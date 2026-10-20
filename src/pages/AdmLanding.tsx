@@ -30,6 +30,7 @@ import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { savePromotionPalette } from '@/lib/promotionPaletteStore'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
+import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import MarqueeEditor from '@/components/MarqueeEditor'
 import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
@@ -41,7 +42,7 @@ export default function AdmLanding() {
   const returnTo = requestedReturn === '/gestao' || requestedReturn === '/config' ? requestedReturn : '/'
   const returnLabel = returnTo === '/gestao' ? 'Voltar ao Gestor' : returnTo === '/config' ? 'Voltar às Configurações' : 'Voltar à Landing Page'
   const { content, saveSection, saveTheme, applyPreset, refresh } = useLandingContent()
-  const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja'>('textos')
+  const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja' | 'stories'>('textos')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [heroGlowEnabled, setHeroGlowEnabled] = useState(Boolean(content.heroGlowEnabled))
@@ -531,7 +532,8 @@ export default function AdmLanding() {
             {/* Navegação por Abas do Painel */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => setActiveTab('stories')} className={'rounded-lg px-4 py-2 text-xs font-semibold ' + (activeTab === 'stories' ? 'bg-[#8F0F1B] text-white' : 'bg-zinc-900 text-zinc-400')}>Stories da Landing</button>
             <button
               type="button"
               onClick={() => setActiveTab('textos')}
@@ -1338,6 +1340,7 @@ export default function AdmLanding() {
         )}
 
         {activeTab === 'temas' && <SeasonalCampaignAdmin />}
+        {activeTab === 'stories' && <LandingStoriesAdmin />}
 
         {/* ================= ABA 4: ABERTO / FECHADO ================= */}
         {activeTab === 'loja' && (

@@ -1,3 +1,4 @@
+import { marqueeBlocks, selectedMessages, type MarqueeBlock } from '@/lib/landingCommunications'
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -49,6 +50,7 @@ export interface LandingContentState {
 
   // Faixa rotativa editável na administração da landing
   marqueeItems: string[]
+  marqueeBlocks?: MarqueeBlock[]
 
   // Story
   storyHeadingPrefix: string
@@ -391,9 +393,9 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
               next.heroSubtitleChips = data.heroSubtitleChips
             }
           } else if (section === 'marquee') {
-            if (Array.isArray(data.marqueeItems)) {
-              next.marqueeItems = data.marqueeItems.filter((value: unknown): value is string => typeof value === 'string').map((value: string) => value.trim()).filter(Boolean)
-            }
+            const legacy = Array.isArray(data.marqueeItems) ? data.marqueeItems.filter((v: unknown): v is string => typeof v === 'string') : next.marqueeItems
+            next.marqueeBlocks = marqueeBlocks(data.marqueeBlocks, legacy)
+            next.marqueeItems = selectedMessages(next.marqueeBlocks)
           } else if (section === 'story') {
             if (data.storyHeadingPrefix) next.storyHeadingPrefix = data.storyHeadingPrefix
             if (data.storyHeadingHighlight) next.storyHeadingHighlight = data.storyHeadingHighlight

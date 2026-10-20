@@ -3,9 +3,10 @@ import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function Marquee() {
   const { content } = useLandingContent()
-  const source = content.marqueeItems?.length ? content.marqueeItems : MARQUEE_ITEMS
+  const source = content.marqueeBlocks ? content.marqueeItems : content.marqueeItems?.length ? content.marqueeItems : MARQUEE_ITEMS
   const items = [...source, ...source]
 
+  if (!source.length) return null
   return (
     <aside
       className="text-[#C4C4C4] py-3 overflow-hidden border-y border-white/[0.06] select-none relative z-20"
