@@ -503,14 +503,15 @@ export default function AdmLanding() {
             </span>
           </div>
 
-          <Link
-            to="/"
+          <a
+            href={import.meta.env.VITE_LANDING_URL || 'https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app/'}
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-colors"
           >
             <span>Ver Landing</span>
             <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
+          </a>
         </div>
       </header>
 
@@ -519,9 +520,9 @@ export default function AdmLanding() {
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <b>Modo de visualização:</b> você pode explorar o painel sem login. Para salvar imagens,
-            campanhas, paletas e cardápio no Supabase é necessário entrar como operador autorizado.{' '}
-            <Link to="/login" className="font-bold underline">Entrar no Gestor</Link>.
+            <b>Modo de visualização:</b> você pode testar sem login, mas publicar imagens e mudanças na Landing exige uma conta de operador autorizada no Supabase.
+            {' '}<Link to="/login" className="font-bold underline">Entrar no Gestor</Link>.
+            {' '}Para criar a primeira conta, abra <a href="https://supabase.com/dashboard/project/awgqpfdfsyslpqpfzoul/auth/users" target="_blank" rel="noopener noreferrer" className="font-bold underline">Supabase → Authentication → Users</a>; depois associe o usuário à empresa.
           </span>
         </div>
       </div>
