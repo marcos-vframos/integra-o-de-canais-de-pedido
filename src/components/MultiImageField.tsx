@@ -37,21 +37,37 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
+    // Files are uploaded in order and each successful addition is saved immediately.
+    // If the sixth of nine fails, the previous five remain published.
     const nextImages = [...images]
     let complete = 0
+    const failures: string[] = []
     try {
       setUploading(true)
-      for (const file of files) {
-        setProgress(`Enviando ${complete + 1} de ${files.length}: ${file.name}`)
-        const url = await uploadLandingGalleryImage(file)
-        nextImages.push(url)
-        // Persist every successful file immediately, including when a later upload fails.
-        await onChange([...nextImages])
-        complete += 1
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        setProgress(`Enviando ${index + 1} de ${files.length}: ${file.name}`)
+        if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) {
+          failures.push(`${file.name}: formato inválido (use JPG, PNG, WebP ou GIF)`)
+          continue
+        }
+        if (file.size > 15 * 1024 * 1024) {
+          failures.push(`${file.name}: tamanho superior a 15 MB`)
+          continue
+        }
+        try {
+          const url = await uploadLandingGalleryImage(file)
+          nextImages.push(url)
+          await onChange([...nextImages])
+          complete += 1
+        } catch (err: any) {
+          // Failed database persistence must not falsely count as success.
+          nextImages.pop()
+          failures.push(`${file.name}: ${err?.message || 'Falha no envio ou salvamento'}`)
+        }
       }
-      setProgress(`${complete} imagem(ns) salva(s) com sucesso.`)
-    } catch (err: any) {
-      setError(`Foram salvas ${complete} de ${files.length} imagens. ${err?.message || 'Falha no envio.'}`)
+      setProgress(`${complete} de ${files.length} imagem(ns) publicada(s).`)
+      if (failures.length) setError(`Não foi possível publicar ${failures.length} arquivo(s): ${failures.join('; ')}`)
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -104,7 +120,8 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
           />
           <button
             type="button"
-            disabled={disabled || uploading}
+            disabled={disabled || uploading || !pb.authStore.isValid}
+            title={!pb.authStore.isValid ? 'Entre com uma conta administrativa autorizada para publicar imagens' : 'Adicionar uma ou várias imagens'}
             onClick={() => fileInputRef.current?.click()}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
           >
@@ -132,11 +149,11 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
         </div>
       </div>
 
-      <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+      <p className="text-xs text-zinc-400 leading-relaxed">{description} Você pode selecionar 9 imagens ou mais na mesma operação; cada foto aceita até 15 MB.</p>
       {!pb.authStore.isValid && (
         <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-          A visualização é livre, mas publicar fotos exige uma conta administrativa autorizada.
-          <Link to="/login" className="ml-2 font-bold underline">Entrar para enviar imagens</Link>
+          A visualização é livre, mas enviar e salvar imagens na Landing exige uma conta do Supabase autorizada para esta empresa.
+          <Link to="/login" className="ml-2 font-bold underline">Entrar como administrador</Link>
         </div>
       )}
       {progress && <p aria-live="polite" className="text-xs text-emerald-300">{progress}</p>}
