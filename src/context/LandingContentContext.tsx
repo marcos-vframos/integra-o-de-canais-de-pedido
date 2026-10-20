@@ -462,7 +462,9 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
         // Legacy PocketBase stored two uploaded Hero images in separate landing_content
         // sections. Their binaries and image_path have now been restored to Supabase Storage.
         const slides = [...(next.heroSlides || [])]
-        records.filter((rec: any) => /^slide_\d+$/.test(String(rec.section))).forEach((rec: any) => {
+        const hasSavedHeroGallery = records.some((rec: any) => rec.section === 'hero' && Array.isArray(rec.data?.heroSlides) && rec.data.heroSlides.length > 0)
+        // Preserve editor-saved images: legacy slide records must never override a newer gallery.
+        if (!hasSavedHeroGallery) records.filter((rec: any) => /^slide_\d+$/.test(String(rec.section))).forEach((rec: any) => {
           const index = Number(String(rec.section).replace('slide_', ''))
           if (!Number.isInteger(index) || index < 0 || index > 20 || !rec.image) return
           const fallback = slides[index] || { image: '', title: 'Destaque da Casa', price: '', tag: '', subtitle: '' }
