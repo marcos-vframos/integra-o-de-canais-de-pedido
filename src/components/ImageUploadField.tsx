@@ -20,15 +20,21 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const [success, setSuccess] = React.useState('')
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
+      setError(''); setSuccess('')
+      if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) throw new Error('Use JPG, PNG, WebP ou GIF.')
+      if (file.size > 15 * 1024 * 1024) throw new Error('A imagem deve ter até 15 MB.')
       setUploading(true)
       await onUpload(file)
+      setSuccess('Imagem enviada e salva na Landing.')
     } catch (err: any) {
-      alert('Erro ao carregar imagem: ' + (err?.message || 'Tente novamente.'))
+      setError(err?.message || 'Não foi possível enviar e salvar esta imagem.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) {
@@ -64,9 +70,11 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
       {!pb.authStore.isValid && (
         <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-[11px] text-amber-200">
-          Upload real protegido pelo Supabase. <Link to="/login" className="underline font-bold">Entrar como administrador</Link>
+          Upload real protegido pelo Supabase. <Link to="/login?returnTo=/adm-landing" className="underline font-bold">Entrar como administrador</Link>
         </div>
       )}
+      {error && <p role="alert" className="rounded-lg border border-red-500/30 bg-red-950/40 p-2 text-xs text-red-200">{error}</p>}
+      {success && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 p-2 text-xs text-emerald-200">{success}</p>}
       <input
         ref={fileInputRef}
         type="file"
