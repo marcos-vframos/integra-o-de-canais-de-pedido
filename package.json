@@ -1,13 +1,13 @@
 {
   "name": "loyolas-canais-de-venda",
-  "description": "Loyola's Lanches \u2014 website de pedidos e Gestor PWA independentes",
+  "description": "Loyola's Lanches — website de pedidos e Gestor PWA independentes",
   "private": true,
   "version": "0.0.10",
   "type": "module",
   "scripts": {
     "start": "vite dev",
     "dev": "vite",
-    "build": "vite build",
+    "build": "node --test tests/*.test.mjs && vite build",
     "build:dev": "vite build --mode development",
     "lint": "oxlint src",
     "lint:fix": "oxlint src --fix",
@@ -16,8 +16,8 @@
     "preview": "vite preview",
     "test": "node --test tests/*.test.mjs",
     "test:watch": "node --test --watch tests/*.test.mjs",
-    "build:cliente": "vite build",
-    "build:gestao": "vite build --mode gestao",
+    "build:cliente": "node --test tests/*.test.mjs && vite build",
+    "build:gestao": "node --test tests/*.test.mjs && vite build --mode gestao",
     "dev:gestao": "vite --mode gestao",
     "preview:gestao": "vite preview --outDir dist-gestao"
   },
