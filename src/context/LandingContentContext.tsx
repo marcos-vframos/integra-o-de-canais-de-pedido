@@ -1,4 +1,5 @@
 import { marqueeBlocks, selectedMessages, type MarqueeBlock } from '@/lib/landingCommunications'
+import { savedFieldsMatch } from '@/lib/persistence'
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -528,10 +529,12 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
       formData.append('image', imageFile)
     }
 
-    if (existingRecord) {
-      await pb.collection('landing_content').update(existingRecord.id, formData)
-    } else {
-      await pb.collection('landing_content').create(formData)
+    const written = existingRecord
+      ? await pb.collection('landing_content').update(existingRecord.id, formData)
+      : await pb.collection('landing_content').create(formData)
+    const confirmed = await pb.collection('landing_content').getOne(written.id)
+    if (!savedFieldsMatch(data, confirmed.data) || (imageFile && !confirmed.image)) {
+      throw new Error('O Supabase não confirmou todos os dados. Tente salvar novamente.')
     }
     await loadContent()
   }

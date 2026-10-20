@@ -22,6 +22,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
   aspectRatio = 'h-36',
 }) => {
   const navigate = useNavigate()
+  const operationLock = useRef(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState('')
@@ -31,6 +32,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
   const [showUrlModal, setShowUrlModal] = useState(false)
 
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (operationLock.current || disabled) return
     const files = Array.from(e.target.files || [])
     if (!files.length) return
     setError('')
@@ -48,6 +50,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
     const pending = [...images]
     const failures: string[] = []
     let complete = 0
+    operationLock.current = true
     setUploading(true)
     try {
       // Upload to secure Storage first. Save the gallery JSON ONE time at the end,
@@ -85,13 +88,15 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       }
       if (failures.length) setError(`${failures.length} problema(s): ${failures.join('; ')}`)
     } finally {
+      operationLock.current = false
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
   const retryGallerySave = async () => {
-    if (!pendingImages || uploading) return
+    if (!pendingImages || operationLock.current || disabled) return
+    operationLock.current = true
     setUploading(true)
     setError('')
     try {
@@ -100,22 +105,29 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       setPendingImages(null)
     } catch (err: unknown) {
       setError('Não foi possível concluir o salvamento: ' + (err instanceof Error ? err.message : 'erro desconhecido'))
-    } finally { setUploading(false) }
+    } finally { operationLock.current = false; setUploading(false) }
+  }
+
+  const mutateGallery = async (action: () => void | Promise<void>) => {
+    if (operationLock.current || disabled || pendingImages) return
+    operationLock.current = true
+    setUploading(true); setError('')
+    try { await action() }
+    catch (err: unknown) { setError(err instanceof Error ? err.message : 'Não foi possível salvar a galeria.') }
+    finally { operationLock.current = false; setUploading(false) }
   }
 
   const handleAddUrl = async () => {
     if (!urlInput.trim()) return
-    try {
-      setError('')
+    await mutateGallery(async () => {
       await onChange([...images, urlInput.trim()])
       setUrlInput('')
       setShowUrlModal(false)
-    } catch (err: any) { setError(err?.message || 'Não foi possível salvar a URL.') }
+    })
   }
 
   const handleRemove = async (index: number) => {
-    try { setError(''); await onChange(images.filter((_, i) => i !== index)) }
-    catch(err: any) { setError(err?.message || 'Não foi possível excluir a imagem.') }
+    await mutateGallery(() => onChange(images.filter((_, i) => i !== index)))
   }
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {
@@ -125,8 +137,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
     const temp = updated[index]
     updated[index] = updated[target]
     updated[target] = temp
-    try { setError(''); await onChange(updated) }
-    catch(err: any) { setError(err?.message || 'Não foi possível reordenar as imagens.') }
+    await mutateGallery(() => onChange(updated))
   }
 
   return (
@@ -149,7 +160,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
           />
           <button
             type="button"
-            disabled={disabled || uploading}
+            disabled={disabled || uploading || !!pendingImages}
             title={!pb.authStore.hasSession ? 'Ativar edição segura para enviar até 30 imagens de uma vez' : 'Adicionar uma ou várias imagens'}
             onClick={() => { if (!pb.authStore.hasSession) { navigate('/login?returnTo=/adm-landing'); return } fileInputRef.current?.click() }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
@@ -168,7 +179,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
           </button>
           <button
             type="button"
-            disabled={disabled}
+            disabled={disabled || uploading || !!pendingImages}
             onClick={() => setShowUrlModal(!showUrlModal)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors border border-zinc-700"
           >
@@ -242,7 +253,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    disabled={idx === 0}
+                    disabled={disabled || uploading || !!pendingImages || idx === 0}
                     onClick={() => handleMove(idx, 'up')}
                     className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
                     title="Mover para frente"
@@ -251,7 +262,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
                   </button>
                   <button
                     type="button"
-                    disabled={idx === images.length - 1}
+                    disabled={disabled || uploading || !!pendingImages || idx === images.length - 1}
                     onClick={() => handleMove(idx, 'down')}
                     className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
                     title="Mover para trás"
@@ -261,6 +272,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
                 </div>
                 <button
                   type="button"
+                  disabled={disabled || uploading || !!pendingImages}
                   onClick={() => handleRemove(idx)}
                   className="p-1 rounded hover:bg-red-950/60 text-zinc-400 hover:text-red-400 transition-colors"
                   title="Excluir imagem"
