@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react'
 import { Upload, Trash2, ArrowUp, ArrowDown, Plus, Loader2 } from 'lucide-react'
+import { uploadLandingGalleryImage } from '@/lib/supabase/compat'
+import { Link } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 
 interface MultiImageFieldProps {
   label: string
   images: string[]
-  onChange: (images: string[]) => void
+  onChange: (images: string[]) => void | Promise<void>
   disabled?: boolean
   description?: string
   aspectRatio?: string
@@ -21,54 +23,65 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState('')
+  const [error, setError] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [showUrlModal, setShowUrlModal] = useState(false)
 
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    setError('')
+    if (!pb.authStore.isValid) {
+      setError('Você está no Gestor demonstrativo. Para salvar fotos no Supabase, entre como administrador autorizado.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    const nextImages = [...images]
+    let complete = 0
     try {
       setUploading(true)
-      // Upload para landing_content como record auxiliar ou upload genérico
-      const formData = new FormData()
-      formData.append('section', `media_${Date.now()}`)
-      formData.append(
-        'data',
-        JSON.stringify({ uploadedAt: new Date().toISOString(), originalName: file.name }),
-      )
-      formData.append('image', file)
-
-      const rec = await pb.collection('landing_content').create(formData)
-      const fileUrl = pb.files.getURL(rec, rec.image)
-      onChange([...images, fileUrl])
+      for (const file of files) {
+        setProgress(`Enviando ${complete + 1} de ${files.length}: ${file.name}`)
+        const url = await uploadLandingGalleryImage(file)
+        nextImages.push(url)
+        // Persist every successful file immediately, including when a later upload fails.
+        await onChange([...nextImages])
+        complete += 1
+      }
+      setProgress(`${complete} imagem(ns) salva(s) com sucesso.`)
     } catch (err: any) {
-      alert('Erro ao enviar imagem: ' + (err?.message || 'Tente novamente.'))
+      setError(`Foram salvas ${complete} de ${files.length} imagens. ${err?.message || 'Falha no envio.'}`)
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
-  const handleAddUrl = () => {
+  const handleAddUrl = async () => {
     if (!urlInput.trim()) return
-    onChange([...images, urlInput.trim()])
-    setUrlInput('')
-    setShowUrlModal(false)
+    try {
+      setError('')
+      await onChange([...images, urlInput.trim()])
+      setUrlInput('')
+      setShowUrlModal(false)
+    } catch (err: any) { setError(err?.message || 'Não foi possível salvar a URL.') }
   }
 
-  const handleRemove = (index: number) => {
-    onChange(images.filter((_, i) => i !== index))
+  const handleRemove = async (index: number) => {
+    try { setError(''); await onChange(images.filter((_, i) => i !== index)) }
+    catch(err: any) { setError(err?.message || 'Não foi possível excluir a imagem.') }
   }
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const target = direction === 'up' ? index - 1 : index + 1
     if (target < 0 || target >= images.length) return
     const updated = [...images]
     const temp = updated[index]
     updated[index] = updated[target]
     updated[target] = temp
-    onChange(updated)
+    try { setError(''); await onChange(updated) }
+    catch(err: any) { setError(err?.message || 'Não foi possível reordenar as imagens.') }
   }
 
   return (
@@ -84,7 +97,8 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif"
             className="hidden"
             onChange={handleUploadFile}
           />
@@ -102,7 +116,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
             ) : (
               <>
                 <Upload className="w-3.5 h-3.5" />
-                <span>Upload Imagem</span>
+                <span>Enviar imagens</span>
               </>
             )}
           </button>
@@ -119,6 +133,14 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       </div>
 
       <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+      {!pb.authStore.isValid && (
+        <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+          A visualização é livre, mas publicar fotos exige uma conta administrativa autorizada.
+          <Link to="/login" className="ml-2 font-bold underline">Entrar para enviar imagens</Link>
+        </div>
+      )}
+      {progress && <p aria-live="polite" className="text-xs text-emerald-300">{progress}</p>}
+      {error && <p role="alert" className="rounded-lg bg-red-950/50 border border-red-500/30 p-2 text-xs text-red-200">{error}</p>}
 
       {showUrlModal && (
         <div className="p-3 bg-zinc-900 border border-zinc-700 rounded-lg flex items-center gap-2">
