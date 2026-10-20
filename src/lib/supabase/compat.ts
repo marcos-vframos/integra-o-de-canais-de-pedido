@@ -163,6 +163,16 @@ const fromRow=(name:string,data:JsonRow)=>{
     if(['id','legacy_id','created','updated','tenant_id'].includes(key))continue
     if(key==='image'||key==='media')continue // Uploaded through Storage independently
     const mapped=cols(name,key)
+    if (name === 'seasonal_campaigns' && ['start_date','end_date'].includes(mapped)) {
+      if (value == null || (typeof value === 'string' && !value.trim())) {
+        payload[mapped] = null
+      } else {
+        const date = new Date(value as string)
+        if (!Number.isFinite(date.getTime())) throw new Error('Informe uma data válida para a campanha.')
+        payload[mapped] = date.toISOString()
+      }
+      continue
+    }
     payload[mapped] = value
   }
   return payload

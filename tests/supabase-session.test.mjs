@@ -90,3 +90,35 @@ test('nine images upload through authenticated storage with unique paths',async(
   assert.equal(new Set(urls).size,9)
   assert.equal(a.calls.length,9)
 })
+
+
+test('campaign creation sends null for optional empty FormData dates',async()=>{
+  const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(_url,opts)=>{
+    const body=JSON.parse(opts.body)
+    assert.equal(body.start_date,null)
+    assert.equal(body.end_date,null)
+    return json([{id:'new-campaign',...body}])
+  })
+  const data=new FormData()
+  data.append('title','Campanha sem prazo')
+  data.append('startDate','')
+  data.append('endDate','   ')
+  await a.pb.collection('seasonal_campaigns').create(data)
+  assert.equal(a.calls.length,1)
+})
+
+test('campaign update can remove dates and preserves a valid UTC timestamp',async()=>{
+  const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(_url,opts)=>{
+    const body=JSON.parse(opts.body)
+    assert.equal(body.start_date,'2026-10-31T22:30:00.000Z')
+    assert.equal(body.end_date,null)
+    return json([{id:'campaign',...body}])
+  })
+  await a.pb.collection('seasonal_campaigns').update('campaign',{startDate:'2026-10-31T19:30:00-03:00',endDate:''})
+})
+
+test('invalid campaign dates are rejected before contacting the database',async()=>{
+  const a=adapter({...expired(),expires_at:Date.now()/1000+3600},()=>{throw Error('Unexpected write')})
+  await assert.rejects(a.pb.collection('seasonal_campaigns').create({title:'Invalid',startDate:'invalid'}),/data válida/)
+  assert.equal(a.calls.length,0)
+})
