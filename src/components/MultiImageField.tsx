@@ -24,6 +24,7 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState('')
+  const [pendingImages, setPendingImages] = useState<string[] | null>(null)
   const [error, setError] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [showUrlModal, setShowUrlModal] = useState(false)
@@ -32,46 +33,73 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
     const files = Array.from(e.target.files || [])
     if (!files.length) return
     setError('')
+    setPendingImages(null)
     if (!pb.authStore.isValid) {
-      setError('Você está no Gestor demonstrativo. Para salvar fotos no Supabase, entre como administrador autorizado.')
+      setError('Para publicar fotos, é preciso entrar com uma conta de operador vinculada ao Loyola’s Lanches. A navegação sem login permite somente visualizar.')
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
-    // Files are uploaded in order and each successful addition is saved immediately.
-    // If the sixth of nine fails, the previous five remain published.
-    const nextImages = [...images]
-    let complete = 0
+    if (files.length > 30) {
+      setError('Envie até 30 fotos de cada vez (9 imagens são aceitas normalmente).')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    const pending = [...images]
     const failures: string[] = []
+    let complete = 0
+    setUploading(true)
     try {
-      setUploading(true)
+      // Upload to secure Storage first. Save the gallery JSON ONE time at the end,
+      // not once per photo; concurrent effects otherwise overwrite earlier images.
       for (let index = 0; index < files.length; index++) {
         const file = files[index]
         setProgress(`Enviando ${index + 1} de ${files.length}: ${file.name}`)
         if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) {
-          failures.push(`${file.name}: formato inválido (use JPG, PNG, WebP ou GIF)`)
+          failures.push(`${file.name}: use JPG, PNG, WebP ou GIF`)
           continue
         }
         if (file.size > 15 * 1024 * 1024) {
-          failures.push(`${file.name}: tamanho superior a 15 MB`)
+          failures.push(`${file.name}: excede 15 MB`)
           continue
         }
         try {
           const url = await uploadLandingGalleryImage(file)
-          nextImages.push(url)
-          await onChange([...nextImages])
+          pending.push(url)
           complete += 1
-        } catch (err: any) {
-          // Failed database persistence must not falsely count as success.
-          nextImages.pop()
-          failures.push(`${file.name}: ${err?.message || 'Falha no envio ou salvamento'}`)
+        } catch (err: unknown) {
+          failures.push(`${file.name}: ${err instanceof Error ? err.message : 'Falha no envio'}`)
         }
       }
-      setProgress(`${complete} de ${files.length} imagem(ns) publicada(s).`)
-      if (failures.length) setError(`Não foi possível publicar ${failures.length} arquivo(s): ${failures.join('; ')}`)
+      if (complete > 0) {
+        setProgress(`Salvando galeria com ${pending.length} imagens…`)
+        try {
+          await onChange(pending)
+          setProgress(`${complete} imagem(ns) publicada(s); galeria salva no Supabase.`)
+        } catch (err: unknown) {
+          setPendingImages(pending)
+          failures.push(`Fotos chegaram ao Storage, mas a galeria não foi salva: ${err instanceof Error ? err.message : 'erro desconhecido'}. Use “Tentar salvar galeria” para concluir sem reenviar as imagens.`)
+        }
+      } else {
+        setProgress('Nenhuma imagem foi enviada.')
+      }
+      if (failures.length) setError(`${failures.length} problema(s): ${failures.join('; ')}`)
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const retryGallerySave = async () => {
+    if (!pendingImages || uploading) return
+    setUploading(true)
+    setError('')
+    try {
+      await onChange(pendingImages)
+      setProgress(`Galeria confirmada: ${pendingImages.length} imagem(ns) no Supabase.`)
+      setPendingImages(null)
+    } catch (err: unknown) {
+      setError('Não foi possível concluir o salvamento: ' + (err instanceof Error ? err.message : 'erro desconhecido'))
+    } finally { setUploading(false) }
   }
 
   const handleAddUrl = async () => {
@@ -153,10 +181,11 @@ export const MultiImageField: React.FC<MultiImageFieldProps> = ({
       {!pb.authStore.isValid && (
         <div role="status" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
           A visualização é livre, mas enviar e salvar imagens na Landing exige uma conta do Supabase autorizada para esta empresa.
-          <Link to="/login" className="ml-2 font-bold underline">Entrar como administrador</Link>
+          <Link to="/login?returnTo=/adm-landing" className="ml-2 font-bold underline">Entrar para editar</Link>
         </div>
       )}
       {progress && <p aria-live="polite" className="text-xs text-emerald-300">{progress}</p>}
+      {pendingImages && <button type="button" disabled={uploading} onClick={retryGallerySave} className="self-start rounded-lg border border-amber-500/50 px-3 py-2 text-xs font-semibold text-amber-200 disabled:opacity-50">Tentar salvar galeria (sem reenviar fotos)</button>}
       {error && <p role="alert" className="rounded-lg bg-red-950/50 border border-red-500/30 p-2 text-xs text-red-200">{error}</p>}
 
       {showUrlModal && (
