@@ -393,7 +393,7 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
               next.heroSubtitleChips = data.heroSubtitleChips
             }
           } else if (section === 'marquee') {
-            const legacy = Array.isArray(data.marqueeItems) ? data.marqueeItems.filter((v: unknown): v is string => typeof v === 'string') : next.marqueeItems
+            const legacy = Array.isArray(data.marqueeItems) && data.marqueeItems.length ? data.marqueeItems.filter((v: unknown): v is string => typeof v === 'string') : MARQUEE_ITEMS
             next.marqueeBlocks = marqueeBlocks(data.marqueeBlocks, legacy)
             next.marqueeItems = selectedMessages(next.marqueeBlocks)
           } else if (section === 'story') {
