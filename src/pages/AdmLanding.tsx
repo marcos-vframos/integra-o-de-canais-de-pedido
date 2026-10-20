@@ -515,19 +515,20 @@ export default function AdmLanding() {
         </div>
       </header>
 
-      {/* Banner de Aviso de Estrutura de Login Futuro */}
-      <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs text-amber-300">
+      {/* Acesso de visualização continua livre; escrita exige operador vinculado ao tenant. */}
+      {!pb.authStore.isValid && <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs text-amber-300">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <b>Modo de visualização:</b> você pode testar sem login, mas publicar imagens e mudanças na Landing exige uma conta de operador autorizada no Supabase.
-            {' '}<Link to="/login" className="font-bold underline">Entrar no Gestor</Link>.
+            <b>Publicação protegida:</b> você pode visualizar tudo sem login, mas salvar imagens e mudanças exige um operador cadastrado e vinculado à empresa no Supabase.
+            {' '}<Link to="/login?returnTo=/adm-landing" className="font-bold underline">Entrar no Gestor</Link>.
             {' '}Para criar a primeira conta, abra <a href="https://supabase.com/dashboard/project/awgqpfdfsyslpqpfzoul/auth/users" target="_blank" rel="noopener noreferrer" className="font-bold underline">Supabase → Authentication → Users</a>; depois associe o usuário à empresa.
           </span>
         </div>
-      </div>
+      </div>}
 
-      {/* Navegação por Abas do Painel */}
+      {/* Depois de autenticar, o banner desaparece e os campos gravam normalmente. */}
+            {/* Navegação por Abas do Painel */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
           <div className="flex items-center gap-2">
