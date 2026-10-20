@@ -43,7 +43,8 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         <span className="text-xs font-semibold text-zinc-300">{label}</span>
         <button
           type="button"
-          disabled={disabled || uploading}
+          disabled={disabled || uploading || !pb.authStore.isValid}
+          title={!pb.authStore.isValid ? 'Entre no Gestor com um operador autorizado para carregar fotos' : 'Enviar foto para o Supabase'}
           onClick={() => fileInputRef.current?.click()}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#8F0F1B] hover:bg-[#A31220] text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
         >
