@@ -519,9 +519,9 @@ export default function AdmLanding() {
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <b>Acesso Administrativo Preparado:</b> Esta área já está estruturada para bloqueio por
-            login e senha do operador na próxima etapa. Atualmente liberada para configuração do
-            cardápio e identidade visual.
+            <b>Modo de visualização:</b> você pode explorar o painel sem login. Para salvar imagens,
+            campanhas, paletas e cardápio no Supabase é necessário entrar como operador autorizado.{' '}
+            <Link to="/login" className="font-bold underline">Entrar no Gestor</Link>.
           </span>
         </div>
       </div>
@@ -1062,7 +1062,6 @@ export default function AdmLanding() {
                 label="Fotos da Seção Nossa História"
                 images={storyImages}
                 onChange={async (imgs) => {
-                  setStoryImages(imgs)
                   await saveSection('story', {
                     storyHeadingPrefix: formText.storyHeadingPrefix,
                     storyHeadingHighlight: formText.storyHeadingHighlight,
@@ -1073,6 +1072,7 @@ export default function AdmLanding() {
                     storyImage: imgs[0] || '',
                     storyImages: imgs,
                   })
+                  setStoryImages(imgs)
                 }}
               />
             </div>
@@ -1093,7 +1093,6 @@ export default function AdmLanding() {
                 label="Fotos de Fundo do CTA de Pedidos"
                 images={ctaImages}
                 onChange={async (imgs) => {
-                  setCtaImages(imgs)
                   await saveSection('order_cta', {
                     ctaTag: formText.ctaTag,
                     ctaHeading: formText.ctaHeading,
@@ -1101,6 +1100,7 @@ export default function AdmLanding() {
                     ctaButtonText: formText.ctaButtonText,
                     ctaImages: imgs,
                   })
+                  setCtaImages(imgs)
                 }}
               />
             </div>
