@@ -406,12 +406,13 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
             } else if (data.storyImage) {
               next.storyImage = data.storyImage
             }
-            // Prefer the original uploaded image recovered from PocketBase over outdated external URLs.
-            if (next.storyImage) {
-              const others = Array.isArray(data.storyImages) ? data.storyImages.filter((src: string) => src && src !== next.storyImage) : []
-              next.storyImages = [next.storyImage, ...others]
-            } else if (Array.isArray(data.storyImages)) {
-              next.storyImages = data.storyImages
+            // An explicitly saved gallery is authoritative (including removals and reordering).
+            // Legacy image_path is only a fallback when no gallery was ever configured.
+            if (Array.isArray(data.storyImages)) {
+              next.storyImages = data.storyImages.filter((src: unknown): src is string => typeof src === 'string' && !!src.trim())
+              next.storyImage = next.storyImages[0] || ''
+            } else if (next.storyImage) {
+              next.storyImages = [next.storyImage]
             }
             if (data.storyCard1Title) next.storyCard1Title = data.storyCard1Title
             if (data.storyCard1Desc) next.storyCard1Desc = data.storyCard1Desc
@@ -512,7 +513,11 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
 
     const formData = new FormData()
     formData.append('section', section)
-    formData.append('data', JSON.stringify(data))
+    // Gallery updates must not erase unrelated text/branding fields from the same section.
+    const mergedData = existingRecord?.data && typeof existingRecord.data === 'object' && !Array.isArray(existingRecord.data)
+      ? { ...existingRecord.data, ...data }
+      : data
+    formData.append('data', JSON.stringify(mergedData))
 
     if (imageFile) {
       formData.append('image', imageFile)
