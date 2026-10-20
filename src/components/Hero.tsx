@@ -137,9 +137,9 @@ export default function Hero() {
           <div className="lg:col-span-7 flex flex-col items-start space-y-6 sm:space-y-7">
             {/* Tag solicitada no item 3: TRADIÇÃO & ESSÊNCIA */}
             <div className="flex items-center gap-3 text-xs tracking-[0.22em] uppercase font-semibold text-[#C4C4C4]">
-              <span className="w-8 h-px bg-[#8F0F1B]" />
+              <span className="w-8 h-px bg-[var(--landing-vinho)]" />
               <span className="text-[#E2E8F0] tracking-[0.24em]">{traditionBadge}</span>
-              <span className="w-2 h-2 rounded-full bg-[#8F0F1B]/80 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[var(--landing-vinho)]/80 animate-pulse" />
             </div>
 
             {/* Headline com troca automática e transição fluida */}
@@ -180,7 +180,7 @@ export default function Hero() {
                   aria-label={`Ver mensagem ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                     safeHeadlineIndex === i
-                      ? 'w-8 bg-[#8F0F1B]'
+                      ? 'w-8 bg-[var(--landing-vinho)]'
                       : 'w-2 bg-white/20 hover:bg-white/40'
                   }`}
                 />
@@ -209,7 +209,7 @@ export default function Hero() {
                   event.preventDefault()
                   document.getElementById('cardapio')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
-                className="inline-flex items-center justify-center gap-2.5 bg-[#8F0F1B] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-[#8F0F1B]/30 hover:shadow-[#8F0F1B]/50 hover:scale-[1.02] active:scale-[0.99]"
+                className="inline-flex items-center justify-center gap-2.5 bg-[var(--landing-vinho)] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-[#8F0F1B]/30 hover:shadow-[#8F0F1B]/50 hover:scale-[1.02] active:scale-[0.99]"
               >
                 <span>Fazer Pedido</span>
                 <ArrowRight className="w-4 h-4 text-white/90" />
@@ -302,7 +302,7 @@ export default function Hero() {
                     onClick={() => setSlideIndex(i)}
                     aria-label={`Ver foto ${i + 1}`}
                     className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                      slideIndex === i ? 'w-5 bg-[#8F0F1B]' : 'w-2 bg-white/40 hover:bg-white/70'
+                      slideIndex === i ? 'w-5 bg-[var(--landing-vinho)]' : 'w-2 bg-white/40 hover:bg-white/70'
                     }`}
                   />
                 ))}
