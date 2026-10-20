@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { X, ArrowUpRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { notifyOffer, type CampaignOffer } from '@/lib/campaignOffer'
+import { loadPrimaryCampaign } from '@/lib/primaryCampaign'
+import { selectOpeningCampaign } from '@/lib/campaignDisplay'
 import useRealtime from '@/hooks/use-realtime'
 import type { LandingThemeColors } from '@/context/LandingContentContext'
 
@@ -22,20 +24,17 @@ interface SeasonalCampaign {
   offer?: CampaignOffer
 }
 
-function isCampaignLive(c: SeasonalCampaign, now = new Date()) {
-  if (!c.active) return false
-  const start = c.startDate ? new Date(c.startDate) : null
-  const end = c.endDate ? new Date(c.endDate) : null
-  return (!start || start <= now) && (!end || end >= now)
-}
-
 export default function SeasonalCampaignOverlay() {
+  const [primaryId, setPrimaryId] = useState<string | null>(null)
+  const [now, setNow] = useState(Date.now)
   const [campaigns, setCampaigns] = useState<SeasonalCampaign[]>([])
   const [dismissedId, setDismissedId] = useState<string | null>(null)
 
   const load = async () => {
     try {
-      const rows = await pb.collection('seasonal_campaigns').getFullList({ sort: '-startDate,-created' })
+      const [rows, primary] = await Promise.all([pb.collection('seasonal_campaigns').getFullList({ sort: '-startDate,-created' }), loadPrimaryCampaign()])
+      setPrimaryId(primary)
+      setNow(Date.now())
       setCampaigns(rows as unknown as SeasonalCampaign[])
     } catch (error) {
       console.warn('Não foi possível carregar campanhas sazonais:', error)
@@ -45,7 +44,12 @@ export default function SeasonalCampaignOverlay() {
   useEffect(() => { load() }, [])
   useRealtime('seasonal_campaigns', load)
 
-  const active = useMemo(() => campaigns.find((c) => isCampaignLive(c)) || null, [campaigns])
+  useRealtime('landing_content', load)
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15000)
+    return () => clearInterval(timer)
+  }, [])
+  const active = selectOpeningCampaign(campaigns, primaryId, now)
 
   // Promoções podem trocar texto/imagens, mas NUNCA a paleta global da Landing.
   // Só o ADM da Landing, por meio de saveTheme(), altera as cores persistidas.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Save, Trash2, Pencil, Palette, AlertTriangle, Upload, CheckCircle2 } from 'lucide-react'
+import { Plus, Save, Trash2, Pencil, Palette, AlertTriangle, Upload, CheckCircle2, Star } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -9,6 +9,7 @@ import { DEFAULT_THEME_COLORS, type LandingThemeColors, useLandingContent } from
 import { OCCASION_PALETTES } from '@/lib/occasionPalettes'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
+import { loadPrimaryCampaign, savePrimaryCampaign } from '@/lib/primaryCampaign'
 import { isCampaignLive } from '@/lib/campaignDisplay'
 
 type CampaignOffer = { productId: string; unitPrice?: number; included: { ingredientId: string; qty: number }[] }
@@ -70,6 +71,7 @@ const validCta = (value: string) => value.startsWith('/') || value.startsWith('#
 export default function SeasonalCampaignAdmin() {
   const navigate = useNavigate()
   const { content, saveTheme } = useLandingContent()
+  const [primaryId, setPrimaryId] = useState<string | null>(null)
   const [items, setItems] = useState<CampaignRow[]>([])
   const [products, setProducts] = useState<MenuItem[]>([])
   const [ingredients, setIngredients] = useState<InventoryItem[]>([])
@@ -95,6 +97,7 @@ export default function SeasonalCampaignAdmin() {
     try {
       const rows = await pb.collection('seasonal_campaigns').getFullList({ sort: '-created' })
       const records = rows as unknown as CampaignRow[]
+      setPrimaryId(await loadPrimaryCampaign())
       setItems(records)
       return records
     } catch (e: unknown) {
@@ -249,6 +252,20 @@ export default function SeasonalCampaignAdmin() {
       setError('Não foi possível confirmar o status da campanha: ' + getErrorMessage(error))
     } finally { toggleLock.current = false; setTogglingId(null) }
   }
+  const makePrimary = async (row: CampaignRow) => {
+    if (toggleLock.current || saving) return
+    if (!canWrite) { navigate('/login?returnTo=/adm-landing'); return }
+    toggleLock.current = true
+    setTogglingId(row.id); setError(''); setSuccess('')
+    try {
+      await savePrimaryCampaign(row.id)
+      setPrimaryId(row.id)
+      setSuccess(isCampaignLive(row)
+        ? 'Promoção principal salva. Ela abrirá ao entrar ou atualizar a Landing.'
+        : 'Promoção principal salva. Ela abrirá quando estiver ativa e dentro do período cadastrado.')
+    } catch (error) { setError('Não foi possível definir a promoção principal: ' + getErrorMessage(error)) }
+    finally { toggleLock.current = false; setTogglingId(null) }
+  }
   const remove = async (id: string) => {
     if (!confirm('Excluir esta campanha sazonal?')) return
     if (!canWrite) { setError('A exclusão exige backend próprio e autenticação.'); return }
@@ -377,6 +394,13 @@ export default function SeasonalCampaignAdmin() {
               disabled={!!togglingId || saving} onClick={() => void toggleCampaign(row)}
               className={'mt-3 w-full rounded-lg border px-3 py-2 text-xs font-bold disabled:cursor-wait disabled:opacity-50 ' + (row.active ? 'border-amber-500/40 bg-amber-500/10 text-amber-200' : 'border-emerald-500/40 bg-emerald-600 text-white')}>
               {togglingId === row.id ? 'Salvando status…' : row.active ? 'Desativar campanha' : 'Ativar campanha'}
+            </button>
+            <button type="button" aria-label={'Definir como principal: ' + row.title}
+              aria-pressed={primaryId === row.id} disabled={!!togglingId || saving || primaryId === row.id}
+              onClick={() => void makePrimary(row)}
+              className={'mt-2 flex items-center gap-1.5 text-[11px] disabled:cursor-default ' + (primaryId === row.id ? 'text-amber-300' : 'text-zinc-400 hover:text-white')}>
+              <Star size={13} fill={primaryId === row.id ? 'currentColor' : 'none'} />
+              {primaryId === row.id ? 'Promoção principal' : 'Definir como principal'}
             </button>
             {scheduled && <p className="mt-2 text-[11px] text-amber-200">Aparecerá na Landing no início do período. Para exibir agora, altere a data de início.</p>}
           </article>

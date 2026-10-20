@@ -43,3 +43,14 @@ test('video media including signed URLs are identified', () => {
   assert.equal(campaignMediaIsVideo('https://example.com/offer.webm'), true)
   assert.equal(campaignMediaIsVideo('https://example.com/offer.jpg'), false)
 })
+
+test('opening campaign honors the saved selection without publishing inactive, scheduled or deleted campaigns', () => {
+  const select = context.exports.selectOpeningCampaign
+  const first = { id: 'first', active: true }
+  const primary = { id: 'primary', active: true }
+  assert.equal(select([first, primary], 'primary', now).id, 'primary')
+  assert.equal(select([first, { ...primary, active: false }], 'primary', now).id, 'first')
+  assert.equal(select([first, { ...primary, startDate: '2026-10-31' }], 'primary', now).id, 'first')
+  assert.equal(select([first], 'deleted', now).id, 'first')
+  assert.equal(select([], 'primary', now), null)
+})

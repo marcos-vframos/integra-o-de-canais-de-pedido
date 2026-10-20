@@ -21,3 +21,11 @@ export function campaignDestination(value?: string): string {
 export function campaignMediaIsVideo(url: string): boolean {
   return /\.(mp4|webm)(\?|$)/i.test(url)
 }
+
+/** Explicit selection wins only while eligible; keep the existing fallback otherwise. */
+export function selectOpeningCampaign<T extends { id: string; active?: boolean; startDate?: string; endDate?: string }>(
+  campaigns: T[], primaryId: string | null, now = Date.now(),
+): T | null {
+  const eligible = campaigns.filter(campaign => isCampaignLive(campaign, now))
+  return eligible.find(campaign => campaign.id === primaryId) || eligible[0] || null
+}
