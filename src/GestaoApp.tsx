@@ -29,7 +29,7 @@ export default function GestaoApp() {
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/login" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <Login />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ForgotPassword />} />
               <Route path="/reset-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ResetPassword />} />
               <Route path="/verify-email" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <VerifyEmail />} />
