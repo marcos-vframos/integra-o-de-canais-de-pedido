@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
+import LandingStories from '@/components/LandingStories'
 import { BUSINESS_INFO, checkIsOpenNow } from '@/data/loyolasData'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
@@ -95,6 +96,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
         style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <a
             href="#inicio"
             onClick={(e) => handleNavClick(e, '#inicio')}
@@ -108,6 +110,8 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
               Pindamonhangaba • SP
             </span>
           </a>
+          <LandingStories />
+          </div>
 
           <nav
             role="navigation"

@@ -54,7 +54,7 @@ export default function LandingStories() {
   const href=current ? safeStoryLink(current.link_url) : ''
   return <>
     <button ref={trigger} type="button" aria-label="Abrir stories do Loyola's" onClick={()=>{setMuted(true);setSelectedId(live[0].id)}}
-      className="fixed left-3 top-24 z-40 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-amber-400 bg-[#121215] p-0.5 text-white shadow-xl sm:left-5" title="Stories">
+      className="relative flex h-11 w-11 shrink-0 sm:h-12 sm:w-12 items-center justify-center rounded-full border-[3px] border-amber-400 bg-[#121215] p-0.5 text-white shadow-xl" title="Stories">
       {live[0].media_kind==='image'?<img src={live[0].media_url} alt="" className="h-full w-full rounded-full object-cover"/>:<Play size={24}/>}
     </button>
     <Dialog open={!!current} onOpenChange={open=>{if(!open)setSelectedId(null)}}>
