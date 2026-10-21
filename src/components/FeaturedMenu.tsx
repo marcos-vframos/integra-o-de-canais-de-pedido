@@ -1,3 +1,4 @@
+import { isBeverage } from '@/lib/beverages'
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, AlertCircle, Search } from 'lucide-react'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
@@ -250,12 +251,12 @@ export default function FeaturedMenu() {
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#C4C4C4] leading-relaxed">
-                      Lanche chapeado artesanalmente com ingredientes frescos e sabor incomparável.
+                      {isBeverage(item) ? 'Bebida para acompanhar seu pedido.' : 'Preparo artesanal com ingredientes frescos e sabor incomparável.'}
                     </p>
                   </div>
 
                   <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                    <span className="text-[11px] text-[#C4C4C4]/70">Feito na chapa</span>
+                    <span className="text-[11px] text-[#C4C4C4]/70">{isBeverage(item) ? 'Bebida' : 'Preparo na hora'}</span>
                     <button type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent('loyolas:select-product', { detail: { itemId: item.id } }))}
                       className="inline-flex items-center gap-1.5 text-xs text-white hover:text-[#C4C4C4] font-medium tracking-wide uppercase transition-colors"

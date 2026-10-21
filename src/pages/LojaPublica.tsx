@@ -1,3 +1,4 @@
+import { isBeverage, hasSodaFlavor, validSodaFlavor } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -44,6 +45,7 @@ import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
 import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
+  beverageFlavor?: string
   cartLineId: string
   itemId: string
   qty: number
@@ -90,6 +92,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Customização
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
+  const [customizeFlavor, setCustomizeFlavor] = useState('')
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
@@ -330,6 +333,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const handleOpenCustomize = (item: MenuItem) => {
     setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
+    setCustomizeFlavor('')
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
@@ -342,6 +346,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     if (!item) return
     setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
+    setCustomizeFlavor(line.beverageFlavor || '')
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
@@ -358,9 +363,10 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }
 
   const handleConfirmCustomize = () => {
-    if (!customizeItem) return
-    const removed = Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
-    const added = Object.entries(customizeAdded)
+    if (!customizeItem || (hasSodaFlavor(customizeItem) && !validSodaFlavor(customizeFlavor))) return
+    const beverageFlavor = hasSodaFlavor(customizeItem) ? customizeFlavor : undefined
+    const removed = isBeverage(customizeItem) ? [] : Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
+    const added = Object.entries(isBeverage(customizeItem) ? {} : customizeAdded)
       .filter(([ingredientId, q]) => Number(q) > 0 && !breadKind(ingredientId, stockById))
       .map(([ingredientId, qty]) => ({ ingredientId, qty: Number(qty) }))
 
@@ -372,7 +378,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       setCart((prev) =>
         prev.map((l) =>
           l.cartLineId === customizeEditingLineId
-            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice }
+            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice, beverageFlavor }
             : l,
         ),
       )
@@ -382,6 +388,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         {
           cartLineId: `pub_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
           itemId: customizeItem.id,
+          beverageFlavor,
           qty: customizeQty,
           removed,
           added,
@@ -400,6 +407,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }
 
   const handleQuickAdd = (item: MenuItem) => {
+    if (hasSodaFlavor(item)) { handleOpenCustomize(item); return }
     setCart((prev) => {
       const existing = prev.find(
         (l) =>
@@ -729,7 +737,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
       return {
         itemId: l.itemId,
-        name: item?.name || 'Item',
+        name: l.beverageFlavor ? `${item?.name || 'Item'} — ${l.beverageFlavor}` : item?.name || 'Item',
+        beverageFlavor: l.beverageFlavor,
         price: (l.promotionId ? Number(l.promotionPrice ?? baseItemPrice) : baseItemPrice) + unitExtra + breadExtra,
         promotionId: l.promotionId,
         promotionalIncluded: l.promotionalIncluded,
@@ -1079,7 +1088,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
             <div>
               <div className="text-[11px] text-[#9A9CA0] uppercase tracking-wider font-semibold">
-                Total do Pedido
+                Total
               </div>
               <div className="text-lg font-black text-white font-mono leading-tight">
                 {fmtBRL(subtotal)}
@@ -1173,7 +1182,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="font-bold text-sm text-white">
-                              {item?.name || 'Item'}
+                              {item?.name || 'Item'}{line.beverageFlavor ? ` — ${line.beverageFlavor}` : ''}
                             </div>
                             <div className="text-xs text-[#C0C0C0] font-mono">
                               {fmtBRL(calculateLineTotal(line))}
@@ -1181,7 +1190,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            {!line.promotionId && item?.recipe && item.recipe.length > 0 && (
+                            {!line.promotionId && (hasSodaFlavor(item) || (item?.recipe && item.recipe.length > 0)) && (
                               <button
                                 type="button"
                                 onClick={() => handleEditCartLine(line)}
@@ -1611,7 +1620,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                 )}
 
                 <div className="flex items-center justify-between text-base font-bold pt-1 border-t border-zinc-800">
-                  <span className="text-white">Total a Pagar</span>
+                  <span className="text-white">Total</span>
                   <span className="text-white font-mono text-lg">{fmtBRL(finalTotal)}</span>
                 </div>
 
@@ -1722,6 +1731,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       {/* 6. Modal de Customização Reutilizado */}
       <CustomizeModal
         item={customizeItem}
+        beverageFlavor={customizeFlavor}
+        setBeverageFlavor={setCustomizeFlavor}
         stock={stock}
         menu={menu}
         qty={customizeQty}
@@ -1770,6 +1781,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
             added: it.added
               ? it.added.map((a: any) => ({ ingredientId: a.ingredientId || a.name, qty: a.qty }))
               : [],
+            beverageFlavor: (it as any).beverageFlavor,
             gourmetFreeChoice: it.gourmetFreeChoice,
             breadChoice: it.breadChoice || 'hamburguer',
           }))

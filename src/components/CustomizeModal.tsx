@@ -1,10 +1,13 @@
 import React from 'react'
+import { isBeverage, hasSodaFlavor, SODA_FLAVORS } from '@/lib/beverages'
 import { Minus, Plus, X } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, breadSurcharge, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 interface CustomizeModalProps {
+  beverageFlavor?: string
+  setBeverageFlavor?: (flavor: string) => void
   item: MenuItem | null
   stock: InventoryItem[]
   menu: MenuItem[]
@@ -28,6 +31,8 @@ interface CustomizeModalProps {
 
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   item,
+  beverageFlavor = '',
+  setBeverageFlavor,
   menu,
   qty,
   removed,
@@ -48,14 +53,16 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 }) => {
   if (!item) return null
 
+  const beverage = isBeverage(item)
+  const soda = hasSodaFlavor(item)
   const isGourmet = item.category === 'Gourmet'
-  const showBreadSelector = hasBread(item, resolveStockItem)
-  const extras = Object.entries(added)
+  const showBreadSelector = !beverage && hasBread(item, resolveStockItem)
+  const extras = Object.entries(beverage ? {} : added)
     .filter(([ingredientId, amount]) => Number(amount) > 0 && !breadKind(ingredientId, resolveStockItem))
     .map(([ingredientId, amount]) => ({ ingredientId, qty: Number(amount) }))
   const extrasTotal = extras.reduce((sum, a) => sum + extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty, 0)
   const breadExtra = breadSurcharge(item, { breadChoice }, resolveStockItem)
-  const currentUnitTotal = lineUnitTotal(item, { added: extras, breadChoice }, resolveStockItem, menu)
+  const currentUnitTotal = beverage ? Number(item.price) : lineUnitTotal(item, { added: extras, breadChoice }, resolveStockItem, menu)
 
   return (
     <div className="sc-modal-backdrop" onClick={onClose}>
@@ -83,6 +90,13 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           </div>
         </div>
 
+        {soda && setBeverageFlavor && <div className="sc-field">
+          <label htmlFor="beverage-flavor" className="sc-label">Sabor do refrigerante</label>
+          <select id="beverage-flavor" value={beverageFlavor} onChange={e => setBeverageFlavor(e.target.value)} className="w-full rounded-lg border border-zinc-700 bg-[#17171C] p-3 text-white">
+            <option value="">Selecione o sabor</option>
+            {SODA_FLAVORS.map(flavor => <option key={flavor} value={flavor}>{flavor}</option>)}
+          </select>
+        </div>}
         {showBreadSelector && (
           <fieldset className="sc-field rounded-xl border border-[var(--line)] bg-[#151518] p-3">
             <legend className="px-1 text-xs font-bold uppercase tracking-wide text-white">Escolha o pão</legend>
@@ -221,7 +235,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           </div>
         )}
 
-        {item.recipe && item.recipe.length > 0 && (
+        {!beverage && item.recipe && item.recipe.length > 0 && (
           <div className="sc-field">
             <label className="sc-label">
               Ingredientes inclusos — desmarque para remover ou use o seletor para adicionar extra
@@ -385,18 +399,18 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
         )}
 
         <div className="rounded-xl border border-[var(--line)] bg-[#121217] p-3 space-y-1" aria-live="polite">
-          <div className="flex justify-between text-xs text-zinc-300"><span>Preço do lanche</span><span>{fmtBRL(item.price)}</span></div>
+          <div className="flex justify-between text-xs text-zinc-300"><span>{beverage ? 'Preço da bebida' : 'Preço do produto'}</span><span>{fmtBRL(item.price)}</span></div>
           {showBreadSelector && <div className="flex justify-between text-xs text-zinc-300"><span>{breadName(breadChoice)} por unidade</span><span>{breadExtra > 0 ? `+ ${fmtBRL(breadExtra)}` : 'Incluso'}</span></div>}
-          <div className="flex justify-between text-xs text-zinc-300"><span>Outros adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>
+          {!beverage && <div className="flex justify-between text-xs text-zinc-300"><span>Outros adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>}
           {extras.map(a => <div key={a.ingredientId} className="flex justify-between text-[11px] text-zinc-400">
             <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>
             <span>+ {fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}</span>
           </div>)}
-          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total ({qty} {qty === 1 ? 'lanche' : 'lanches'})</span><span>{fmtBRL(currentUnitTotal * qty)}</span></div>
+          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total</span><span>{fmtBRL(currentUnitTotal * qty)}</span></div>
         </div>
 
         <div className="sc-form-actions">
-          <button className="sc-btn-primary" onClick={onConfirm}>
+          <button className="sc-btn-primary" disabled={soda && !!setBeverageFlavor && !beverageFlavor} onClick={onConfirm}>
             {isEditing ? 'Salvar alterações' : 'Adicionar ao pedido'}
           </button>
           <button className="sc-btn-ghost" onClick={onClose}>
