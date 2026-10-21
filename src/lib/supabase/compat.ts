@@ -341,8 +341,9 @@ const pb={
       await ensureOperatorSession()
       return request('/rest/v1/rpc/'+(path.includes('vouchers')?'issue_voucher_batch':'save_delivery_neighborhoods'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...opts.body as object,p_tenant:tenantId})},true) as Promise<T>
     }
+    if(path==='/backend/v1/delivery/lookup') opts={...opts,body:{...opts.body as object,action:'lookupNeighborhoods'}}
     if(path==='/backend/v1/vouchers/lookup') opts={...opts,body:{...opts.body as object,action:'lookupVoucher'}}
-    if(path!=='/backend/v1/orders/finalize' && path!=='/backend/v1/vouchers/lookup')throw new Error('Endpoint não migrado: '+path)
+    if(path!=='/backend/v1/orders/finalize' && path!=='/backend/v1/vouchers/lookup' && path!=='/backend/v1/delivery/lookup')throw new Error('Endpoint não migrado: '+path)
     if(!backendConfigured)throw new Error(backendConfigMessage)
     const headers:Record<string,string>={'Content-Type':'application/json',apikey:publishableKey}
     if(authStore.isValid)headers.Authorization='Bearer '+authStore.token

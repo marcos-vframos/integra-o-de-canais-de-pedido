@@ -368,7 +368,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     if (hasDrinkFlavor(customizeItem)) {
       if (!Object.values(customizeFlavors).some(q=>q>0) || Object.keys(customizeFlavors).some(f=>!validDrinkFlavor(customizeItem,f))) return
       const rows = flavorQuantityLines(customizeItem.id,customizeFlavors)
-      setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,removed:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
+      setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
       handleCloseCustomize()
       return
     }

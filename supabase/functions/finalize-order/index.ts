@@ -47,6 +47,26 @@ Deno.serve(async(request: Request) => {
   const secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!url || !secret) return reply(request,503,{error:'Servidor de pedidos ainda não configurado'})
   const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}})
+  if(payload.action==='lookupNeighborhoods') {
+    const points=payload.points
+    if(!Array.isArray(points)||points.length<3||points.length>100||points.some(p=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||p[0]<-23.2||p[0]>-22.6||p[1]<-45.9||p[1]>-45.1))
+      return reply(request,422,{error:'Delimite uma área válida em Pindamonhangaba (3 a 100 pontos).'})
+    const poly=points.map(p=>p.join(' ')).join(' ')
+    const query='[out:json][timeout:10];nwr["place"~"suburb|neighbourhood|quarter"](poly:"'+poly+'");out center;'
+    for(const endpoint of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']) {
+      try {
+        const response=await fetch(endpoint+'?data='+encodeURIComponent(query),{signal:AbortSignal.timeout(12000),headers:{Accept:'application/json'}})
+        if(!response.ok)continue
+        const data=await response.json()
+        const neighborhoods=(data.elements||[]).flatMap((e:any)=>{
+          const lat=e.lat??e.center?.lat,lng=e.lon??e.center?.lon
+          return typeof e.tags?.name==='string'&&Number.isFinite(lat)&&Number.isFinite(lng)?[{name:e.tags.name,lat,lng,fee:0}]:[]
+        })
+        return reply(request,200,{neighborhoods,source:'OpenStreetMap',coverage:'mapped'})
+      }catch{ /* Read-only fallback to the second public map endpoint. */ }
+    }
+    return reply(request,503,{error:'Consulta aos bairros indisponível. Importe limites oficiais ou inclua os bairros manualmente.'})
+  }
   if(payload.action==='lookupVoucher') {
     const code=String(payload.code||'').trim().toUpperCase()
     if(!/^LOY-[A-F0-9]{6,10}$/.test(code))return reply(request,422,{error:'Código inválido'})

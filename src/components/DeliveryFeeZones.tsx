@@ -23,11 +23,8 @@ export default function DeliveryFeeZones(){
  const token=++requestRef.current;setBusy(true);setStatus('Buscando bairros da área…')
  const found=[...zones.map(z=>({...z,polygon:zoneMeta(z.description).polygon})),...catalog].filter(n=>n.polygon?.length?polygonsOverlap(points,n.polygon):pointInPolygon([n.lat,n.lng],points))
  try{
- const poly=points.map(p=>p.join(' ')).join(' '),q='[out:json][timeout:20];nwr["place"~"suburb|neighbourhood|quarter"](poly:"'+poly+'");out center;'
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),25000)
- let data:any
- try{const response=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),{signal:controller.signal});if(!response.ok)throw Error();data=await response.json()}finally{clearTimeout(timeout)}
- for(const e of data.elements||[]){const lat=e.lat??e.center?.lat,lng=e.lon??e.center?.lon;if(e.tags?.name&&Number.isFinite(lat)&&Number.isFinite(lng)&&pointInPolygon([lat,lng],points))found.push({name:e.tags.name,lat,lng,fee:0})}
+ const data=await pb.send<{neighborhoods:Neighborhood[]}>('/backend/v1/delivery/lookup',{body:{points}})
+ for(const n of data.neighborhoods||[]){if(pointInPolygon([n.lat,n.lng],points))found.push(n)}
  if(token!==requestRef.current)return
  setStatus('Bairros cadastrados e mapeados listados. Confira a cobertura e inclua os ausentes antes de salvar. Para limites completos, importe o GeoJSON oficial de bairros.')
  }catch{if(token!==requestRef.current)return;setStatus('Consulta ao mapa indisponível. Listamos os bairros já cadastrados/importados. Inclua os ausentes ou importe um GeoJSON de bairros.')}
@@ -35,7 +32,7 @@ export default function DeliveryFeeZones(){
  }
  // Atualiza a lista após concluir/alterar o desenho.
  useEffect(()=>{if(!open||points.length<3||!autoRef.current)return;const t=setTimeout(()=>{void list()},900);return()=>clearTimeout(t)},[points,catalog,open])
- const edit=(z:Saved)=>{requestRef.current++;autoRef.current=false;const meta=zoneMeta(z.description),id=meta.zoneId||z.id;setZoneId(id);setName(meta.zoneName||z.name);setPoints(meta.zonePolygon||meta.polygon||[]);setRows(zones.filter(x=>(zoneMeta(x.description).zoneId||x.id)===id).map(x=>({...x,polygon:zoneMeta(x.description).polygon})));setStatus('Ajuste os valores individuais e salve.');setOpen(true)}
+ const edit=(z:Saved)=>{requestRef.current++;autoRef.current=false;setBusy(false);const meta=zoneMeta(z.description),id=meta.zoneId||z.id;setZoneId(id);setName(meta.zoneName||z.name);setPoints(meta.zonePolygon||meta.polygon||[]);setRows(zones.filter(x=>(zoneMeta(x.description).zoneId||x.id)===id).map(x=>({...x,polygon:zoneMeta(x.description).polygon})));setStatus('Ajuste os valores individuais e salve.');setOpen(true)}
  const save=async()=>{
  if(!name.trim()||points.length<3||!rows.length){setStatus('Informe o nome da área, delimite o mapa e inclua os bairros.');return}
  if(rows.some(r=>r.name.trim().length<2||!Number.isFinite(r.fee)||r.fee<0)){setStatus('Preencha o nome e uma taxa válida para cada bairro.');return}
@@ -52,7 +49,7 @@ export default function DeliveryFeeZones(){
  <div className="grid gap-4 md:grid-cols-[1fr_350px]"><div><div ref={mapEl} className="h-[380px] rounded-xl"/><div className="mt-3 flex flex-wrap gap-2"><button className="sc-btn-ghost" onClick={()=>{requestRef.current++;setPoints([]);setRows([]);setBusy(false)}}>Limpar desenho</button><button className="sc-btn-ghost" disabled={busy||points.length<3} onClick={()=>void list()}>Atualizar bairros da área</button></div><label className="mt-3 block text-xs text-zinc-400">Importar limites oficiais de bairros (GeoJSON)<input type="file" accept=".geojson,.json,application/geo+json,application/json" className="mt-2 block max-w-full" onChange={async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024)throw Error('Arquivo deve ter até 10 MB.');const data=readNeighborhoodGeoJSON(JSON.parse(await file.text()));if(!data.length)throw Error('Nenhum bairro válido encontrado.');autoRef.current=true;setCatalog(data);setStatus(data.length+' limites importados; confira os bairros da área.')}catch(e:any){setStatus(e.message)}e.target.value=''}}/></label></div>
  <div className="space-y-3"><label className="block text-sm">Nome da área<input className={field} value={name} onChange={e=>setName(e.target.value)}/></label><p className="text-xs text-zinc-400">{points.length} pontos · {rows.length} bairros. Sem limites importados, a detecção usa os pontos mapeados dos bairros.</p>
  <div className="space-y-3">{rows.map((r,i)=><div key={r.id||i} className="rounded-lg border border-zinc-700 p-3"><label className="block text-xs">Bairro<input aria-label={'Nome do bairro '+(i+1)} className={field} value={r.name} onChange={e=>setRows(rs=>rs.map((x,j)=>j===i?{...x,name:e.target.value}:x))}/></label><label className="mt-2 block text-xs">Taxa de entrega (R$)<input aria-label={'Taxa de '+r.name} type="number" min="0" step=".01" className={field} value={Number.isFinite(r.fee)?r.fee:''} onChange={e=>setRows(rs=>rs.map((x,j)=>j===i?{...x,fee:e.target.value===''?NaN:Number(e.target.value)}:x))}/></label></div>)}</div>
- <button className="sc-btn-ghost w-full" disabled={points.length<3} onClick={()=>setRows(rs=>[...rs,{name:'',fee:0,lat:points.reduce((n,p)=>n+p[0],0)/points.length,lng:points.reduce((n,p)=>n+p[1],0)/points.length}])}>Incluir bairro ausente</button>
+ <button className="sc-btn-ghost w-full" disabled={busy||points.length<3} onClick={()=>setRows(rs=>[...rs,{name:'',fee:0,lat:points.reduce((n,p)=>n+p[0],0)/points.length,lng:points.reduce((n,p)=>n+p[1],0)/points.length}])}>Incluir bairro ausente</button>
  <button disabled={busy||!rows.length} onClick={()=>void save()} className="sc-btn-primary w-full">{busy?'Aguarde…':'Salvar taxas por bairro'}</button><p role="status" className="text-sm text-zinc-300">{status}</p>
  </div></div></div></div>}</>
 }
