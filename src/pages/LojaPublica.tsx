@@ -1,3 +1,4 @@
+import { menuOrder } from '@/lib/productPresentation'
 import { isBeverage, hasSodaFlavor, validSodaFlavor } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
@@ -302,7 +303,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Filtro de itens (excluindo 'Complementos' do cardápio público principal)
   const filteredMenu = useMemo(() => {
-    return menu.filter((item) => {
+    return menuOrder(menu.filter((item) => {
       const itemCat = (item.category || '').trim() || 'Outros'
       if (itemCat === 'Complementos') return false
       const matchCat = itemCat === currentCategory
@@ -312,7 +313,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         (item.name || '').toLowerCase().includes(query) ||
         itemCat.toLowerCase().includes(query)
       return matchCat && matchSearch
-    })
+    }))
   }, [menu, currentCategory, searchTerm])
 
   // Preços cadastrados dos complementos de Catupiry e Cheddar
@@ -983,7 +984,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         <StorePromotionCarousel />
 
         {/* Categorias (Pills horizontais) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
+        <div className="flex flex-wrap items-center gap-2 pb-2 mb-5">
           {availableCategories.map((cat) => {
             const active = currentCategory === cat
             return (

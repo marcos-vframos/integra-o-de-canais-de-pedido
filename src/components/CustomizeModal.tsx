@@ -251,6 +251,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                   const checked = !removed[ingKey]
                   const extraCount = Number(added[ingKey]) || 0
                   const extraPrice = extraUnitPrice(ingKey, resolveStockItem, menu)
+                  const unitProduct = /^ing-(refri|agua|suco)/.test(si?.code || ingKey)
 
                   return (
                     <React.Fragment key={ingKey}>
@@ -270,11 +271,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                             <span className={checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'}>
                               {si ? si.name : r.ingredientId}
                             </span>
-                            <span className="text-[10px] text-zinc-500">Extra: {fmtBRL(extraPrice)} por porção</span>
+                            <span className="text-[10px] text-zinc-500">{unitProduct ? 'Incluído no combo. Para outra unidade, peça a bebida no cardápio.' : extraPrice > 0 ? `Extra: ${fmtBRL(extraPrice)} por porção` : 'Sem adicional disponível'}</span>
                           </span>
                         </label>
 
-                        <div className="flex items-center gap-2 shrink-0 select-none">
+                        {!unitProduct && extraPrice > 0 && <div className="flex items-center gap-2 shrink-0 select-none">
                           <button
                             type="button"
                             className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--line)] text-white hover:border-[var(--red)] active:scale-95 flex items-center justify-center transition-all disabled:opacity-40"
@@ -312,7 +313,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                           >
                             <Plus size={12} strokeWidth={2.5} />
                           </button>
-                        </div>
+                        </div>}
                       </div>
 
                       {(ingKey === 'ing-batata-300' || si?.code === 'ing-batata-300') && (
@@ -328,6 +329,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                             const toppingItem = resolveStockItem(toppingId)
                             const topKey = toppingItem?.code || toppingItem?.id || toppingId
                             const topExtra = Number(added[topKey]) || 0
+                            if (extraUnitPrice(topKey, resolveStockItem, menu) <= 0) return null
                             return (
                               <div
                                 key={topKey}

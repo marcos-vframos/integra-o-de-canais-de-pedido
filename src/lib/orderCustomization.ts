@@ -57,7 +57,7 @@ export function extraUnitPrice(
       return r.ingredientId === ingredientId || r.ingredientId === code || (ingredient?.code === stock?.code && !!ingredient?.code)
     })
   })
-  const fallback = isCatupiry ? 4 : isCheddar ? 3 : 3
+  const fallback = isCatupiry ? 4 : isCheddar ? 3 : 0
   const price = match ? Number(match.price) : fallback
   return Number.isFinite(price) ? Math.max(0, price) : fallback
 }

@@ -1,4 +1,5 @@
-import { isBeverage } from '@/lib/beverages'
+import { productCaption, preparationLabel, menuOrder } from '@/lib/productPresentation'
+import ProductImage from '@/components/ProductImage'
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, AlertCircle, Search } from 'lucide-react'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
@@ -114,7 +115,7 @@ export default function FeaturedMenu() {
   })
 
   // Itens da categoria selecionada (excluindo Complementos do cardápio exibido)
-  const filteredItems = menuItems.filter((item) => {
+  const filteredItems = menuOrder(menuItems.filter((item) => {
     const itemCat = (item.category || '').trim() || 'Outros'
     if (itemCat === 'Complementos') return false
     const query = searchTerm.trim().toLowerCase()
@@ -122,7 +123,7 @@ export default function FeaturedMenu() {
       return item.name.toLowerCase().includes(query) || itemCat.toLowerCase().includes(query)
     }
     return itemCat === currentCategory
-  })
+  }))
 
   // Imagens associadas por categoria ou nome para manter o visual premium
   const getImageForItem = (item: MenuItem) => {
@@ -184,7 +185,7 @@ export default function FeaturedMenu() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 sm:gap-3 pt-6 border-b border-white/[0.08] overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-6 border-b border-white/[0.08] pb-2">
             {availableCategories.map((cat) => {
               const active = currentCategory === cat
               return (
@@ -229,12 +230,7 @@ export default function FeaturedMenu() {
                 className="group bg-[#0D1A11] rounded-md overflow-hidden border border-white/[0.08] hover:border-white/[0.18] transition-all flex flex-col justify-between"
               >
                 <div className="relative h-52 sm:h-56 overflow-hidden bg-[#0A150D]">
-                  <img
-                    src={getImageForItem(item)}
-                    alt={item.name}
-                    className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 filter contrast-[1.03]"
-                    loading="lazy"
-                  />
+                  <ProductImage item={item} fallback={getImageForItem(item)} />
                   <span className="absolute top-3 left-3 bg-[#0A150D]/90 text-[10px] tracking-wider uppercase font-medium text-white px-2.5 py-1 rounded border border-white/10">
                     {item.category}
                   </span>
@@ -251,12 +247,12 @@ export default function FeaturedMenu() {
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#C4C4C4] leading-relaxed">
-                      {isBeverage(item) ? 'Bebida para acompanhar seu pedido.' : 'Preparo artesanal com ingredientes frescos e sabor incomparável.'}
+                      {productCaption(item)}
                     </p>
                   </div>
 
                   <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                    <span className="text-[11px] text-[#C4C4C4]/70">{isBeverage(item) ? 'Bebida' : 'Preparo na hora'}</span>
+                    <span className="text-[11px] text-[#C4C4C4]/70">{preparationLabel(item)}</span>
                     <button type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent('loyolas:select-product', { detail: { itemId: item.id } }))}
                       className="inline-flex items-center gap-1.5 text-xs text-white hover:text-[#C4C4C4] font-medium tracking-wide uppercase transition-colors"
