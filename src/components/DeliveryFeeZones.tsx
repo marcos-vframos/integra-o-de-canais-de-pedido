@@ -1,18 +1,58 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Map, Plus, Trash2, Save } from 'lucide-react'
+import { useEffect,useRef,useState } from 'react'
 import pb from '@/lib/pocketbase/client'
-import type { DeliveryFeeItem } from '@/lib/geoDistance'
-
-type Zone = DeliveryFeeItem & { polygon?: [number,number][]; active?: boolean }
-
+import {pointInPolygon,polygonsOverlap,readNeighborhoodGeoJSON,zoneMeta,type Point,type Neighborhood} from '@/lib/deliveryAreas'
+type Saved=Neighborhood&{id:string;description?:string}
 export default function DeliveryFeeZones(){
- const [zones,setZones]=useState<Zone[]>([]),[open,setOpen]=useState(false),[name,setName]=useState(''),[fee,setFee]=useState(0),[points,setPoints]=useState<[number,number][]>([])
- const mapEl=useRef<HTMLDivElement|null>(null), mapRef=useRef<any>(null), layerRef=useRef<any>(null)
- const load=()=>pb.collection('delivery_fees').getFullList<Zone>({sort:'name'}).then(setZones).catch(()=>setZones([]))
- useEffect(()=>{load()},[])
- useEffect(()=>{if(!open)return;let alive=true;const boot=async()=>{if(!(window as any).L){if(!document.getElementById('leaflet-css')){const l=document.createElement('link');l.id='leaflet-css';l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(l)}await new Promise<void>((res,rej)=>{const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=()=>res();s.onerror=rej;document.body.appendChild(s)})}if(!alive||!mapEl.current)return;const L=(window as any).L;if(mapRef.current)mapRef.current.remove();const m=L.map(mapEl.current).setView([-22.92,-45.46],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(m);m.on('click',(e:any)=>setPoints(p=>[...p,[e.latlng.lat,e.latlng.lng]]));mapRef.current=m};boot();return()=>{alive=false}},[open])
- useEffect(()=>{const L=(window as any).L,m=mapRef.current;if(!L||!m)return;if(layerRef.current)m.removeLayer(layerRef.current);if(points.length){layerRef.current=L.polygon(points,{color:'#E10600'}).addTo(m)}},[points])
- const save=async()=>{if(!name.trim()||fee<0||points.length<3)return alert('Informe nome, taxa e marque pelo menos 3 pontos no mapa.');const center=points.reduce((a,p)=>[a[0]+p[0]/points.length,a[1]+p[1]/points.length] as [number,number],[0,0] as [number,number]);try{await pb.collection('delivery_fees').create({name:name.trim(),fee,lat:center[0],lng:center[1],description:JSON.stringify({polygon:points,active:true})});setName('');setFee(0);setPoints([]);setOpen(false);load()}catch(e:any){alert(e?.message||'Não foi possível cadastrar a região.')}} 
- return <><div className="rounded-xl border border-[#27272A] bg-[#121215] p-4"><span className="block text-[11px] font-semibold uppercase text-zinc-500">Taxas por região</span><div className="mt-2 flex gap-2"><button onClick={()=>setOpen(true)} className="flex items-center gap-1 rounded-lg bg-[#E10600] px-3 py-2 text-xs font-bold text-white"><Plus size={13}/>Cadastrar taxa</button><button onClick={()=>setOpen(true)} className="flex items-center gap-1 rounded-lg border border-zinc-700 px-3 py-2 text-xs font-bold text-white"><Map size={13}/>Abrir mapa</button></div><div className="mt-2 text-[10px] text-zinc-500">{zones.length} região(ões) cadastrada(s)</div></div>
- {open&&<div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4" onClick={()=>setOpen(false)}><div className="w-full max-w-4xl rounded-2xl border border-zinc-700 bg-[#121215] p-5" onClick={e=>e.stopPropagation()}><div className="mb-3 flex justify-between"><div><h3 className="font-bold text-white">Mapa de taxas de entrega</h3><p className="text-xs text-zinc-400">Clique no mapa contornando a região. O polígono será usado para definir a taxa.</p></div><button onClick={()=>setOpen(false)} className="text-zinc-400">✕</button></div><div className="grid gap-3 md:grid-cols-[1fr_280px]"><div ref={mapEl} className="h-[430px] rounded-xl"/><div className="space-y-3"><input value={name} onChange={e=>setName(e.target.value)} placeholder="Nome da região" className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-xs text-white"/><input type="number" min="0" step=".5" value={fee} onChange={e=>setFee(Number(e.target.value))} placeholder="Taxa R$" className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-xs text-white"/><div className="text-xs text-zinc-400">{points.length} pontos demarcados</div><button onClick={()=>setPoints([])} className="flex w-full items-center justify-center gap-1 rounded-lg border border-zinc-700 p-2 text-xs text-zinc-300"><Trash2 size={13}/>Limpar desenho</button><button onClick={save} className="flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-600 p-2 text-xs font-bold text-white"><Save size={13}/>Salvar região e taxa</button></div></div></div></div>}</>
+ const [zones,setZones]=useState<Saved[]>([]),[open,setOpen]=useState(false),[name,setName]=useState(''),[zoneId,setZoneId]=useState(''),[points,setPoints]=useState<Point[]>([]),[rows,setRows]=useState<Neighborhood[]>([]),[catalog,setCatalog]=useState<Neighborhood[]>([]),[status,setStatus]=useState(''),[busy,setBusy]=useState(false),[mapReady,setMapReady]=useState(0)
+ const mapEl=useRef<HTMLDivElement>(null),mapRef=useRef<any>(null),layerRef=useRef<any>(null),requestRef=useRef(0),autoRef=useRef(true)
+ const load=async()=>{try{setZones(await pb.collection('delivery_fees').getFullList<Saved>({sort:'name'}))}catch(e:any){setStatus(e.message)}}
+ useEffect(()=>{void load()},[])
+ useEffect(()=>{if(!open)return;let alive=true;const boot=async()=>{try{
+ if(!(window as any).L){if(!document.getElementById('leaflet-css')){const l=document.createElement('link');l.id='leaflet-css';l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(l)}await new Promise<void>((res,rej)=>{const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=()=>res();s.onerror=rej;document.body.appendChild(s)})}
+ if(!alive||!mapEl.current)return
+ const L=(window as any).L,m=L.map(mapEl.current).setView([-22.92,-45.46],13)
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(m)
+ m.on('click',(e:any)=>{requestRef.current++;autoRef.current=true;setBusy(false);setPoints(p=>[...p,[e.latlng.lat,e.latlng.lng]]);setRows([])})
+ mapRef.current=m;setMapReady(v=>v+1)
+ }catch{setStatus('Não foi possível carregar o mapa. Tente abrir novamente.')}};void boot()
+ return()=>{alive=false;requestRef.current++;mapRef.current?.remove();mapRef.current=null}
+ },[open])
+ useEffect(()=>{const L=(window as any).L,m=mapRef.current;if(!L||!m)return;if(layerRef.current)m.removeLayer(layerRef.current);layerRef.current=null;if(points.length){layerRef.current=L.polygon(points,{color:'#E10600'}).addTo(m)}},[points,mapReady])
+ const list=async()=>{
+ if(points.length<3){setStatus('Marque ao menos três pontos para delimitar a área.');return}
+ const token=++requestRef.current;setBusy(true);setStatus('Buscando bairros da área…')
+ const found=[...zones.map(z=>({...z,polygon:zoneMeta(z.description).polygon})),...catalog].filter(n=>n.polygon?.length?polygonsOverlap(points,n.polygon):pointInPolygon([n.lat,n.lng],points))
+ try{
+ const poly=points.map(p=>p.join(' ')).join(' '),q='[out:json][timeout:20];nwr["place"~"suburb|neighbourhood|quarter"](poly:"'+poly+'");out center;'
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),25000)
+ let data:any
+ try{const response=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),{signal:controller.signal});if(!response.ok)throw Error();data=await response.json()}finally{clearTimeout(timeout)}
+ for(const e of data.elements||[]){const lat=e.lat??e.center?.lat,lng=e.lon??e.center?.lon;if(e.tags?.name&&Number.isFinite(lat)&&Number.isFinite(lng)&&pointInPolygon([lat,lng],points))found.push({name:e.tags.name,lat,lng,fee:0})}
+ if(token!==requestRef.current)return
+ setStatus('Bairros cadastrados e mapeados listados. Confira a cobertura e inclua os ausentes antes de salvar. Para limites completos, importe o GeoJSON oficial de bairros.')
+ }catch{if(token!==requestRef.current)return;setStatus('Consulta ao mapa indisponível. Listamos os bairros já cadastrados/importados. Inclua os ausentes ou importe um GeoJSON de bairros.')}
+ finally{if(token===requestRef.current){const unique=new Map<string,Neighborhood>();for(const n of found){const key=n.name.trim().toLocaleLowerCase('pt-BR');if(!unique.has(key))unique.set(key,n)}setRows([...unique.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')));setBusy(false)}}
+ }
+ // Atualiza a lista após concluir/alterar o desenho.
+ useEffect(()=>{if(!open||points.length<3||!autoRef.current)return;const t=setTimeout(()=>{void list()},900);return()=>clearTimeout(t)},[points,catalog,open])
+ const edit=(z:Saved)=>{requestRef.current++;autoRef.current=false;const meta=zoneMeta(z.description),id=meta.zoneId||z.id;setZoneId(id);setName(meta.zoneName||z.name);setPoints(meta.zonePolygon||meta.polygon||[]);setRows(zones.filter(x=>(zoneMeta(x.description).zoneId||x.id)===id).map(x=>({...x,polygon:zoneMeta(x.description).polygon})));setStatus('Ajuste os valores individuais e salve.');setOpen(true)}
+ const save=async()=>{
+ if(!name.trim()||points.length<3||!rows.length){setStatus('Informe o nome da área, delimite o mapa e inclua os bairros.');return}
+ if(rows.some(r=>r.name.trim().length<2||!Number.isFinite(r.fee)||r.fee<0)){setStatus('Preencha o nome e uma taxa válida para cada bairro.');return}
+ if(new Set(rows.map(r=>r.name.trim().toLocaleLowerCase('pt-BR'))).size!==rows.length){setStatus('Há bairros com nomes repetidos. Revise a lista.');return}
+ setBusy(true)
+ try{const id=zoneId||crypto.randomUUID();const saved=await pb.send<Saved[]>('/backend/v1/delivery/neighborhoods',{body:{p_rows:rows.map(r=>({id:r.id||null,name:r.name.trim(),fee:r.fee,lat:r.lat,lng:r.lng,description:JSON.stringify({zoneId:id,zoneName:name.trim(),zonePolygon:points,polygon:r.polygon,fixedFee:true,neighborhood:true})}))}})
+ if(saved.length!==rows.length)throw Error('O servidor não confirmou todos os bairros.')
+ setZoneId(id);setRows(saved.map(x=>({...x,polygon:zoneMeta(x.description).polygon})));await load();setStatus('Taxas de todos os bairros salvas. Você pode voltar e editar a qualquer momento.')
+ }catch(e:any){setStatus(e.message)}finally{setBusy(false)}
+ }
+ const field='w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-sm text-white'
+ return <><div className="rounded-xl border border-zinc-800 bg-[#121215] p-4"><h3 className="font-bold text-white">Taxas por área e bairro</h3><button className="sc-btn-primary mt-2" onClick={()=>{autoRef.current=true;setBusy(false);setName('');setZoneId('');setPoints([]);setRows([]);setStatus('');setOpen(true)}}>Abrir mapa / Nova área</button><div className="mt-3 space-y-2">{zones.map(z=><div key={z.id} className="flex items-center justify-between gap-2 text-sm"><span>{z.name} — {Number(z.fee).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span><button className="sc-btn-ghost" onClick={()=>edit(z)}>Editar</button></div>)}</div></div>
+ {open&&<div className="fixed inset-0 z-[70] overflow-y-auto bg-black/85 p-3" role="dialog" aria-modal="true" aria-label="Taxas de entrega por bairro"><div className="mx-auto my-4 w-full max-w-5xl rounded-2xl border border-zinc-700 bg-[#121215] p-4"><div className="mb-3 flex justify-between gap-3"><div><h3 className="font-bold text-white">Área de entrega e taxas por bairro</h3><p className="text-xs text-zinc-400">Clique no mapa para contornar a área. Revise os bairros e informe o valor de cada um.</p></div><button aria-label="Fechar mapa" onClick={()=>setOpen(false)}>✕</button></div>
+ <div className="grid gap-4 md:grid-cols-[1fr_350px]"><div><div ref={mapEl} className="h-[380px] rounded-xl"/><div className="mt-3 flex flex-wrap gap-2"><button className="sc-btn-ghost" onClick={()=>{requestRef.current++;setPoints([]);setRows([]);setBusy(false)}}>Limpar desenho</button><button className="sc-btn-ghost" disabled={busy||points.length<3} onClick={()=>void list()}>Atualizar bairros da área</button></div><label className="mt-3 block text-xs text-zinc-400">Importar limites oficiais de bairros (GeoJSON)<input type="file" accept=".geojson,.json,application/geo+json,application/json" className="mt-2 block max-w-full" onChange={async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>10*1024*1024)throw Error('Arquivo deve ter até 10 MB.');const data=readNeighborhoodGeoJSON(JSON.parse(await file.text()));if(!data.length)throw Error('Nenhum bairro válido encontrado.');autoRef.current=true;setCatalog(data);setStatus(data.length+' limites importados; confira os bairros da área.')}catch(e:any){setStatus(e.message)}e.target.value=''}}/></label></div>
+ <div className="space-y-3"><label className="block text-sm">Nome da área<input className={field} value={name} onChange={e=>setName(e.target.value)}/></label><p className="text-xs text-zinc-400">{points.length} pontos · {rows.length} bairros. Sem limites importados, a detecção usa os pontos mapeados dos bairros.</p>
+ <div className="space-y-3">{rows.map((r,i)=><div key={r.id||i} className="rounded-lg border border-zinc-700 p-3"><label className="block text-xs">Bairro<input aria-label={'Nome do bairro '+(i+1)} className={field} value={r.name} onChange={e=>setRows(rs=>rs.map((x,j)=>j===i?{...x,name:e.target.value}:x))}/></label><label className="mt-2 block text-xs">Taxa de entrega (R$)<input aria-label={'Taxa de '+r.name} type="number" min="0" step=".01" className={field} value={Number.isFinite(r.fee)?r.fee:''} onChange={e=>setRows(rs=>rs.map((x,j)=>j===i?{...x,fee:e.target.value===''?NaN:Number(e.target.value)}:x))}/></label></div>)}</div>
+ <button className="sc-btn-ghost w-full" disabled={points.length<3} onClick={()=>setRows(rs=>[...rs,{name:'',fee:0,lat:points.reduce((n,p)=>n+p[0],0)/points.length,lng:points.reduce((n,p)=>n+p[1],0)/points.length}])}>Incluir bairro ausente</button>
+ <button disabled={busy||!rows.length} onClick={()=>void save()} className="sc-btn-primary w-full">{busy?'Aguarde…':'Salvar taxas por bairro'}</button><p role="status" className="text-sm text-zinc-300">{status}</p>
+ </div></div></div></div>}</>
 }

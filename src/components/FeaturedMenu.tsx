@@ -231,9 +231,9 @@ export default function FeaturedMenu() {
               >
                 <div className="relative h-52 sm:h-56 overflow-hidden bg-[#0A150D]">
                   <ProductImage item={item} fallback={getImageForItem(item)} />
-                  <span className="absolute top-3 left-3 bg-[#0A150D]/90 text-[10px] tracking-wider uppercase font-medium text-white px-2.5 py-1 rounded border border-white/10">
+                  {item.category !== 'Bebidas' && <span className="absolute top-3 left-3 bg-[#0A150D]/90 text-[10px] tracking-wider uppercase font-medium text-white px-2.5 py-1 rounded border border-white/10">
                     {item.category}
-                  </span>
+                  </span>}
                 </div>
 
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">

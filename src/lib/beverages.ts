@@ -11,3 +11,8 @@ export const validDrinkFlavor = (item: Product, flavor: string) => drinkFlavors(
 export function flavorLines(itemId: string, flavors: string[], qty: number) {
   return [...new Set(flavors)].map(beverageFlavor => ({ cartLineId: 'drink_'+crypto.randomUUID(), itemId, beverageFlavor, qty, removed: [], added: [] }))
 }
+
+export function flavorQuantityLines(itemId: string, counts: Record<string,number>) {
+ return Object.entries(counts).filter(([,qty])=>Number.isInteger(qty)&&qty>0&&qty<=30).map(([beverageFlavor,qty])=>({cartLineId:'drink_'+crypto.randomUUID(),itemId,beverageFlavor,qty,removed:[],added:[]}))
+}
+export const drinkUnitCount = (counts: Record<string,number>) => Object.values(counts).reduce((sum,n)=>sum+(Number.isInteger(n)&&n>0&&n<=30?n:0),0)

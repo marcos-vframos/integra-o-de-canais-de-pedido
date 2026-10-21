@@ -1,4 +1,4 @@
-import { hasDrinkFlavor, validDrinkFlavor, flavorLines, isBeverage } from '@/lib/beverages'
+import { hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines, isBeverage } from '@/lib/beverages'
 import StockNotifications from '@/components/StockNotifications'
 import { lowStockRows } from '@/lib/stockAlerts'
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
@@ -31,7 +31,7 @@ import { TabCardapio } from '@/components/TabCardapio'
 import { TabEstoque } from '@/components/TabEstoque'
 import { TabCaixa } from '@/components/TabCaixa'
 import { TabMotoboys } from '@/components/TabMotoboys'
-import { TabClientes } from '@/components/TabClientes'
+import CRMHub from '@/components/CRMHub'
 import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { TabPedidosOnline } from '@/components/TabPedidosOnline'
@@ -97,7 +97,7 @@ export default function Gestao() {
 
   // Customize Modal state
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
-  const [customizeFlavors,setCustomizeFlavors] = useState<string[]>([])
+  const [customizeFlavors,setCustomizeFlavors] = useState<Record<string,number>>({})
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
@@ -521,7 +521,7 @@ export default function Gestao() {
   const openCustomize = (item: MenuItem) => {
     setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavors([])
+    setCustomizeFlavors({})
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
@@ -534,7 +534,7 @@ export default function Gestao() {
     if (!item) return
     setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavors(line.beverageFlavor?[line.beverageFlavor]:[])
+    setCustomizeFlavors(line.beverageFlavor?{[line.beverageFlavor]:line.qty}:{})
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
@@ -558,8 +558,8 @@ export default function Gestao() {
   const confirmCustomize = () => {
     if (!customizeItem) return
     if(hasDrinkFlavor(customizeItem)) {
-      if(!customizeFlavors.length || customizeFlavors.some(f=>!validDrinkFlavor(customizeItem,f))) return
-      const rows=flavorLines(customizeItem.id,customizeFlavors,customizeQty)
+      if(!Object.values(customizeFlavors).some(q=>q>0) || Object.keys(customizeFlavors).some(f=>!validDrinkFlavor(customizeItem,f))) return
+      const rows=flavorQuantityLines(customizeItem.id,customizeFlavors)
       setCart(prev=>[...prev.filter(l=>l.cartLineId!==customizeEditingLineId),...rows.map(row=>({...row,removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
       closeCustomize();return
     }
@@ -1421,7 +1421,7 @@ export default function Gestao() {
 
         {currentTab === 'motoboys' && <TabMotoboys orders={orders} />}
 
-        {currentTab === 'clientes' && <TabClientes menu={menu} />}
+        {currentTab === 'clientes' && <CRMHub menu={menu} />}
 
         {currentTab === 'promocoes' && <SeasonalCampaignAdmin />}
         {currentTab === 'stories' && <LandingStoriesAdmin />}

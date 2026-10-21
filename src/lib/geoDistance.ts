@@ -1,3 +1,4 @@
+import { pointInPolygon, zoneMeta } from './deliveryAreas'
 /**
  * Cálculo de distância em quilômetros via fórmula de Haversine
  */
@@ -42,27 +43,14 @@ export function resolveDeliveryFee(
     return { fee: 5, nearestName: 'Taxa Padrão', distanceKm: 0 }
   }
 
-  // Regiões desenhadas são persistidas no campo description como JSON para manter
-  // compatibilidade com a coleção atual, sem exigir migração imediata do PocketBase.
-  const parsed = feesList.map((f) => {
-    if (f.polygon?.length) return f
-    try {
-      const meta = f.description ? JSON.parse(f.description) : null
-      return meta?.polygon ? { ...f, polygon: meta.polygon as [number, number][] } : f
-    } catch { return f }
-  })
-  const inside = parsed.find((f) => {
-    const poly = f.polygon
-    if (!poly || poly.length < 3) return false
-    let hit = false
-    for (let i=0,j=poly.length-1;i<poly.length;j=i++) {
-      const yi=poly[i][0], xi=poly[i][1], yj=poly[j][0], xj=poly[j][1]
-      const cross=((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/((yj-yi)||1e-12)+xi)
-      if(cross) hit=!hit
-    }
-    return hit
-  })
-  if (inside) return { fee: inside.fee, nearestName: inside.name, distanceKm: 0 }
+  const parsed=feesList.map(f=>({...f,meta:zoneMeta(f.description)}))
+  // Prioriza limites de bairro; áreas sem esses limites usam o ponto mais próximo dentro da área.
+  const exact=parsed.filter(f=>pointInPolygon([lat,lng],f.polygon||f.meta.polygon||[]))
+  const covered=exact.length?exact:parsed.filter(f=>pointInPolygon([lat,lng],f.meta.zonePolygon||[]))
+  if(covered.length){
+    const nearest=covered.reduce((a,b)=>calculateDistanceKm(lat,lng,b.lat??lat,b.lng??lng)<calculateDistanceKm(lat,lng,a.lat??lat,a.lng??lng)?b:a)
+    return {fee:Number(nearest.fee),nearestName:nearest.name,distanceKm:0}
+  }
 
   const withCoords = parsed.filter(
     (f) => typeof f.lat === 'number' && typeof f.lng === 'number' && !isNaN(f.lat) && !isNaN(f.lng),
@@ -87,7 +75,7 @@ export function resolveDeliveryFee(
   // Se estiver a menos de 3km do ponto mais próximo, aplica a taxa dele
   // Se estiver além, cobra uma taxa base com acréscimo proporcional por km excedente (R$ 1,50/km)
   let calculatedFee = nearest.fee
-  if (minDistance > 3) {
+  if (minDistance > 3 && !nearest.meta.fixedFee) {
     const extraKm = minDistance - 3
     calculatedFee = Math.round((nearest.fee + extraKm * 1.5) * 2) / 2
   }

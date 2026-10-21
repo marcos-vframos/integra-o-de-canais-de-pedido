@@ -79,10 +79,10 @@ const fieldAliases:Record<string,Record<string,string>>={
     campaignId:'campaign_id',paymentDetails:'payment_details',clientRequestId:'idempotency_key',
     invoiceRequested:'invoice_requested',invoiceDocument:'invoice_document',invoiceStatus:'invoice_status',
   },
-  customers:{lastOrderAt:'last_order_at',totalOrders:'total_orders',totalSpent:'total_spent',favoriteItems:'favorite_items'},
+  customers:{crmProfile:'crm_profile',lastOrderAt:'last_order_at',totalOrders:'total_orders',totalSpent:'total_spent',favoriteItems:'favorite_items'},
   motoboys:{feePerDelivery:'fee_per_delivery'},
   delivery_fees:{areaGeojson:'area_geojson'},
-  campaigns:{
+  campaigns:{voucherCode:'voucher_code',
     customerId:'customer_id',customerPhone:'customer_phone',customerName:'customer_name',
     discountPercent:'discount_percent',discountAmount:'discount_amount',
     targetProductId:'target_product_id',targetProductName:'target_product_name',expiresAt:'expires_at',
@@ -237,7 +237,7 @@ const collection=(name:string)=>{
     },
     async create<T=any>(data:FormData|Record<string,any>):Promise<T>{
       await ensureOperatorSession()
-      if(['orders','customers','closures','users'].includes(name))
+      if(['orders','closures','users'].includes(name))
         throw new Error('Esta operação exige uma API segura dedicada; gravação direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
@@ -254,7 +254,7 @@ const collection=(name:string)=>{
     },
     async update<T=any>(id:string,data:FormData|Record<string,any>):Promise<T>{
       await ensureOperatorSession()
-      if(['orders','customers','closures','users'].includes(name))
+      if(['orders','closures','users'].includes(name))
         throw new Error('Esta operação exige permissão específica do servidor; alteração direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
@@ -337,7 +337,12 @@ const pb={
     return ''
   }},
   async send<T=any>(path:string,opts:{method?:string;body?:unknown}={}):Promise<T>{
-    if(path!=='/backend/v1/orders/finalize')throw new Error('Endpoint não migrado: '+path)
+    if(path==='/backend/v1/vouchers/issue' || path==='/backend/v1/delivery/neighborhoods'){
+      await ensureOperatorSession()
+      return request('/rest/v1/rpc/'+(path.includes('vouchers')?'issue_voucher_batch':'save_delivery_neighborhoods'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...opts.body as object,p_tenant:tenantId})},true) as Promise<T>
+    }
+    if(path==='/backend/v1/vouchers/lookup') opts={...opts,body:{...opts.body as object,action:'lookupVoucher'}}
+    if(path!=='/backend/v1/orders/finalize' && path!=='/backend/v1/vouchers/lookup')throw new Error('Endpoint não migrado: '+path)
     if(!backendConfigured)throw new Error(backendConfigMessage)
     const headers:Record<string,string>={'Content-Type':'application/json',apikey:publishableKey}
     if(authStore.isValid)headers.Authorization='Bearer '+authStore.token

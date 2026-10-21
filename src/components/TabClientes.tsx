@@ -1,3 +1,4 @@
+import VoucherBatchForm from '@/components/VoucherBatchForm'
 import React, { useState, useEffect } from 'react'
 import {
   Users,
@@ -32,6 +33,8 @@ interface CustomerItem {
 
 interface CampaignItem {
   id: string
+  voucherCode?: string
+  expiresAt?: string
   customerId?: string
   customerPhone: string
   customerName: string
@@ -145,7 +148,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
         description: desc,
         discountPercent,
         discountAmount,
-        targetProductId,
+        targetProductId:targetProductId||null,
         targetProductName,
         active: true,
         used: false,
@@ -342,6 +345,8 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
           <span>Vouchers e Campanhas Geradas ({campaigns.length})</span>
         </h3>
 
+        <VoucherBatchForm customers={customers} onCreated={loadData}/>
+
         {campaigns.length === 0 ? (
           <p className="text-xs text-zinc-500">Nenhum voucher emitido no momento.</p>
         ) : (
@@ -364,7 +369,8 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                     </button>
                   </div>
                   <p className="text-[11px] text-zinc-400 mt-1">{camp.description}</p>
-                  <div className="mt-2 rounded bg-black/30 px-2 py-1 font-mono text-[10px] text-amber-300">Código: LOY-{camp.id.slice(0,6).toUpperCase()}</div>
+                  <div className="mt-2 rounded bg-black/30 px-2 py-1 font-mono text-[10px] text-amber-300">Código: {camp.voucherCode || ('LOY-'+camp.id.slice(0,6).toUpperCase())}</div>
+                  {camp.expiresAt && <p className="text-[10px] text-zinc-400">Prazo: {new Date(camp.expiresAt).toLocaleString('pt-BR')}</p>}
                   <div className="text-[10px] text-zinc-500 mt-1">
                     Para: <b>{camp.customerName}</b> ({camp.customerPhone})
                   </div>

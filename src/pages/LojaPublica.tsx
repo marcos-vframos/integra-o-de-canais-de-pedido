@@ -1,5 +1,5 @@
 import { menuOrder } from '@/lib/productPresentation'
-import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorLines } from '@/lib/beverages'
+import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -93,7 +93,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Customização
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
-  const [customizeFlavors, setCustomizeFlavors] = useState<string[]>([])
+  const [customizeFlavors, setCustomizeFlavors] = useState<Record<string,number>>({})
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
@@ -334,7 +334,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const handleOpenCustomize = (item: MenuItem) => {
     setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavors([])
+    setCustomizeFlavors({})
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
@@ -347,7 +347,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     if (!item) return
     setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavors(line.beverageFlavor ? [line.beverageFlavor] : [])
+    setCustomizeFlavors(line.beverageFlavor ? {[line.beverageFlavor]:line.qty} : {})
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
@@ -366,8 +366,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const handleConfirmCustomize = () => {
     if (!customizeItem) return
     if (hasDrinkFlavor(customizeItem)) {
-      if (!customizeFlavors.length || customizeFlavors.some(f=>!validDrinkFlavor(customizeItem,f))) return
-      const rows = flavorLines(customizeItem.id,customizeFlavors,customizeQty)
+      if (!Object.values(customizeFlavors).some(q=>q>0) || Object.keys(customizeFlavors).some(f=>!validDrinkFlavor(customizeItem,f))) return
+      const rows = flavorQuantityLines(customizeItem.id,customizeFlavors)
       setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,removed:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
       handleCloseCustomize()
       return
@@ -515,7 +515,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const discountAmount = useMemo(() => {
     if (!appliedCampaign) return 0
     if (appliedCampaign.type === 'voucher_10') {
-      return Math.round(subtotal * 0.1 * 100) / 100
+      return Math.round(subtotal * Math.min(100,Math.max(0,Number((appliedCampaign as any).discountPercent||10))) / 100 * 100) / 100
     }
     if (appliedCampaign.type === 'free_delivery') {
       return deliveryType === 'entrega' ? deliveryFeeValue : 0
@@ -655,13 +655,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     const code = voucherCode.trim().toUpperCase()
     if (!code) return
     try {
-      const camps = await pb.collection('campaigns').getFullList<CampaignVoucher>({ filter: 'active=true && used=false' })
-      const match = camps.find((camp: any) => {
-        const generated = `LOY-${String(camp.id).slice(0, 6).toUpperCase()}`
-        const belongs = !camp.customerPhone || camp.customerPhone === customerPhone.trim() || camp.customerPhone === currentCustomer?.phone
-        return generated === code && belongs
-      })
-      if (!match) return setVoucherMessage('Código inválido, já utilizado ou vinculado a outro cliente.')
+      const match=await pb.send<CampaignVoucher>('/backend/v1/vouchers/lookup',{body:{code,customerPhone:customerPhone.trim()||currentCustomer?.phone||''}})
       setAppliedCampaign(match)
       setVoucherMessage(`Voucher ${code} aplicado.`)
     } catch { setVoucherMessage('Não foi possível validar o código agora.') }

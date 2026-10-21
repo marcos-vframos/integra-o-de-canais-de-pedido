@@ -47,6 +47,14 @@ Deno.serve(async(request: Request) => {
   const secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!url || !secret) return reply(request,503,{error:'Servidor de pedidos ainda não configurado'})
   const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}})
+  if(payload.action==='lookupVoucher') {
+    const code=String(payload.code||'').trim().toUpperCase()
+    if(!/^LOY-[A-F0-9]{6,10}$/.test(code))return reply(request,422,{error:'Código inválido'})
+    const {data:v,error}=await admin.from('campaigns').select('id,title,description,type,discount_percent,discount_amount,target_product_id,target_product_name,customer_phone,expires_at').eq('tenant_id',tenantId).eq('voucher_code',code).eq('active',true).eq('used',false).maybeSingle()
+    const phone=String(payload.customerPhone||'').replace(/\D/g,'')
+    if(error||!v||(v.expires_at&&new Date(v.expires_at).getTime()<=Date.now())||(v.customer_phone&&v.customer_phone.replace(/\D/g,'')!==phone))return reply(request,422,{error:'Código inválido, expirado ou indisponível para este telefone'})
+    return reply(request,200,{id:v.id,title:v.title,description:v.description,type:v.type,discountPercent:Number(v.discount_percent),discountAmount:Number(v.discount_amount),targetProductId:v.target_product_id,targetProductName:v.target_product_name,expiresAt:v.expires_at,active:true,used:false})
+  }
   const origin=payload.origin==='balcao'?'balcao':'online'
   let operatorId: string|null=null
   if (origin==='balcao') {
