@@ -465,7 +465,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                 </div>
               </label>
 
-              {/* Opção 3: Oferecer desconto de Z produto (com lista completa de produtos) */}
+              {/* Opção 3: Desconto no produto: (com lista completa de produtos) */}
               <label
                 className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                   campaignType === 'product_discount'
@@ -482,7 +482,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
                 />
                 <div className="flex-1">
                   <span className="text-xs font-bold text-white block">
-                    Oferecer desconto de Z produto
+                    Desconto no produto:
                   </span>
                   <span className="text-[11px] text-zinc-400">
                     Escolha qualquer produto do cardápio e defina o valor do desconto

@@ -297,13 +297,18 @@
 }
 
 .sc-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
-  overflow-x: auto;
+  overflow: visible;
   margin-bottom: 14px;
   padding-bottom: 2px;
 }
 .sc-tab {
+  min-width: 0;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1211,3 +1216,5 @@ div:has(> a[href*='goskip.dev']) {
   .sc-header-statuses { width:100%; }
   .sc-header-statuses .sc-status { width:100%; justify-content:center; }
 }
+
+@media (max-width: 640px) { .sc-tabs { grid-template-columns: repeat(2,minmax(0,1fr)); } }

@@ -1,3 +1,4 @@
+import CRMReportActions from '@/components/CRMReportActions'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
@@ -28,7 +29,7 @@ export default function CRMHub({menu}:{menu:MenuItem[]}) {
  if(!pb.authStore.isValid)return <div><h2 className="sc-title">CRM completo</h2><p>Entre como operador para consultar e editar os dados dos clientes.</p><Link className="sc-btn-primary" to="/login?returnTo=/gestao%3Ftab%3Dclientes">Entrar no Gestor</Link></div>
  return <section className="space-y-4">
  <h2 className="sc-title">CRM — Relacionamento com clientes</h2>
- <div className="flex flex-wrap gap-2">{['Resumo','Clientes e vouchers','Relacionamento','Tarefas','Feedback','Relatórios','Fidelidade'].map(t=><button key={t} type="button" className={tab===t?'sc-btn-primary':'sc-btn-ghost'} onClick={()=>setTab(t)}>{t}</button>)}</div>
+ <div className="flex flex-wrap gap-2">{['Resumo','Clientes e vouchers','Relacionamento','Tarefas','Feedback','Relatórios','Fidelidade'].map(t=><button key={t} type="button" aria-pressed={tab===t} className={'rounded-lg border px-3 py-2 text-xs font-semibold transition-colors '+(tab===t?'border-red-600 bg-red-600 text-white':'border-zinc-700 bg-zinc-950 text-zinc-300')} onClick={()=>setTab(t)}>{t}</button>)}</div>
  {error&&<p role="alert">{error}</p>}
  {tab==='Clientes e vouchers'?<TabClientes menu={menu}/>:<>
  {['Resumo','Relatórios'].includes(tab)&&<div className="grid gap-3 sm:grid-cols-4">{[['Clientes',customers.length],['Pedidos válidos',valid.length],['Faturamento',fmtBRL(revenue)],['Recompra entre compradores',repeat.toFixed(1)+'%']].map(([label,value])=><div key={label} className="rounded border border-zinc-700 p-4"><p className="text-xs text-zinc-400">{label}</p><strong>{value}</strong></div>)}</div>}
@@ -37,7 +38,7 @@ export default function CRMHub({menu}:{menu:MenuItem[]}) {
  <label>Inativo após <input aria-label="Dias para inatividade" type="number" min="1" value={days} onChange={e=>setDays(Math.max(1,Number(e.target.value)))} className="w-20 rounded bg-zinc-900 p-2"/> dias</label>
  <label>VIP a partir de R$ <input aria-label="Valor VIP" type="number" min="1" value={vip} onChange={e=>setVip(Math.max(1,Number(e.target.value)))} className="w-24 rounded bg-zinc-900 p-2"/></label>
  <select aria-label="Filtrar segmento" value={segment} onChange={e=>setSegment(e.target.value)} className="sc-input">{['Todos','Sem compra','Novo','Recorrente','VIP','Inativo'].map(s=><option key={s}>{s}</option>)}</select>
- <button className="sc-btn-ghost" onClick={exportCSV}>Exportar relatório CSV</button><button className="sc-btn-primary" onClick={()=>{choose('');setTab('Relacionamento')}}>Cadastrar cliente</button>
+ <button className="sc-btn-ghost" onClick={exportCSV}>Exportar relatório CSV</button><CRMReportActions customers={filtered}/><button className="sc-btn-primary" onClick={()=>{choose('');setTab('Relacionamento')}}>Cadastrar cliente</button>
  </div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th>Cliente</th><th>Segmento</th><th>Pedidos</th><th>Gasto</th><th>Ticket médio</th><th>Última compra</th></tr></thead><tbody>{filtered.map(c=><tr key={c.id} className="border-b border-zinc-800"><td className="py-3"><button onClick={()=>{choose(c.id);setTab('Relacionamento')}} className="text-left text-white underline">{c.name}</button></td><td>{c.metrics.segment}</td><td>{c.metrics.count}</td><td>{fmtBRL(c.metrics.total)}</td><td>{fmtBRL(c.metrics.average)}</td><td>{c.metrics.last?new Date(c.metrics.last).toLocaleDateString('pt-BR'):'Sem compra'}</td></tr>)}</tbody></table></div>
  <p className="text-xs text-zinc-500">Métricas calculadas pelos pedidos registrados, excluindo cancelamentos, rejeições e estornos. Os limites de segmento são ajustáveis.</p></>}
  {tab==='Relacionamento'&&<div className="space-y-4 rounded-xl border border-zinc-700 p-4">

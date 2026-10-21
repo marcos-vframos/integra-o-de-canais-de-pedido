@@ -1,3 +1,4 @@
+import ProductMediaEditor from '@/components/ProductMediaEditor'
 import React, { useState, useEffect, useMemo } from 'react'
 import { Plus, Pencil, Trash2, X, Check, Layers, ArrowUp, ArrowDown } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
@@ -606,7 +607,7 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                   {/* FORMULÁRIO INLINE */}
                   {!isOffline && isEditingThis && (
                     <div className="p-3.5 bg-[var(--surface-2)] border border-t-0 border-[var(--line)] rounded-b-xl mb-2">
-                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-[var(--line)]">
+                      <div className="flex flex-row-reverse items-center justify-end gap-2 pb-2 mb-3 border-b border-[var(--line)]">
                         <span className="text-xs font-bold text-[var(--silver)] flex items-center gap-1.5">
                           <Pencil size={12} className="text-[var(--red)]" /> Editando: {item.name}
                         </span>
@@ -620,6 +621,7 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                         </button>
                       </div>
 
+                      <ProductMediaEditor key={item.id} productId={item.id}/>
                       <div className="sc-field">
                         <label className="sc-label">Nome do produto</label>
                         <input

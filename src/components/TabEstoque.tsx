@@ -79,111 +79,9 @@ export const TabEstoque: React.FC<TabEstoqueProps> = ({
     }
   }
 
-  return (
-    <div className="sc-card">
-      <h2 className="sc-title">Estoque</h2>
-      {isOffline && (
-        <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200/90">
-          Modo offline ativo: estoque em modo somente leitura. Em modo offline, a baixa dos
-          ingredientes será processada no servidor assim que os pedidos da fila forem sincronizados.
-          Ajustes manuais exigem conexão.
-        </div>
-      )}
-      <p className="sc-sub">
-        Ingredientes e materiais de operação. O estoque de ingredientes é baixado automaticamente ao
-        finalizar pedidos vinculados (balcão ou online).
-      </p>
-
-      {GROUPS.map((g) => {
-        const items = stock.filter((s) => s.group === g)
-        if (items.length === 0) return null
-
-        return (
-          <div key={g}>
-            <div className="sc-group-title">
-              {g === 'Ingrediente' ? 'Ingredientes' : 'Materiais e operação'}
-            </div>
-            {items.map((si) => {
-              const low = si.qty <= si.min
-              const displayName =
-                si.code === 'ing-batata-300' || si.id === 'ing-batata-300'
-                  ? 'Batata Frita Kg'
-                  : si.name
-
-              return (
-                <div className="sc-row" key={si.id}>
-                  <div className="sc-row-main">
-                    <div className="sc-row-name">{displayName}</div>
-                    <div className="sc-row-meta">
-                      Mínimo: {si.min} {si.unit}
-                    </div>
-                  </div>
-
-                  <div className="sc-row-actions">
-                    {low && <span className="sc-badge low">Estoque baixo</span>}
-                    <div className="sc-stock-adj">
-                      {!isOffline && (
-                        <button
-                          className="sc-round-btn"
-                          onClick={() => onAdjustStock(si.id, -1)}
-                          aria-label="Diminuir estoque"
-                        >
-                          <Minus size={13} />
-                        </button>
-                      )}
-                      <span className="sc-stock-qty sc-tabular font-bold">{si.qty}</span>
-                      {!isOffline && (
-                        <button
-                          className="sc-round-btn"
-                          onClick={() => onAdjustStock(si.id, 1)}
-                          aria-label="Aumentar estoque"
-                        >
-                          <Plus size={13} />
-                        </button>
-                      )}
-                    </div>
-
-                    {!isOffline && (
-                      <>
-                        <button
-                          className="sc-btn-small"
-                          onClick={() => openEditForm(si)}
-                          aria-label="Editar"
-                        >
-                          <Pencil size={12} />
-                        </button>
-
-                        {deleteConfirmId === si.id ? (
-                          <button
-                            className="sc-btn-small danger"
-                            onClick={() => {
-                              onDeleteStockItem(si.id)
-                              setDeleteConfirmId(null)
-                            }}
-                          >
-                            Confirmar
-                          </button>
-                        ) : (
-                          <button
-                            className="sc-btn-small danger"
-                            onClick={() => setDeleteConfirmId(si.id)}
-                            aria-label="Excluir"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })}
-
-      {isOffline ? null : formOpen ? (
-        <div className="sc-form">
+  const stockForm = (
+        <div className="sc-form relative pt-9">
+          <button type="button" aria-label="Fechar edição" onClick={()=>{setFormOpen(false);setEditingId(null)}} className="absolute left-3 top-2 text-zinc-500 hover:text-white">×</button>
           <div className="sc-field">
             <label className="sc-label">Nome do item</label>
             <input
@@ -257,12 +155,116 @@ export const TabEstoque: React.FC<TabEstoqueProps> = ({
             </button>
           </div>
         </div>
-      ) : (
-        <button className="sc-btn-ghost" style={{ marginTop: 10 }} onClick={openNewForm}>
-          <Plus size={13} style={{ marginRight: 5 }} />
-          Novo item de estoque
-        </button>
+  )
+
+  return (
+    <div className="sc-card">
+      <h2 className="sc-title">Estoque</h2>
+      {isOffline && (
+        <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200/90">
+          Modo offline ativo: estoque em modo somente leitura. Em modo offline, a baixa dos
+          ingredientes será processada no servidor assim que os pedidos da fila forem sincronizados.
+          Ajustes manuais exigem conexão.
+        </div>
       )}
+      <p className="sc-sub">
+        Ingredientes e materiais de operação. O estoque de ingredientes é baixado automaticamente ao
+        finalizar pedidos vinculados (balcão ou online).
+      </p>
+
+      {GROUPS.map((g) => {
+        const items = stock.filter((s) => s.group === g)
+        if (items.length === 0) return null
+
+        return (
+          <div key={g}>
+            <div className="sc-group-title">
+              {g === 'Ingrediente' ? 'Ingredientes' : 'Materiais e operação'}
+            </div>
+            {items.map((si) => {
+              const low = si.qty <= si.min
+              const displayName =
+                si.code === 'ing-batata-300' || si.id === 'ing-batata-300'
+                  ? 'Batata Frita Kg'
+                  : si.name
+
+              return (
+                <React.Fragment key={si.id}><div className="sc-row">
+                  <div className="sc-row-main">
+                    <div className="sc-row-name">{displayName}</div>
+                    <div className="sc-row-meta">
+                      Mínimo: {si.min} {si.unit}
+                    </div>
+                  </div>
+
+                  <div className="sc-row-actions">
+                    {low && <span className="sc-badge low">Estoque baixo</span>}
+                    <div className="sc-stock-adj">
+                      {!isOffline && (
+                        <button
+                          className="sc-round-btn"
+                          onClick={() => onAdjustStock(si.id, -1)}
+                          aria-label="Diminuir estoque"
+                        >
+                          <Minus size={13} />
+                        </button>
+                      )}
+                      <span className="sc-stock-qty sc-tabular font-bold">{si.qty}</span>
+                      {!isOffline && (
+                        <button
+                          className="sc-round-btn"
+                          onClick={() => onAdjustStock(si.id, 1)}
+                          aria-label="Aumentar estoque"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      )}
+                    </div>
+
+                    {!isOffline && (
+                      <>
+                        <button
+                          className="sc-btn-small"
+                          onClick={() => openEditForm(si)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={12} />
+                        </button>
+
+                        {deleteConfirmId === si.id ? (
+                          <button
+                            className="sc-btn-small danger"
+                            onClick={() => {
+                              onDeleteStockItem(si.id)
+                              setDeleteConfirmId(null)
+                            }}
+                          >
+                            Confirmar
+                          </button>
+                        ) : (
+                          <button
+                            className="sc-btn-small danger"
+                            onClick={() => setDeleteConfirmId(si.id)}
+                            aria-label="Excluir"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                {!isOffline && formOpen && editingId===si.id && stockForm}
+                </React.Fragment>
+              )
+            })}
+          </div>
+        )
+      })}
+
+      {!isOffline && !editingId && formOpen && stockForm}
+      {!isOffline && !formOpen && <button className="sc-btn-ghost" style={{marginTop:10}} onClick={openNewForm}><Plus size={13}/> Novo item de estoque</button>}
+
     </div>
   )
 }

@@ -1,6 +1,19 @@
+import {useEffect,useState} from 'react'
+import {useLandingContent} from '@/context/LandingContentContext'
 import type { MenuItem } from '@/types/loyolas'
 import { sodaImages } from '@/lib/productPresentation'
 export default function ProductImage({ item, fallback }: { item: MenuItem; fallback: string }) {
+  const {content}=useLandingContent()
+  const gallery=content.productMedia?.[item.id]
+  const images=gallery?.images||[]
+  const [index,setIndex]=useState(0)
+  const [paused,setPaused]=useState(false)
+  useEffect(()=>{setIndex(0)},[images.join('|')])
+  useEffect(()=>{if(!gallery?.carousel||images.length<2||paused||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;const timer=setInterval(()=>setIndex(i=>(i+1)%images.length),5000);return()=>clearInterval(timer)},[gallery?.carousel,images.length,paused])
+  if(images.length) return <div className="relative h-full w-full" onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)} onFocus={()=>setPaused(true)} onBlur={()=>setPaused(false)} aria-label={'Imagens de '+item.name}>
+    <img src={images[gallery?.carousel?index%images.length:0]} alt={item.name} className="h-full w-full bg-[#101312] object-contain" loading="lazy"/>
+    {gallery?.carousel&&images.length>1&&<div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/60 p-1">{images.map((_,i)=><button key={i} type="button" aria-label={'Ver imagem '+(i+1)+' de '+item.name} aria-pressed={index===i} onClick={e=>{e.stopPropagation();setIndex(i)}} className="flex h-8 w-8 items-center justify-center"><span className={'h-2 w-2 rounded-full '+(index===i?'bg-white':'bg-zinc-500')}/></button>)}</div>}
+  </div>
   const combo = item.category === 'Combos'
   const soda = /refri/i.test(item.name) && item.category === 'Bebidas'
   const drink = /2l/i.test(item.name) ? sodaImages.large : /600/i.test(item.name) ? sodaImages.small : /1l/i.test(item.name) ? sodaImages.liter : sodaImages.can

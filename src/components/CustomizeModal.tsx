@@ -95,10 +95,10 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
         {soda && setBeverageFlavors && <fieldset className="sc-field">
           <legend className="sc-label">Escolha os sabores</legend>
           <p className="mb-3 text-xs text-zinc-400">Defina a quantidade de cada sabor. Cada unidade é cobrada pelo valor integral.</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2">
           {drinkFlavors(item).map(flavor => <div key={flavor} className="flex items-center justify-between gap-2 rounded-lg border border-zinc-700 p-3 text-sm text-white">
-            <label htmlFor={'qty-'+flavor}>{flavor}</label>
-            <div className="flex items-center gap-1">
+            <label className="min-w-0 flex-1 font-medium leading-snug" htmlFor={'qty-'+flavor}>{flavor}</label>
+            <div className="flex shrink-0 items-center gap-1">
             <button type="button" aria-label={'Diminuir '+flavor} disabled={!beverageFlavors[flavor]} className="sc-round-btn" onClick={()=>setBeverageFlavors({...beverageFlavors,[flavor]:Math.max(0,(beverageFlavors[flavor]||0)-1)})}><Minus size={13}/></button>
             <input id={'qty-'+flavor} type="number" min="0" max="30" step="1" value={beverageFlavors[flavor]||0} onChange={e=>setBeverageFlavors({...beverageFlavors,[flavor]:Math.min(30,Math.max(0,Math.floor(Number(e.target.value)||0)))})} className="w-12 rounded bg-zinc-900 p-1 text-center" />
             <button type="button" aria-label={'Aumentar '+flavor} disabled={(beverageFlavors[flavor]||0)>=30} className="sc-round-btn" onClick={()=>setBeverageFlavors({...beverageFlavors,[flavor]:(beverageFlavors[flavor]||0)+1})}><Plus size={13}/></button>
@@ -106,6 +106,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           </div>)}
           </div>
           <p className="mt-2 text-xs text-zinc-300">{drinkUnitCount(beverageFlavors)} unidade(s) selecionada(s)</p>
+          <ul className="mt-2 space-y-1 text-sm text-zinc-200" aria-live="polite">{Object.entries(beverageFlavors).filter(([,count])=>count>0).map(([flavor,count])=><li key={flavor}>{count} × {item.name} — {flavor} <span className="float-right">{fmtBRL(item.price*count)}</span></li>)}</ul>
         </fieldset>}
         {showBreadSelector && (
           <fieldset className="sc-field rounded-xl border border-[var(--line)] bg-[#151518] p-3">

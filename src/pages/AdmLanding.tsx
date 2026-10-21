@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Save,
@@ -41,7 +41,8 @@ export default function AdmLanding() {
   // Restrict return destinations to known internal management routes.
   const returnTo = requestedReturn === '/gestao' || requestedReturn === '/config' ? requestedReturn : '/'
   const returnLabel = returnTo === '/gestao' ? 'Voltar ao Gestor' : returnTo === '/config' ? 'Voltar às Configurações' : 'Voltar à Landing Page'
-  const { content, saveSection, saveTheme, applyPreset, refresh } = useLandingContent()
+  const draftTouched = useRef(false)
+  const { content, loading: contentLoading, saveSection, saveTheme, applyPreset, refresh } = useLandingContent()
   const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja' | 'stories'>('textos')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -156,8 +157,9 @@ export default function AdmLanding() {
     loadStoreSettings()
   })
 
-  // Atualiza estado local quando o content carrega do servidor
+  // Atualizações externas não substituem o rascunho que está sendo editado.
   useEffect(() => {
+    if (contentLoading || draftTouched.current) return
     setFormText({
       traditionBadge: content.traditionBadge,
       headline0Prefix: content.headlines[0]?.prefix || '',
@@ -217,7 +219,7 @@ export default function AdmLanding() {
     setCustomColors(content.activeColors || DEFAULT_THEME_COLORS)
     setHeroGlowEnabled(Boolean(content.heroGlowEnabled))
     setAllHeadlines(content.headlines)
-  }, [content])
+  }, [content, contentLoading])
 
   // Salvar textos no backend
   const handleSaveAllTexts = async () => {
@@ -458,7 +460,7 @@ export default function AdmLanding() {
   const isStoreCurrentlyOpen = forceOpen ? true : forceClosed ? false : autoStatus.isOpen
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-[#f3f4f6] font-sans">
+    <div onClickCapture={e=>{if(!contentLoading && (e.target as HTMLElement).closest('button'))draftTouched.current=true}} onChangeCapture={() => { draftTouched.current = true }} className="min-h-screen bg-[#090a0f] text-[#f3f4f6] font-sans">
       {/* Barra de Topo do Painel Administrativo */}
       <header className="sticky top-0 z-50 bg-[#12141c]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

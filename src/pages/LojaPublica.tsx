@@ -1,3 +1,4 @@
+import {voucherDiscount} from '@/lib/voucherPricing'
 import { menuOrder } from '@/lib/productPresentation'
 import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
@@ -512,31 +513,10 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const currentDeliveryFee = deliveryType === 'entrega' ? deliveryFeeValue : 0
 
   // Desconto calculado por campanhas / vouchers
-  const discountAmount = useMemo(() => {
-    if (!appliedCampaign) return 0
-    if (appliedCampaign.type === 'voucher_10') {
-      return Math.round(subtotal * Math.min(100,Math.max(0,Number((appliedCampaign as any).discountPercent||10))) / 100 * 100) / 100
-    }
-    if (appliedCampaign.type === 'free_delivery') {
-      return deliveryType === 'entrega' ? deliveryFeeValue : 0
-    }
-    if (appliedCampaign.type === 'product_discount' && appliedCampaign.discountAmount) {
-      // Se tiver produto alvo, valida se ele está no carrinho ou aplica o valor diretamente
-      if (appliedCampaign.targetProductId) {
-        const hasTarget = cart.some((l) => l.itemId === appliedCampaign.targetProductId)
-        if (!hasTarget) {
-          // Também aceita por compatibilidade com nome do produto
-          const hasTargetByName = cart.some((l) => {
-            const item = menuById(l.itemId)
-            return item?.name === appliedCampaign.targetProductName
-          })
-          if (!hasTargetByName) return 0
-        }
-      }
-      return Math.min(appliedCampaign.discountAmount, subtotal)
-    }
-    return 0
-  }, [appliedCampaign, subtotal, deliveryType, deliveryFeeValue, cart, menu])
+  const discountAmount = useMemo(() => voucherDiscount(appliedCampaign,
+    cart.map(line=>({productId:menuById(line.itemId)?.id||line.itemId,total:calculateLineTotal(line)})),currentDeliveryFee),
+    [appliedCampaign,cart,menu,currentDeliveryFee,stock])
+
 
   const finalTotal = Math.max(0, subtotal - discountAmount + currentDeliveryFee)
 
@@ -644,6 +624,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     }
   }
 
+  useEffect(()=>{setAppliedCampaign(null);setVoucherMessage('')},[customerPhone])
+
   const handleCustomerLogout = () => {
     setCurrentCustomer(null)
     setCustomerOrders([])
@@ -657,8 +639,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     try {
       const match=await pb.send<CampaignVoucher>('/backend/v1/vouchers/lookup',{body:{code,customerPhone:customerPhone.trim()||currentCustomer?.phone||''}})
       setAppliedCampaign(match)
-      setVoucherMessage(`Voucher ${code} aplicado.`)
-    } catch { setVoucherMessage('Não foi possível validar o código agora.') }
+      setVoucherMessage(match.targetProductId && !cart.some(line=>menuById(line.itemId)?.id===match.targetProductId) ? `Voucher validado. Adicione ${match.targetProductName || 'o produto participante'} ao carrinho para receber o desconto.` : `Voucher ${code} aplicado.`)
+    } catch (error: any) { setAppliedCampaign(null); setVoucherMessage(error?.message || 'Não foi possível validar o código agora.') }
   }
 
   const handleDeleteCustomerAccount = async () => {
