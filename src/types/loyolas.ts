@@ -31,6 +31,8 @@ export interface InventoryItem {
 }
 
 export interface OrderItem {
+  beverageFlavor?: string
+  stockDeductions?: Record<string,number>
   itemId?: string
   name: string
   price: number
@@ -85,6 +87,7 @@ export interface ClosureRecord {
 }
 
 export interface CartLine {
+  beverageFlavor?: string
   cartLineId: string
   itemId: string
   qty: number

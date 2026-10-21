@@ -2,7 +2,7 @@ type Product = { name: string; category: string; code?: string }
 export function productCaption(item: Product) {
   if (item.category === 'Bebidas') {
     if (/água|agua/i.test(item.name)) return 'Água mineral em garrafa de 500 ml para acompanhar seu pedido.'
-    if (/suco/i.test(item.name)) return 'Suco Tropical. Consulte os sabores disponíveis.'
+    if (/suco/i.test(item.name)) return 'Suco Tropical: maracujá, goiaba, guaraná com açaí, abacaxi, caju, laranja com acerola e laranja. Cada sabor conta como uma unidade.'
     const size = /2l/i.test(item.name) ? '2 litros' : /600/i.test(item.name) ? '600 ml' : /1l/i.test(item.name) ? '1 litro' : 'lata'
     return 'Refrigerante em ' + size + '. Escolha o sabor ao pedir.'
   }

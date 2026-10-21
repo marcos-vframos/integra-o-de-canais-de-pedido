@@ -1,5 +1,5 @@
 import { menuOrder } from '@/lib/productPresentation'
-import { isBeverage, hasSodaFlavor, validSodaFlavor } from '@/lib/beverages'
+import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorLines } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -93,7 +93,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Customização
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
-  const [customizeFlavor, setCustomizeFlavor] = useState('')
+  const [customizeFlavors, setCustomizeFlavors] = useState<string[]>([])
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
@@ -334,7 +334,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const handleOpenCustomize = (item: MenuItem) => {
     setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavor('')
+    setCustomizeFlavors([])
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
@@ -347,7 +347,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     if (!item) return
     setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
-    setCustomizeFlavor(line.beverageFlavor || '')
+    setCustomizeFlavors(line.beverageFlavor ? [line.beverageFlavor] : [])
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
@@ -364,8 +364,15 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }
 
   const handleConfirmCustomize = () => {
-    if (!customizeItem || (hasSodaFlavor(customizeItem) && !validSodaFlavor(customizeFlavor))) return
-    const beverageFlavor = hasSodaFlavor(customizeItem) ? customizeFlavor : undefined
+    if (!customizeItem) return
+    if (hasDrinkFlavor(customizeItem)) {
+      if (!customizeFlavors.length || customizeFlavors.some(f=>!validDrinkFlavor(customizeItem,f))) return
+      const rows = flavorLines(customizeItem.id,customizeFlavors,customizeQty)
+      setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,removed:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
+      handleCloseCustomize()
+      return
+    }
+    const beverageFlavor = undefined
     const removed = isBeverage(customizeItem) ? [] : Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
     const added = Object.entries(isBeverage(customizeItem) ? {} : customizeAdded)
       .filter(([ingredientId, q]) => Number(q) > 0 && !breadKind(ingredientId, stockById))
@@ -408,7 +415,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }
 
   const handleQuickAdd = (item: MenuItem) => {
-    if (hasSodaFlavor(item)) { handleOpenCustomize(item); return }
+    if (hasDrinkFlavor(item)) { handleOpenCustomize(item); return }
     setCart((prev) => {
       const existing = prev.find(
         (l) =>
@@ -1191,7 +1198,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            {!line.promotionId && (hasSodaFlavor(item) || (item?.recipe && item.recipe.length > 0)) && (
+                            {!line.promotionId && (hasDrinkFlavor(item) || (item?.recipe && item.recipe.length > 0)) && (
                               <button
                                 type="button"
                                 onClick={() => handleEditCartLine(line)}
@@ -1732,8 +1739,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       {/* 6. Modal de Customização Reutilizado */}
       <CustomizeModal
         item={customizeItem}
-        beverageFlavor={customizeFlavor}
-        setBeverageFlavor={setCustomizeFlavor}
+        beverageFlavors={customizeFlavors}
+        setBeverageFlavors={setCustomizeFlavors}
         stock={stock}
         menu={menu}
         qty={customizeQty}

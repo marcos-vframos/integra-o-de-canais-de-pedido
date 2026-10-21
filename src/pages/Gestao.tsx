@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { hasDrinkFlavor, validDrinkFlavor, flavorLines, isBeverage } from '@/lib/beverages'
+import StockNotifications from '@/components/StockNotifications'
+import { lowStockRows } from '@/lib/stockAlerts'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import {
   ShoppingCart,
@@ -66,6 +69,14 @@ export default function Gestao() {
 
   const [menu, setMenu] = useState<MenuItem[]>([])
   const [stock, setStock] = useState<InventoryItem[]>([])
+  const previousLowStock=useRef<Set<string>>(new Set())
+  useEffect(()=>{
+    const lows=stock.filter(s=>Number(s.qty)<Number(s.min)||Number(s.qty)<=0)
+    const added=lows.filter(s=>!previousLowStock.current.has(s.id))
+    previousLowStock.current=new Set(lows.map(s=>s.id))
+    if(added.length) toast({title:'Estoque abaixo do mínimo',description:added.map(s=>s.name).join(', ')})
+  },[stock])
+
   const [orders, setOrders] = useState<OrderRecord[]>([])
   const [closures, setClosures] = useState<ClosureRecord[]>([])
 
@@ -85,6 +96,7 @@ export default function Gestao() {
 
   // Customize Modal state
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
+  const [customizeFlavors,setCustomizeFlavors] = useState<string[]>([])
   const [customizeQty, setCustomizeQty] = useState(1)
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
@@ -472,6 +484,7 @@ export default function Gestao() {
   }
 
   const quickAddToCart = (item: MenuItem) => {
+    if(hasDrinkFlavor(item)) { openCustomize(item); return }
     setCart((prev) => {
       const existing = prev.find(
         (l) =>
@@ -507,6 +520,7 @@ export default function Gestao() {
   const openCustomize = (item: MenuItem) => {
     setCustomizeBreadChoice('hamburguer')
     setCustomizeItem(item)
+    setCustomizeFlavors([])
     setCustomizeQty(1)
     setCustomizeRemoved({})
     setCustomizeAdded({})
@@ -519,6 +533,7 @@ export default function Gestao() {
     if (!item) return
     setCustomizeBreadChoice(line.breadChoice || 'hamburguer')
     setCustomizeItem(item)
+    setCustomizeFlavors(line.beverageFlavor?[line.beverageFlavor]:[])
     setCustomizeQty(line.qty)
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
@@ -541,6 +556,12 @@ export default function Gestao() {
 
   const confirmCustomize = () => {
     if (!customizeItem) return
+    if(hasDrinkFlavor(customizeItem)) {
+      if(!customizeFlavors.length || customizeFlavors.some(f=>!validDrinkFlavor(customizeItem,f))) return
+      const rows=flavorLines(customizeItem.id,customizeFlavors,customizeQty)
+      setCart(prev=>[...prev.filter(l=>l.cartLineId!==customizeEditingLineId),...rows.map(row=>({...row,removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
+      closeCustomize();return
+    }
     const removed = Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
     const added = Object.entries(customizeAdded)
       .filter(([ingredientId, q]) => Number(q) > 0 && !breadKind(ingredientId, stockById))
@@ -607,7 +628,8 @@ export default function Gestao() {
       }
 
       return {
-        name: item?.name || 'Item',
+        name: (item?.name || 'Item')+(l.beverageFlavor?' — '+l.beverageFlavor:''),
+        beverageFlavor:l.beverageFlavor,
         price: (item?.price || 0) + unitExtra + breadExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
@@ -664,7 +686,8 @@ export default function Gestao() {
 
       return {
         itemId: l.itemId,
-        name: item?.name || 'Item removido',
+        name: (item?.name || 'Item removido')+(l.beverageFlavor?' — '+l.beverageFlavor:''),
+        beverageFlavor:l.beverageFlavor,
         price: (item?.price || 0) + unitExtra + breadExtra,
         qty: l.qty,
         removed: (l.removed || []).map((id) => stockById(id)?.name || id),
@@ -984,23 +1007,7 @@ export default function Gestao() {
       })
     })
 
-    const shoppingReport = Object.entries(consumedMap)
-      .map(([ingId, consumedQty]) => {
-        const sItem = stockById(ingId)
-        if (!sItem) return null
-        const currentStock = sItem.qty || 0
-        const minStock = sItem.min || 0
-        const suggestedBuy = Math.max(0, minStock - currentStock)
-        return {
-          ingredientName: sItem.name,
-          consumedQty: Math.round(consumedQty * 10) / 10,
-          unit: sItem.unit,
-          currentStock,
-          minStock,
-          suggestedBuy: Math.round(suggestedBuy * 10) / 10,
-        }
-      })
-      .filter(Boolean)
+    const shoppingReport = lowStockRows(await pb.collection('inventory').getFullList<InventoryItem>({sort:'name'}))
 
     const closurePayload = {
       closedAt: new Date().toISOString(),
@@ -1229,6 +1236,7 @@ export default function Gestao() {
     },
     { id: 'cardapio', label: 'Cardápio', icon: UtensilsCrossed },
     { id: 'estoque', label: 'Estoque', icon: Package },
+    { id: 'notificacoes', label: 'Notificações', icon: Inbox, badge:lowStockRows(stock).length },
     { id: 'caixa', label: 'Caixa', icon: Wallet },
     { id: 'motoboys', label: 'Motoboys', icon: Bike },
     { id: 'clientes', label: 'Clientes', icon: Users },
@@ -1396,6 +1404,8 @@ export default function Gestao() {
           />
         )}
 
+        {currentTab === 'notificacoes' && <StockNotifications stock={stock}/>}
+
         {currentTab === 'caixa' && (
           <TabCaixa
             orders={orders}
@@ -1427,6 +1437,8 @@ export default function Gestao() {
         {/* Modais */}
         <CustomizeModal
           item={customizeItem}
+          beverageFlavors={customizeFlavors}
+          setBeverageFlavors={setCustomizeFlavors}
           stock={stock}
           menu={menu}
           qty={customizeQty}
@@ -1491,6 +1503,7 @@ export default function Gestao() {
                       byPayment,
                       ordersCount: openOrders.length,
                       productBreakdown: computeBreakdown(openOrders),
+                      shoppingReport:lowStockRows(stock),
                       byOriginCount: {
                         balcao: openBalcaoOrders.length,
                         online: openOnlineOrders.length,

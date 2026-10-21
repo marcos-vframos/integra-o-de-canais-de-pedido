@@ -190,7 +190,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
             return (
               <div className="sc-cart-line" key={l.cartLineId}>
                 <div className="sc-cart-line-name">
-                  {item.name}
+                  {item.name}{l.beverageFlavor ? ' — '+l.beverageFlavor : ''}
                   {(() => {
                     const unitTotal = lineUnitTotal(item, l, resolveStockItem, menu)
                     return (

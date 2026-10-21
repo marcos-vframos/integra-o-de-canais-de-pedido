@@ -1,13 +1,13 @@
 import React from 'react'
-import { isBeverage, hasSodaFlavor, SODA_FLAVORS } from '@/lib/beverages'
+import { isBeverage, hasDrinkFlavor, drinkFlavors } from '@/lib/beverages'
 import { Minus, Plus, X } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, breadSurcharge, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 interface CustomizeModalProps {
-  beverageFlavor?: string
-  setBeverageFlavor?: (flavor: string) => void
+  beverageFlavors?: string[]
+  setBeverageFlavors?: (flavors: string[]) => void
   item: MenuItem | null
   stock: InventoryItem[]
   menu: MenuItem[]
@@ -31,8 +31,8 @@ interface CustomizeModalProps {
 
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   item,
-  beverageFlavor = '',
-  setBeverageFlavor,
+  beverageFlavors = [],
+  setBeverageFlavors,
   menu,
   qty,
   removed,
@@ -54,7 +54,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   if (!item) return null
 
   const beverage = isBeverage(item)
-  const soda = hasSodaFlavor(item)
+  const soda = hasDrinkFlavor(item)
   const isGourmet = item.category === 'Gourmet'
   const showBreadSelector = !beverage && hasBread(item, resolveStockItem)
   const extras = Object.entries(beverage ? {} : added)
@@ -90,13 +90,17 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           </div>
         </div>
 
-        {soda && setBeverageFlavor && <div className="sc-field">
-          <label htmlFor="beverage-flavor" className="sc-label">Sabor do refrigerante</label>
-          <select id="beverage-flavor" value={beverageFlavor} onChange={e => setBeverageFlavor(e.target.value)} className="w-full rounded-lg border border-zinc-700 bg-[#17171C] p-3 text-white">
-            <option value="">Selecione o sabor</option>
-            {SODA_FLAVORS.map(flavor => <option key={flavor} value={flavor}>{flavor}</option>)}
-          </select>
-        </div>}
+        {soda && setBeverageFlavors && <fieldset className="sc-field">
+          <legend className="sc-label">Escolha os sabores</legend>
+          <p className="mb-3 text-xs text-zinc-400">Cada sabor selecionado adiciona {qty} unidade(s) ao carrinho, pelo preço integral de cada unidade.</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {drinkFlavors(item).map(flavor => <label key={flavor} className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 p-3 text-sm text-white">
+            <input type="checkbox" checked={beverageFlavors.includes(flavor)} onChange={e => setBeverageFlavors(e.target.checked ? [...beverageFlavors,flavor] : beverageFlavors.filter(f => f!==flavor))}/>
+            {flavor}
+          </label>)}
+          </div>
+          <p className="mt-2 text-xs text-zinc-300">{beverageFlavors.length * qty} unidade(s) selecionada(s)</p>
+        </fieldset>}
         {showBreadSelector && (
           <fieldset className="sc-field rounded-xl border border-[var(--line)] bg-[#151518] p-3">
             <legend className="px-1 text-xs font-bold uppercase tracking-wide text-white">Escolha o pão</legend>
@@ -408,11 +412,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>
             <span>+ {fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}</span>
           </div>)}
-          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total</span><span>{fmtBRL(currentUnitTotal * qty)}</span></div>
+          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total</span><span>{fmtBRL(currentUnitTotal * qty * (soda && setBeverageFlavors ? beverageFlavors.length : 1))}</span></div>
         </div>
 
         <div className="sc-form-actions">
-          <button className="sc-btn-primary" disabled={soda && !!setBeverageFlavor && !beverageFlavor} onClick={onConfirm}>
+          <button className="sc-btn-primary" disabled={soda && !!setBeverageFlavors && !beverageFlavors.length} onClick={onConfirm}>
             {isEditing ? 'Salvar alterações' : 'Adicionar ao pedido'}
           </button>
           <button className="sc-btn-ghost" onClick={onClose}>

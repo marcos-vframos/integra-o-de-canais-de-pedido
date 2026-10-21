@@ -5,6 +5,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const tenantId = '8c0d61b8-7cf9-44e0-9e17-96832f3848b6'
 const allowed = new Set([
   'https://integracao-de-canais-de-pedido.vercel.app',
+  'https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app',
+  'https://loyolas-gestao-independente-git-feat-supab-9fd0ee-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente.vercel.app',
   'https://integracao-de-canais-de-pedido-git-fix-pal-cf6777-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente-git-fix-paleta-d5e642-sync-squad-hq.vercel.app',
@@ -77,7 +79,7 @@ Deno.serve(async(request: Request) => {
     if (error) {
       // Do not return database diagnostics. Surface controlled business validation errors.
       const message=error.message||'Falha na validação do pedido'
-      const safe=/^(Loja |Pedido |Carrinho |Produto |Quantidade |Origem |Identificador |Informe |Endereço |Tipo |Remoções |Adicionais |Receita |Ingrediente |Pão |Troca |Porção |Adicional |Cortesia |Selecione |Coordenadas |Cupom |Forma |Estoque |Acesso )/.test(message)
+      const safe=/^(Loja |Pedido |Carrinho |Produto |Quantidade |Origem |Identificador |Informe |Endereço |Tipo |Remoções |Adicionais |Receita |Ingrediente |Pão |Troca |Porção |Adicional |Cortesia |Selecione |Coordenadas |Cupom |Forma |Estoque |Sabor |Bebidas |Acesso )/.test(message)
         ? message : 'O servidor não conseguiu finalizar o pedido. Confira os dados.'
       console.error('Checkout validation failed',error.code||'unknown')
       return reply(request,422,{error:safe})
