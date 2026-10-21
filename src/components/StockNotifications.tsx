@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import type { InventoryItem } from '@/types/loyolas'
 import { lowStockRows, printShoppingList } from '@/lib/stockAlerts'
-export default function StockNotifications({stock}:{stock:InventoryItem[]}) {
+export default function StockNotifications({stock,authorized}:{stock:InventoryItem[];authorized:boolean}) {
+ if(!authorized) return <section><h2 className="sc-title">Notificações de estoque</h2><p className="mb-4 text-sm text-zinc-400">Entre como operador para consultar saldos reais, mínimos e imprimir a lista de compras.</p><Link className="sc-btn-primary" to="/login?returnTo=/gestao%3Ftab%3Dnotificacoes">Entrar no Gestor</Link></section>
  const rows=lowStockRows(stock)
  return <section className="space-y-4"><h2 className="sc-title">Notificações de estoque</h2>
  <p className="text-sm text-zinc-400">Alertas ativos: itens esgotados ou abaixo do mínimo. A lista acompanha o estoque e é atualizada após vendas e reposições.</p>

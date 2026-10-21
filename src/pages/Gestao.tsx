@@ -71,10 +71,11 @@ export default function Gestao() {
   const [stock, setStock] = useState<InventoryItem[]>([])
   const previousLowStock=useRef<Set<string>>(new Set())
   useEffect(()=>{
+    if(!pb.authStore.isValid) return
     const lows=stock.filter(s=>Number(s.qty)<Number(s.min)||Number(s.qty)<=0)
     const added=lows.filter(s=>!previousLowStock.current.has(s.id))
     previousLowStock.current=new Set(lows.map(s=>s.id))
-    if(added.length) toast({title:'Estoque abaixo do mínimo',description:added.map(s=>s.name).join(', ')})
+    if(added.length) toast({title:'Estoque abaixo do mínimo',description:added.slice(0,4).map(s=>s.name).join(', ')+(added.length>4?' e mais '+(added.length-4)+' itens.':'')})
   },[stock])
 
   const [orders, setOrders] = useState<OrderRecord[]>([])
@@ -1236,7 +1237,7 @@ export default function Gestao() {
     },
     { id: 'cardapio', label: 'Cardápio', icon: UtensilsCrossed },
     { id: 'estoque', label: 'Estoque', icon: Package },
-    { id: 'notificacoes', label: 'Notificações', icon: Inbox, badge:lowStockRows(stock).length },
+    { id: 'notificacoes', label: 'Notificações', icon: Inbox, badge:pb.authStore.isValid?lowStockRows(stock).length:0 },
     { id: 'caixa', label: 'Caixa', icon: Wallet },
     { id: 'motoboys', label: 'Motoboys', icon: Bike },
     { id: 'clientes', label: 'Clientes', icon: Users },
@@ -1404,7 +1405,7 @@ export default function Gestao() {
           />
         )}
 
-        {currentTab === 'notificacoes' && <StockNotifications stock={stock}/>}
+        {currentTab === 'notificacoes' && <StockNotifications stock={stock} authorized={pb.authStore.isValid}/>}
 
         {currentTab === 'caixa' && (
           <TabCaixa
