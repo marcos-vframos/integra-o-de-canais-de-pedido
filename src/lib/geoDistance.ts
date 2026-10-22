@@ -24,7 +24,7 @@ export function calculateDistanceKm(
 export interface DeliveryFeeItem {
   id: string
   name: string
-  fee: number
+  fee: number | null
   lat?: number
   lng?: number
   description?: string
@@ -38,7 +38,7 @@ export function resolveDeliveryFee(
   lat: number,
   lng: number,
   feesList: DeliveryFeeItem[],
-): { fee: number; nearestName: string; distanceKm: number } {
+): { fee: number; nearestName: string; distanceKm: number; pending?: boolean } {
   if (!feesList || feesList.length === 0) {
     return { fee: 5, nearestName: 'Taxa Padrão', distanceKm: 0 }
   }
@@ -49,7 +49,7 @@ export function resolveDeliveryFee(
   const covered=exact.length?exact:parsed.filter(f=>pointInPolygon([lat,lng],f.meta.zonePolygon||[]))
   if(covered.length){
     const nearest=covered.reduce((a,b)=>calculateDistanceKm(lat,lng,b.lat??lat,b.lng??lng)<calculateDistanceKm(lat,lng,a.lat??lat,a.lng??lng)?b:a)
-    return {fee:Number(nearest.fee),nearestName:nearest.name,distanceKm:0}
+    return {fee:nearest.fee === null ? 0 : Number(nearest.fee),nearestName:nearest.name,distanceKm:0,pending:nearest.fee === null}
   }
 
   const withCoords = parsed.filter(
@@ -57,7 +57,7 @@ export function resolveDeliveryFee(
   )
 
   if (withCoords.length === 0) {
-    return { fee: feesList[0].fee, nearestName: feesList[0].name, distanceKm: 0 }
+    return { fee: feesList[0].fee ?? 0, nearestName: feesList[0].name, distanceKm: 0, pending: feesList[0].fee === null }
   }
 
   let nearest = withCoords[0]
@@ -74,6 +74,7 @@ export function resolveDeliveryFee(
 
   // Se estiver a menos de 3km do ponto mais próximo, aplica a taxa dele
   // Se estiver além, cobra uma taxa base com acréscimo proporcional por km excedente (R$ 1,50/km)
+  if (nearest.fee === null) return {fee:0,nearestName:nearest.name,distanceKm:Math.round(minDistance*10)/10,pending:true}
   let calculatedFee = nearest.fee
   if (minDistance > 3 && !nearest.meta.fixedFee) {
     const extraKm = minDistance - 3

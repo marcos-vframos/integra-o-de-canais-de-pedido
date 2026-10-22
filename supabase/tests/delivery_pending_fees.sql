@@ -1,0 +1,34 @@
+begin;
+do $$
+declare t uuid; product uuid; pending uuid; result jsonb; payload jsonb; rejected boolean;
+begin
+ insert into public.tenants(slug,display_name,status) values('test-delivery-'||gen_random_uuid(),'Synthetic delivery fee test','TRIAL') returning id into t;
+ insert into public.settings(tenant_id,key,value) values(t,'force_open','true');
+ insert into public.menu(tenant_id,name,category,price,recipe) values(t,'Teste de taxa','Carnes',10,'[]') returning id into product;
+ insert into public.delivery_fees(tenant_id,name,fee,lat,lng,description) values(t,'Bairro pendente',null,-22.9,-45.4,'{"zoneType":"urban"}') returning id into pending;
+ payload:=jsonb_build_object('origin','online','customerName','Teste fictício','customerPhone','00000000000','deliveryType','entrega','customerAddress','Endereço fictício','payment','Dinheiro','deliveryFeeRegion','Bairro pendente','items',jsonb_build_array(jsonb_build_object('itemId',product,'qty',1)));
+ rejected:=false;
+ begin perform public.checkout_finalize_order(t,payload);
+ exception when others then if sqlerrm not like '%Taxa de entrega ainda não cadastrada%' then raise; end if; rejected:=true; end;
+ assert rejected,'An empty fee cannot become free delivery';
+ assert (select count(*) from public.orders where tenant_id=t)=0,'Pending fee creates no order';
+ payload:=payload||jsonb_build_object('deliveryLat',-22.9,'deliveryLng',-45.4);
+ rejected:=false;
+ begin perform public.checkout_finalize_order(t,payload);
+ exception when others then if sqlerrm not like '%Taxa de entrega ainda não cadastrada%' then raise; end if; rejected:=true; end;
+ assert rejected,'Coordinates cannot bypass a pending fee';
+ update public.delivery_fees set fee=0 where id=pending;
+ result:=public.checkout_finalize_order(t,payload);
+ assert (result#>>'{order,deliveryFee}')::numeric=0,'Explicit zero is allowed';
+ assert (result#>>'{order,total}')::numeric=10,'Product still charged';
+ update public.delivery_fees set fee=8.5 where id=pending;
+ result:=public.checkout_finalize_order(t,payload);
+ assert (result#>>'{order,total}')::numeric=18.5,'Price entered later is charged in full';
+ assert app_private.delivery_metadata('"{\"zoneType\":\"central\"}"')->>'zoneType'='central','Legacy encoded metadata remains readable';
+ rejected:=false;
+ begin perform public.save_delivery_neighborhoods(t,'[]'::jsonb);
+ exception when others then if sqlerrm not like '%Operador sem permissão%' then raise; end if; rejected:=true; end;
+ assert rejected,'Public callers cannot edit fees';
+end $$;
+rollback;
+select 'pending prices reject checkout; zero and priced fees work; legacy metadata and write protection verified; fixtures rolled back' as result;

@@ -26,6 +26,6 @@ test('neighborhood polygons select coverage even when no vertices fall inside th
  const a=[[0,1],[4,1],[4,2],[0,2]],b=[[1,0],[2,0],[2,4],[1,4]]
  assert.equal(polygonsOverlap(a,b),true);assert.equal(pointInPolygon([1.5,1.5],a),true);assert.equal(pointInPolygon([8,8],a),false)
  const rows=readNeighborhoodGeoJSON({type:'FeatureCollection',features:[{properties:{nome:'Centro'},geometry:{type:'Polygon',coordinates:[[[1,0],[2,0],[2,4],[1,4],[1,0]]]}}]})
- assert.equal(rows.length,1);assert.equal(rows[0].name,'Centro');assert.deepEqual(rows[0].polygon[0],[0,1]);assert.equal(rows[0].fee,0)
+ assert.equal(rows.length,1);assert.equal(rows[0].name,'Centro');assert.deepEqual(rows[0].polygon[0],[0,1]);assert.equal(rows[0].fee,null)
  assert.throws(()=>readNeighborhoodGeoJSON({}),/GeoJSON/)
 })

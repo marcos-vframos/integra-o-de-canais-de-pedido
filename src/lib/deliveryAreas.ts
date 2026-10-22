@@ -1,5 +1,7 @@
 export type Point = [number, number]
-export const zoneMeta=(description?:string):any=>{try{return JSON.parse(description||'{}')}catch{return {}}}
+export const zoneMeta=(description?:string):any=>{
+ try{let value=JSON.parse(description||'{}');if(typeof value==='string')value=JSON.parse(value);return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch{return {}}
+}
 export function pointInPolygon([lat,lng]:Point,poly:Point[]):boolean {
  if(!Array.isArray(poly)||poly.length<3)return false
  let hit=false
@@ -19,7 +21,7 @@ export function polygonsOverlap(a:Point[],b:Point[]):boolean {
  }
  return false
 }
-export type Neighborhood={id?:string;name:string;fee:number;lat:number;lng:number;polygon?:Point[]}
+export type Neighborhood={id?:string;name:string;fee:number|null;lat:number;lng:number;polygon?:Point[]}
 export function readNeighborhoodGeoJSON(data:any):Neighborhood[] {
  if(data?.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('Importe um GeoJSON de bairros (FeatureCollection).')
  return data.features.flatMap((f:any)=>{
@@ -30,7 +32,7 @@ export function readNeighborhoodGeoJSON(data:any):Neighborhood[] {
    const polygon:Point[]=ring.map((p:number[])=>[Number(p[1]),Number(p[0])])
    if(polygon.some(p=>!Number.isFinite(p[0])||!Number.isFinite(p[1])||Math.abs(p[0])>90||Math.abs(p[1])>180))return []
    const lat=polygon.reduce((n,p)=>n+p[0],0)/polygon.length,lng=polygon.reduce((n,p)=>n+p[1],0)/polygon.length
-   return [{name:String(name),fee:0,lat,lng,polygon}]
+   return [{name:String(name),fee:null,lat,lng,polygon}]
   })
  })
 }

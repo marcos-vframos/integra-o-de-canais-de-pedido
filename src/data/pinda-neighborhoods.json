@@ -1,0 +1,1472 @@
+[
+  {
+    "referenceId": 1,
+    "name": "Centro",
+    "lat": -22.9236,
+    "lng": -45.4598,
+    "zoneType": "central",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 2,
+    "name": "Alto do Cardoso",
+    "lat": -22.9189,
+    "lng": -45.4492,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 3,
+    "name": "Araretama",
+    "lat": -22.9463,
+    "lng": -45.4981,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 4,
+    "name": "Bosque da Princesa",
+    "lat": -22.9195,
+    "lng": -45.4611,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 5,
+    "name": "Chácara Galega",
+    "lat": -22.9258,
+    "lng": -45.4533,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 6,
+    "name": "Crispim",
+    "lat": -22.9289,
+    "lng": -45.4461,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 7,
+    "name": "Boa Vista",
+    "lat": -22.9324,
+    "lng": -45.4687,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 8,
+    "name": "Socorro",
+    "lat": -22.9161,
+    "lng": -45.4552,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 9,
+    "name": "Tabaú",
+    "lat": -22.9248,
+    "lng": -45.4419,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 10,
+    "name": "Vila São Benedito",
+    "lat": -22.941,
+    "lng": -45.4795,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 11,
+    "name": "Jardim Cristina",
+    "lat": -22.9298,
+    "lng": -45.474,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 12,
+    "name": "Jardim d'Icaraí",
+    "lat": -22.934,
+    "lng": -45.485,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 13,
+    "name": "Cidade Jardim",
+    "lat": -22.9395,
+    "lng": -45.4822,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 14,
+    "name": "Loteamento Araguaia",
+    "lat": -22.9412,
+    "lng": -45.491,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 15,
+    "name": "Jardim Rosely",
+    "lat": -22.9215,
+    "lng": -45.4682,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 16,
+    "name": "Olaria",
+    "lat": -22.912,
+    "lng": -45.4645,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 17,
+    "name": "Real Ville",
+    "lat": -22.927,
+    "lng": -45.4715,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 18,
+    "name": "Parque São Domingos",
+    "lat": -22.9315,
+    "lng": -45.438,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 19,
+    "name": "Vila São João",
+    "lat": -22.9332,
+    "lng": -45.452,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 20,
+    "name": "Vila São José",
+    "lat": -22.9175,
+    "lng": -45.442,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 21,
+    "name": "Moreira César (Centro)",
+    "lat": -22.932,
+    "lng": -45.3855,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 22,
+    "name": "Cidade Nova",
+    "lat": -22.9221,
+    "lng": -45.3712,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 23,
+    "name": "Residencial Pasin",
+    "lat": -22.9398,
+    "lng": -45.3615,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 24,
+    "name": "Terra dos Ipês I",
+    "lat": -22.9431,
+    "lng": -45.375,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 25,
+    "name": "Terra dos Ipês II",
+    "lat": -22.945,
+    "lng": -45.3705,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 26,
+    "name": "Vale das Acaciaas",
+    "lat": -22.9351,
+    "lng": -45.3995,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 27,
+    "name": "Feital",
+    "lat": -22.9125,
+    "lng": -45.405,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 28,
+    "name": "Vila São Judas Tadeu",
+    "lat": -22.929,
+    "lng": -45.391,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 29,
+    "name": "Jardim Regina",
+    "lat": -22.9255,
+    "lng": -45.378,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 30,
+    "name": "Jardim Carlota",
+    "lat": -22.931,
+    "lng": -45.369,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 31,
+    "name": "Vila Celeste",
+    "lat": -22.936,
+    "lng": -45.381,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 32,
+    "name": "Liberdade",
+    "lat": -22.9402,
+    "lng": -45.3845,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 33,
+    "name": "Laerte Assumpção",
+    "lat": -22.9372,
+    "lng": -45.393,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 34,
+    "name": "Jardim Azeredo",
+    "lat": -22.9285,
+    "lng": -45.3955,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 35,
+    "name": "Mantiqueira",
+    "lat": -22.9205,
+    "lng": -45.363,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 36,
+    "name": "Vila Resende",
+    "lat": -22.9345,
+    "lng": -45.3735,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 37,
+    "name": "Potreiro",
+    "lat": -22.948,
+    "lng": -45.358,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 38,
+    "name": "Cícero Prado",
+    "lat": -22.916,
+    "lng": -45.399,
+    "zoneType": "district",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 39,
+    "name": "Residencial Almerinda Chaves",
+    "lat": -22.9415,
+    "lng": -45.366,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 40,
+    "name": "Vila Paulista",
+    "lat": -22.9295,
+    "lng": -45.3605,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 41,
+    "name": "Mombaça",
+    "lat": -22.9512,
+    "lng": -45.439,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 42,
+    "name": "Três Marias",
+    "lat": -22.954,
+    "lng": -45.446,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 43,
+    "name": "Jardim Imperial",
+    "lat": -22.9585,
+    "lng": -45.437,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 44,
+    "name": "Maricá",
+    "lat": -22.961,
+    "lng": -45.4485,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 45,
+    "name": "Carangola",
+    "lat": -22.9475,
+    "lng": -45.431,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 46,
+    "name": "Jardim Carangola",
+    "lat": -22.949,
+    "lng": -45.4265,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 47,
+    "name": "Parque das Nações",
+    "lat": -22.944,
+    "lng": -45.4345,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 48,
+    "name": "Morumbi",
+    "lat": -22.956,
+    "lng": -45.429,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 49,
+    "name": "Residencial Triângulo",
+    "lat": -22.9592,
+    "lng": -45.452,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 50,
+    "name": "Residencial Campinas",
+    "lat": -22.9635,
+    "lng": -45.435,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 51,
+    "name": "Jardim Eloyna",
+    "lat": -22.965,
+    "lng": -45.442,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 52,
+    "name": "Jardim any",
+    "lat": -22.953,
+    "lng": -45.451,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 53,
+    "name": "Residencial Pinheiros",
+    "lat": -22.9495,
+    "lng": -45.447,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 54,
+    "name": "Goyandira",
+    "lat": -22.9675,
+    "lng": -45.459,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 55,
+    "name": "Vila Suíça",
+    "lat": -22.946,
+    "lng": -45.4425,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 56,
+    "name": "Castolira",
+    "lat": -22.9094,
+    "lng": -45.4385,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 57,
+    "name": "Loteamento Industrial Água Preta",
+    "lat": -22.901,
+    "lng": -45.429,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 58,
+    "name": "Santa Cecília",
+    "lat": -22.9145,
+    "lng": -45.426,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 59,
+    "name": "Jardim Regina Celis",
+    "lat": -22.911,
+    "lng": -45.431,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 60,
+    "name": "Parque das Palmeiras",
+    "lat": -22.9065,
+    "lng": -45.434,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 61,
+    "name": "Vila São Miguel",
+    "lat": -22.913,
+    "lng": -45.4405,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 62,
+    "name": "Vila Paraíba",
+    "lat": -22.919,
+    "lng": -45.457,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 63,
+    "name": "Jardim das Nações",
+    "lat": -22.903,
+    "lng": -45.422,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 64,
+    "name": "Residencial Vista Alegre",
+    "lat": -22.8985,
+    "lng": -45.432,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 65,
+    "name": "Bairro da Antena",
+    "lat": -22.904,
+    "lng": -45.445,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 66,
+    "name": "Jardim Santana",
+    "lat": -22.921,
+    "lng": -45.4745,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 67,
+    "name": "Jardim Morumbi Sede",
+    "lat": -22.923,
+    "lng": -45.48,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 68,
+    "name": "Parque São Bernardo",
+    "lat": -22.917,
+    "lng": -45.472,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 69,
+    "name": "Vila Claro",
+    "lat": -22.924,
+    "lng": -45.467,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 70,
+    "name": "Alto do Tabaú",
+    "lat": -22.9275,
+    "lng": -45.437,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 71,
+    "name": "Jardim Resende Sede",
+    "lat": -22.928,
+    "lng": -45.479,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 72,
+    "name": "Vila Ipiranga",
+    "lat": -22.931,
+    "lng": -45.476,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 73,
+    "name": "Loteamento Ramos",
+    "lat": -22.9195,
+    "lng": -45.4785,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 74,
+    "name": "Vila Madalena",
+    "lat": -22.9335,
+    "lng": -45.4725,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 75,
+    "name": "Jardim e Loteamento Maria Augusta",
+    "lat": -22.9365,
+    "lng": -45.475,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 76,
+    "name": "Jardim Campo Alegre",
+    "lat": -22.933,
+    "lng": -45.433,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 77,
+    "name": "Jardim Yassuda",
+    "lat": -22.93,
+    "lng": -45.428,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 78,
+    "name": "Jardim Aurora",
+    "lat": -22.937,
+    "lng": -45.441,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 79,
+    "name": "Residencial Ouro Verde",
+    "lat": -22.939,
+    "lng": -45.4465,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 80,
+    "name": "Residencial Mantiqueira Sede",
+    "lat": -22.941,
+    "lng": -45.4395,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 81,
+    "name": "Jardim Residencial Dr. Lessa",
+    "lat": -22.923,
+    "lng": -45.429,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 82,
+    "name": "Residencial Andrade",
+    "lat": -22.925,
+    "lng": -45.4245,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 83,
+    "name": "Elias Schmidt",
+    "lat": -22.921,
+    "lng": -45.421,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 84,
+    "name": "Jardim Bela Vista",
+    "lat": -22.917,
+    "lng": -45.428,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 85,
+    "name": "Vila Jade",
+    "lat": -22.922,
+    "lng": -45.434,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 86,
+    "name": "Jardim do Chafariz",
+    "lat": -22.914,
+    "lng": -45.446,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 87,
+    "name": "Jardim Princesa",
+    "lat": -22.915,
+    "lng": -45.449,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 88,
+    "name": "Loteamento Portal dos Eucaliptos",
+    "lat": -22.9445,
+    "lng": -45.453,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 89,
+    "name": "Residencial Primavera",
+    "lat": -22.947,
+    "lng": -45.4575,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 90,
+    "name": "Jardim Florence",
+    "lat": -22.942,
+    "lng": -45.461,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 91,
+    "name": "Residencial Garcez",
+    "lat": -22.9355,
+    "lng": -45.4635,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 92,
+    "name": "Vila São Roque",
+    "lat": -22.932,
+    "lng": -45.461,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 93,
+    "name": "Jardim Sandra Maria",
+    "lat": -22.9295,
+    "lng": -45.466,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 94,
+    "name": "Parque Cidade Nova Sede",
+    "lat": -22.9265,
+    "lng": -45.462,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 95,
+    "name": "Vila ruy",
+    "lat": -22.921,
+    "lng": -45.452,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 96,
+    "name": "Vila Nair",
+    "lat": -22.9245,
+    "lng": -45.448,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 97,
+    "name": "Jardim Guedes",
+    "lat": -22.926,
+    "lng": -45.443,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 98,
+    "name": "Vila Prado",
+    "lat": -22.929,
+    "lng": -45.439,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 99,
+    "name": "Loteamento ruy Vianna",
+    "lat": -22.934,
+    "lng": -45.444,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 100,
+    "name": "Residencial Horto Florestal",
+    "lat": -22.949,
+    "lng": -45.474,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 101,
+    "name": "Araguaia II",
+    "lat": -22.943,
+    "lng": -45.495,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 102,
+    "name": "Residencial Beira Rio",
+    "lat": -22.914,
+    "lng": -45.471,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 103,
+    "name": "Vila Paraíso",
+    "lat": -22.911,
+    "lng": -45.452,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 104,
+    "name": "Jardim das Flores",
+    "lat": -22.942,
+    "lng": -45.449,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 105,
+    "name": "Residencial Vila Verde",
+    "lat": -22.951,
+    "lng": -45.444,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 106,
+    "name": "Vila Romana",
+    "lat": -22.937,
+    "lng": -45.431,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 107,
+    "name": "Vila São Jorge",
+    "lat": -22.928,
+    "lng": -45.451,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 108,
+    "name": "Residencial Bonsucesso",
+    "lat": -22.925,
+    "lng": -45.419,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 109,
+    "name": "Jardim Belvedere",
+    "lat": -22.936,
+    "lng": -45.421,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 110,
+    "name": "Residencial Duas Lagoas",
+    "lat": -22.9425,
+    "lng": -45.414,
+    "zoneType": "urban",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/leis-e-mapas-de-zoneamento"
+    ]
+  },
+  {
+    "referenceId": 111,
+    "name": "Ribeirão Grande",
+    "lat": -22.845,
+    "lng": -45.4852,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 112,
+    "name": "Piracuama",
+    "lat": -22.8122,
+    "lng": -45.541,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 113,
+    "name": "Bairro do Una",
+    "lat": -22.9691,
+    "lng": -45.5122,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 114,
+    "name": "Bairro do Mandú",
+    "lat": -22.895,
+    "lng": -45.3415,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 115,
+    "name": "Bairro dos Lemes",
+    "lat": -22.831,
+    "lng": -45.514,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 116,
+    "name": "Bairro dos Melos",
+    "lat": -22.794,
+    "lng": -45.539,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 117,
+    "name": "Cruz Pequena",
+    "lat": -22.868,
+    "lng": -45.441,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 118,
+    "name": "Bairro do Borba",
+    "lat": -22.889,
+    "lng": -45.385,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 119,
+    "name": "Pinhao do Borba",
+    "lat": -22.8715,
+    "lng": -45.371,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 120,
+    "name": "Bairro das Campinas Rural",
+    "lat": -22.978,
+    "lng": -45.411,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 121,
+    "name": "Bairro do Bonsucesso Rural",
+    "lat": -22.905,
+    "lng": -45.312,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 122,
+    "name": "Paiol Velho",
+    "lat": -22.821,
+    "lng": -45.561,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 123,
+    "name": "Rodeio",
+    "lat": -22.882,
+    "lng": -45.492,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 124,
+    "name": "Gatuba",
+    "lat": -22.859,
+    "lng": -45.362,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 125,
+    "name": "Sapé",
+    "lat": -22.834,
+    "lng": -45.395,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 126,
+    "name": "Bairro do Taipas",
+    "lat": -22.981,
+    "lng": -45.485,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 127,
+    "name": "Coruputuba",
+    "lat": -22.894,
+    "lng": -45.412,
+    "zoneType": "district",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://pindamonhangaba.sp.gov.br/cidade/historia",
+      "https://ecrie.com.br/sistema/conteudos/arquivo/a_70_0_1_27092022100943.pdf"
+    ]
+  },
+  {
+    "referenceId": 128,
+    "name": "Bairro do Pinga",
+    "lat": -22.802,
+    "lng": -45.489,
+    "zoneType": "rural",
+    "classificationStatus": "reference",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 129,
+    "name": "Ribeirão das Pedras",
+    "lat": -22.962,
+    "lng": -45.381,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  },
+  {
+    "referenceId": 130,
+    "name": "Malacacheta",
+    "lat": -22.984,
+    "lng": -45.441,
+    "zoneType": "rural",
+    "classificationStatus": "provisional",
+    "sources": [
+      "https://www.cati.sp.gov.br/portal/projetos-e-programas/conselho-municipal-de-desenvolvimento-rural?cod=422",
+      "https://pindamonhangaba.sp.gov.br/pre-cadastro-habitacional-rural-2026"
+    ]
+  }
+]

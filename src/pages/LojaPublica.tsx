@@ -123,6 +123,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const [deliveryFees, setDeliveryFees] = useState<DeliveryFeeItem[]>([])
   const [selectedFeeNeighborhood, setSelectedFeeNeighborhood] = useState<string>('')
   const [deliveryFeeValue, setDeliveryFeeValue] = useState<number>(0)
+  const [deliveryFeePending, setDeliveryFeePending] = useState('')
   const [useMapLocation, setUseMapLocation] = useState(false)
   const [deliveryLat, setDeliveryLat] = useState<number>(-22.9238)
   const [deliveryLng, setDeliveryLng] = useState<number>(-45.474)
@@ -200,9 +201,10 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         setMenu(isDraftDemo ? seedMenu().filter(x=>x.active).map(x=>({...x,id:x.code})) as MenuItem[] : menuList)
         setStock(isDraftDemo ? seedStock().map(x=>({...x,id:x.code})) as InventoryItem[] : stockList)
         setDeliveryFees(feesList)
-        if (feesList.length > 0) {
-          setSelectedFeeNeighborhood(feesList[0].name)
-          setDeliveryFeeValue(feesList[0].fee)
+        const pricedFee = feesList.find(f => f.fee !== null)
+        if (pricedFee) {
+          setSelectedFeeNeighborhood(pricedFee.name)
+          setDeliveryFeeValue(pricedFee.fee)
         }
       } catch (e) {
         console.error('Erro ao carregar cardápio da loja:', e)
@@ -553,6 +555,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         setUseMapLocation(true)
         const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
         setDeliveryFeeValue(resolved.fee)
+        setDeliveryFeePending(resolved.pending ? `A taxa de ${resolved.nearestName} ainda não foi cadastrada. Consulte o estabelecimento.` : '')
         setSelectedFeeNeighborhood(`${resolved.nearestName} (${resolved.distanceKm} km)`)
         setLocatingUser(false)
       },
@@ -696,6 +699,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       return
     }
 
+    if (deliveryType === 'entrega' && deliveryFeePending) {setErrorMsg(deliveryFeePending); return}
     setSubmitting(true)
 
     // Formatar itens para backend com indicação da cortesia gourmet
@@ -1356,7 +1360,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                               const chosen = deliveryFees.find((f) => f.name === e.target.value)
                               if (chosen) {
                                 setSelectedFeeNeighborhood(chosen.name)
-                                setDeliveryFeeValue(chosen.fee)
+                                setDeliveryFeeValue(chosen.fee ?? 0)
+                                setDeliveryFeePending(chosen.fee === null ? 'Taxa de entrega ainda não cadastrada.' : '')
                                 if (chosen.lat && chosen.lng) {
                                   setDeliveryLat(chosen.lat)
                                   setDeliveryLng(chosen.lng)
@@ -1366,11 +1371,12 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                             className="w-full bg-[#17171C] border border-[#27272A] rounded-lg px-2.5 py-1.5 text-xs text-white"
                           >
                             {deliveryFees.map((fee) => (
-                              <option key={fee.id} value={fee.name}>
-                                {fee.name} — {fmtBRL(fee.fee)}
+                              <option key={fee.id} value={fee.name} disabled={fee.fee === null}>
+                                {fee.name} — {fee.fee === null ? 'Taxa pendente' : fmtBRL(fee.fee)}
                               </option>
                             ))}
                           </select>
+                          {deliveryFeePending && <p role="alert" className="mt-2 text-xs text-amber-300">{deliveryFeePending}</p>}
                         </div>
 
                         {/* Botão de Compartilhar Localização com Mapa Real */}
@@ -1409,6 +1415,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                                 setDeliveryLng(lng)
                                 const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
                                 setDeliveryFeeValue(resolved.fee)
+        setDeliveryFeePending(resolved.pending ? `A taxa de ${resolved.nearestName} ainda não foi cadastrada. Consulte o estabelecimento.` : '')
                                 setSelectedFeeNeighborhood(
                                   `${resolved.nearestName} (${resolved.distanceKm} km)`,
                                 )

@@ -79,6 +79,7 @@ export default function SeasonalCampaignAdmin() {
   const [primaryId, setPrimaryId] = useState<string | null>(null)
   const [items, setItems] = useState<CampaignRow[]>([])
   const [products, setProducts] = useState<MenuItem[]>([])
+  const [offerCategory, setOfferCategory] = useState('Carnes')
   const [ingredients, setIngredients] = useState<InventoryItem[]>([])
   const [draft, setDraft] = useState<CampaignDraft>(emptyDraft)
   const [savedPromos, setSavedPromos] = useState<SavedPromotionPalette[]>([])
@@ -335,8 +336,13 @@ export default function SeasonalCampaignAdmin() {
         <h3 className="text-sm font-bold text-white">Oferta vinculada ao carrinho</h3>
         <p className="text-xs text-zinc-400">Configure o produto anunciado e os ingredientes oferecidos sem custo. O checkout confirma preço e cortesia diretamente no banco.</p>
         <p className="text-xs text-zinc-300">Produtos participantes ({eligibleProductIds(draft.offer).length}). Sem seleção, o anúncio é institucional. Cada unidade escolhida recebe a cortesia abaixo.</p>
-        <div className="grid max-h-72 grid-cols-1 gap-2 overflow-y-auto rounded-lg border border-white/10 p-3 sm:grid-cols-2">
-          {products.map(p => <label key={p.id} className="flex items-center gap-2 text-xs text-zinc-200">
+        <div role="tablist" aria-label="Categorias dos produtos da promoção" className="flex flex-wrap gap-2">
+          {[...new Set(products.map(p => p.category))].sort((a,b) => ['Carnes','Frango','Hot-Dog','Gourmet','Especial','Combos','Bebidas','Complementos'].indexOf(a)-['Carnes','Frango','Hot-Dog','Gourmet','Especial','Combos','Bebidas','Complementos'].indexOf(b)).map(category => <button key={category} id={'offer-tab-'+category} aria-controls="offer-category-products" role="tab" type="button" aria-selected={offerCategory === category} onClick={() => setOfferCategory(category)} className={'rounded-full border px-3 py-1.5 text-xs ' + (offerCategory === category ? 'border-red-600 bg-red-600/15 text-red-300' : 'border-zinc-700 bg-zinc-900 text-zinc-400')}>
+            {category} <span className="text-[10px]">{products.filter(p=>p.category===category&&eligibleProductIds(draft.offer).includes(p.id)).length || ''}</span>
+          </button>)}
+        </div>
+        <div id="offer-category-products" role="tabpanel" aria-labelledby={'offer-tab-'+offerCategory} className="grid grid-cols-1 gap-2 rounded-lg border border-white/10 p-3 sm:grid-cols-2">
+          {products.filter(p => p.category === offerCategory).map(p => <label key={p.id} className="flex items-center gap-2 text-xs text-zinc-200">
             <input type="checkbox" checked={eligibleProductIds(draft.offer).includes(p.id)} onChange={e => {
               const ids = e.target.checked ? [...eligibleProductIds(draft.offer), p.id] : eligibleProductIds(draft.offer).filter(id => id !== p.id)
               update('offer', {...draft.offer, productIds: ids, productId: ids[0] || '', unitPrice: undefined})

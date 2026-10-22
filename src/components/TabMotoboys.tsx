@@ -183,8 +183,9 @@ export const TabMotoboys: React.FC<TabMotoboysProps> = ({ orders }) => {
             {unassignedDeliveries.length}
           </div>
         </div>
-        <DeliveryFeeZones />
       </div>
+
+      <DeliveryFeeZones />
 
       {/* Lista de Motoboys e Entregas do Dia */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
