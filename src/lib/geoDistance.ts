@@ -38,6 +38,7 @@ export function resolveDeliveryFee(
   lat: number,
   lng: number,
   feesList: DeliveryFeeItem[],
+  roadDistanceKm?: number,
 ): { fee: number; nearestName: string; distanceKm: number; pending?: boolean } {
   if (!feesList || feesList.length === 0) {
     return { fee: 5, nearestName: 'Taxa Padrão', distanceKm: 0 }
@@ -72,18 +73,17 @@ export function resolveDeliveryFee(
     }
   }
 
-  // Se estiver a menos de 3km do ponto mais próximo, aplica a taxa dele
-  // Se estiver além, cobra uma taxa base com acréscimo proporcional por km excedente (R$ 1,50/km)
+  // Geometric proximity selects a region only. Any distance surcharge requires road kilometers from the routing service.
   if (nearest.fee === null) return {fee:0,nearestName:nearest.name,distanceKm:Math.round(minDistance*10)/10,pending:true}
   let calculatedFee = nearest.fee
-  if (minDistance > 3 && !nearest.meta.fixedFee) {
-    const extraKm = minDistance - 3
+  if (Number.isFinite(roadDistanceKm) && roadDistanceKm! > 3 && !nearest.meta.fixedFee) {
+    const extraKm = roadDistanceKm! - 3
     calculatedFee = Math.round((nearest.fee + extraKm * 1.5) * 2) / 2
   }
 
   return {
     fee: calculatedFee,
     nearestName: nearest.name,
-    distanceKm: Math.round(minDistance * 10) / 10,
+    distanceKm: Number.isFinite(roadDistanceKm) ? roadDistanceKm! : 0,
   }
 }

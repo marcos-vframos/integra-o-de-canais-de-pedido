@@ -7,6 +7,7 @@ begin
  insert into public.menu(tenant_id,name,category,price,recipe) values(t,'Teste de taxa','Carnes',10,'[]') returning id into product;
  insert into public.delivery_fees(tenant_id,name,fee,lat,lng,description) values(t,'Bairro pendente',null,-22.9,-45.4,'{"zoneType":"urban"}') returning id into pending;
  payload:=jsonb_build_object('origin','online','customerName','Teste fictício','customerPhone','00000000000','deliveryType','entrega','customerAddress','Endereço fictício','payment','Dinheiro','deliveryFeeRegion','Bairro pendente','items',jsonb_build_array(jsonb_build_object('itemId',product,'qty',1)));
+ payload:=payload||jsonb_build_object('serverDeliveryRoute',jsonb_build_object('provider','OSRM','referenceId',pending,'distanceKm',0,'durationMinutes',0));
  rejected:=false;
  begin perform public.checkout_finalize_order(t,payload);
  exception when others then if sqlerrm not like '%Taxa de entrega ainda não cadastrada%' then raise; end if; rejected:=true; end;
@@ -24,6 +25,17 @@ begin
  update public.delivery_fees set fee=8.5 where id=pending;
  result:=public.checkout_finalize_order(t,payload);
  assert (result#>>'{order,total}')::numeric=18.5,'Price entered later is charged in full';
+ payload:=payload||jsonb_build_object('serverDeliveryRoute',jsonb_build_object('provider','OSRM','referenceId',pending,'distanceKm',10,'durationMinutes',20));
+ result:=public.checkout_finalize_order(t,payload);
+ assert (result#>>'{order,deliveryFee}')::numeric=19,'Legacy surcharge uses road kilometers';
+ assert (result#>>'{order,deliveryRoute,distanceKm}')::numeric=10,'Road distance is stored with the order';
+ update public.delivery_fees set description='{"fixedFee":true}' where id=pending;
+ result:=public.checkout_finalize_order(t,payload);
+ assert (result#>>'{order,deliveryFee}')::numeric=8.5,'Fixed fees stay fixed despite road distance';
+ rejected:=false;
+ begin perform public.checkout_finalize_order(t,payload-'serverDeliveryRoute');
+ exception when others then if sqlerrm not like '%Trajeto%' then raise; end if; rejected:=true; end;
+ assert rejected,'No unverified online road distance';
  assert app_private.delivery_metadata('"{\"zoneType\":\"central\"}"')->>'zoneType'='central','Legacy encoded metadata remains readable';
  rejected:=false;
  begin perform public.save_delivery_neighborhoods(t,'[]'::jsonb);

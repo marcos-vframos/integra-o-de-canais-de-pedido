@@ -77,6 +77,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                 {order.deliveryType === 'entrega' ? 'ENTREGA (DELIVERY)' : 'RETIRADA NO BALCÃO'}
               </span>
             </div>
+            {order.deliveryRoute&&<div className="text-[10px] text-zinc-700">Trajeto: {order.deliveryRoute.distanceKm.toFixed(1)} km · {Math.ceil(order.deliveryRoute.durationMinutes)} min estimados ({order.deliveryRoute.traffic==='live'?'trânsito consultado':'sem trânsito ao vivo'})</div>}
             {order.customerAddress && (
               <div className="text-[10px] text-zinc-700 pt-0.5">
                 <span>ENDEREÇO: {order.customerAddress}</span>

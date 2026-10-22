@@ -127,6 +127,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               </b>
             </div>
           )}
+          {ticket.deliveryRoute&&<div className="receipt-line" style={{fontSize:10}}>Trajeto: {ticket.deliveryRoute.distanceKm.toFixed(1)} km · {Math.ceil(ticket.deliveryRoute.durationMinutes)} min estimados ({ticket.deliveryRoute.traffic==='live'?'trânsito consultado':'sem trânsito ao vivo'})</div>}
           {ticket.deliveryType === 'entrega' && ticket.customerAddress && (
             <div className="receipt-line" style={{ fontSize: 11, color: '#333' }}>
               Endereço: {ticket.customerAddress}

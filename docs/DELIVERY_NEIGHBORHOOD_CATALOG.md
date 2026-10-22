@@ -20,7 +20,7 @@ Não foi obtida uma camada legal atual de zoneamento que confirme todos os 130 p
 
 ## Distâncias e valores
 
-Faixas: até 3 km; >3 a 5; >5 a 7; >7 a 9; >9 a 11; >11 a 13; >13 a 15; >15 a 17; >17 a 19; >19 a 21; acima de 21 km. Haversine, em linha reta, entre a origem configurada e o ponto central de referência do bairro. Não corresponde à média de percurso por vias e não altera a regra de cobrança.
+Faixas: até 3 km; >3 a 5; >5 a 7; >7 a 9; >9 a 11; >11 a 13; >13 a 15; >15 a 17; >17 a 19; >19 a 21; acima de 21 km. Percurso pelas vias entre a origem salva e o ponto de referência do bairro, calculado pelo serviço de rotas. Sem resposta válida, o item fica como “Trajeto não calculado”. Ver ROAD_ROUTING.md.
 
 O ponto inicial reaproveita a referência existente no sistema (-22.9238, -45.4740); não foi confirmado como a localização exata do estabelecimento. O gestor define e confirma a origem pelo mapa ou coordenadas, salva em `landing_content / delivery_origin`. Todos os pontos e faixas são recalculados a partir da origem salva.
 

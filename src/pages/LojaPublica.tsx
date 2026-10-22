@@ -43,7 +43,8 @@ import {
 } from '@/components/CustomerAuthDrawer'
 import { OrderReceiptModal } from '@/components/OrderReceiptModal'
 import { generatePixPayload } from '@/lib/pix'
-import { resolveDeliveryFee, DeliveryFeeItem } from '@/lib/geoDistance'
+import {loadDeliveryQuote,type RoadRoute} from '@/lib/deliveryRouting'
+import { DeliveryFeeItem } from '@/lib/geoDistance'
 import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
@@ -124,10 +125,25 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const [selectedFeeNeighborhood, setSelectedFeeNeighborhood] = useState<string>('')
   const [deliveryFeeValue, setDeliveryFeeValue] = useState<number>(0)
   const [deliveryFeePending, setDeliveryFeePending] = useState('')
+  const [deliveryRoute,setDeliveryRoute]=useState<RoadRoute|null>(null)
+  const [quotingRoute,setQuotingRoute]=useState(false)
   const [useMapLocation, setUseMapLocation] = useState(false)
   const [deliveryLat, setDeliveryLat] = useState<number>(-22.9238)
   const [deliveryLng, setDeliveryLng] = useState<number>(-45.474)
   const [locatingUser, setLocatingUser] = useState(false)
+
+  useEffect(()=>{
+    if(deliveryType!=='entrega'){setDeliveryRoute(null);setQuotingRoute(false);return}
+    let alive=true
+    setQuotingRoute(true);setDeliveryRoute(null);setDeliveryFeePending('Calculando trajeto viário e frete…')
+    const timer=setTimeout(()=>{
+      loadDeliveryQuote({lat:deliveryLat,lng:deliveryLng}).then(quote=>{
+        if(!alive)return
+        setDeliveryRoute(quote.route);setDeliveryFeeValue(quote.fee);setSelectedFeeNeighborhood(quote.nearestName);setDeliveryFeePending('')
+      }).catch(error=>{if(alive)setDeliveryFeePending(error.message)}).finally(()=>{if(alive)setQuotingRoute(false)})
+    },600)
+    return()=>{alive=false;clearTimeout(timer)}
+  },[deliveryType,deliveryLat,deliveryLng])
 
   // Auth do Cliente & CRM / Campanhas
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false)
@@ -205,6 +221,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         if (pricedFee) {
           setSelectedFeeNeighborhood(pricedFee.name)
           setDeliveryFeeValue(pricedFee.fee)
+          if(pricedFee.lat!==undefined&&pricedFee.lng!==undefined){setDeliveryLat(pricedFee.lat);setDeliveryLng(pricedFee.lng)}
         }
       } catch (e) {
         console.error('Erro ao carregar cardápio da loja:', e)
@@ -553,10 +570,6 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         setDeliveryLat(lat)
         setDeliveryLng(lng)
         setUseMapLocation(true)
-        const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
-        setDeliveryFeeValue(resolved.fee)
-        setDeliveryFeePending(resolved.pending ? `A taxa de ${resolved.nearestName} ainda não foi cadastrada. Consulte o estabelecimento.` : '')
-        setSelectedFeeNeighborhood(`${resolved.nearestName} (${resolved.distanceKm} km)`)
         setLocatingUser(false)
       },
       (err) => {
@@ -699,7 +712,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       return
     }
 
-    if (deliveryType === 'entrega' && deliveryFeePending) {setErrorMsg(deliveryFeePending); return}
+    if (deliveryType === 'entrega' && (deliveryFeePending||quotingRoute||!deliveryRoute)) {setErrorMsg(deliveryFeePending || 'Calcule um trajeto válido para a entrega.'); return}
     setSubmitting(true)
 
     // Formatar itens para backend com indicação da cortesia gourmet
@@ -1376,6 +1389,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                               </option>
                             ))}
                           </select>
+                          {deliveryRoute&&<p className="mt-2 text-xs text-zinc-300">Trajeto: {deliveryRoute.distanceKm.toFixed(1)} km pelas vias · cerca de {Math.ceil(deliveryRoute.durationMinutes)} min de deslocamento, sem incluir preparo. {deliveryRoute.traffic==='live'?'Trânsito consultado.':'Sem trânsito ao vivo.'}</p>}
                           {deliveryFeePending && <p role="alert" className="mt-2 text-xs text-amber-300">{deliveryFeePending}</p>}
                         </div>
 
@@ -1413,12 +1427,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                               onChangeCoords={(lat, lng) => {
                                 setDeliveryLat(lat)
                                 setDeliveryLng(lng)
-                                const resolved = resolveDeliveryFee(lat, lng, deliveryFees)
-                                setDeliveryFeeValue(resolved.fee)
-        setDeliveryFeePending(resolved.pending ? `A taxa de ${resolved.nearestName} ainda não foi cadastrada. Consulte o estabelecimento.` : '')
-                                setSelectedFeeNeighborhood(
-                                  `${resolved.nearestName} (${resolved.distanceKm} km)`,
-                                )
+
                               }}
                             />
                           )}

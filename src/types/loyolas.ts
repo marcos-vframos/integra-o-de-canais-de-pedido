@@ -52,6 +52,7 @@ export interface OrderRecord {
   discount?: number
   deliveryFee?: number
   deliveryFeeRegion?: string
+  deliveryRoute?: {distanceKm:number;durationMinutes:number;provider:string;traffic:string;calculatedAt:string}
   total: number
   payment: 'Dinheiro' | 'Pix' | 'Cartão'
   status?: string

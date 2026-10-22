@@ -12,7 +12,7 @@ function module(name){
  return modules[name]=context.exports
 }
 const {resolveDeliveryFee}=module('geoDistance')
-const {distanceBand,distanceFromOrigin,DEFAULT_DELIVERY_ORIGIN,neighborhoodDescription,deliveryZone}=module('deliveryCatalog')
+const {distanceBand,DEFAULT_DELIVERY_ORIGIN,neighborhoodDescription,deliveryZone}=module('deliveryCatalog')
 const catalog=JSON.parse(readFileSync(new URL('../src/data/pinda-neighborhoods.json',import.meta.url),'utf8'))
 test('all 130 PDF references are preserved with coordinates and individual zone classifications',()=>{
  assert.equal(catalog.length,130)
@@ -27,9 +27,7 @@ test('distance bands include upper boundaries and separate every requested inter
   assert.notEqual(distanceBand(max).color,distanceBand(max+.00001).color)
  }
  assert.equal(distanceBand(21.1).label,'Acima de 21 km')
- assert.equal(distanceBand(NaN).label,'Sem coordenadas')
- assert.equal(distanceFromOrigin(DEFAULT_DELIVERY_ORIGIN,DEFAULT_DELIVERY_ORIGIN),0)
- assert.ok(distanceFromOrigin(catalog[110],DEFAULT_DELIVERY_ORIGIN)>0)
+ assert.equal(distanceBand(NaN).label,'Trajeto não calculado')
 })
 test('blank price is pending while a deliberately configured zero is a valid free fee',()=>{
  const row={id:'ref',name:'Pendente',fee:null,lat:-22.9,lng:-45.4}

@@ -1,4 +1,3 @@
-import { calculateDistanceKm, type DeliveryFeeItem } from './geoDistance'
 import { zoneMeta, type Neighborhood } from './deliveryAreas'
 export type DeliveryZoneType = 'urban' | 'rural' | 'central' | 'district'
 export const DELIVERY_ZONES: Record<DeliveryZoneType,{label:string;color:string}> = {
@@ -14,10 +13,10 @@ export const normalizeNeighborhood=(name:string)=>name.trim().normalize('NFD').r
 export const validCoordinates=(lat:number,lng:number)=>Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180
 export function distanceBand(km:number){
  const i=DISTANCE_BANDS.findIndex(b=>km<=b.max)
- if(!Number.isFinite(km)||km<0)return {label:'Sem coordenadas',color:'#71717a'}
+ if(!Number.isFinite(km)||km<0)return {label:'Trajeto não calculado',color:'#71717a'}
  return i<0?{label:'Acima de 21 km',color:'#d4d4d8'}:{...DISTANCE_BANDS[i],label:i===0?'Até 3 km':`>${DISTANCE_BANDS[i-1].max} a ${DISTANCE_BANDS[i].max} km`}
 }
-export const distanceFromOrigin=(row:Pick<DeliveryFeeItem,'lat'|'lng'>,origin:DeliveryOrigin)=>validCoordinates(row.lat!,row.lng!)?calculateDistanceKm(origin.lat,origin.lng,row.lat!,row.lng!):NaN
+
 export function deliveryZone(row:{description?:string}):DeliveryZoneType {
  const zone=zoneMeta(row.description).zoneType
  return zone in DELIVERY_ZONES?zone:'urban'

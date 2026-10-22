@@ -168,6 +168,7 @@ const extractWhere=(name:string,filter?:string,query=new URLSearchParams())=>{
 const toRow=(name:string,item:JsonRow)=>{
   const aliases=invert(name)
   const result:JsonRow={...item}
+  if(name==='orders'&&item.payment_details?.deliveryRoute)result.deliveryRoute=item.payment_details.deliveryRoute
   for(const [key,val] of Object.entries(item)){
     const converted=aliases[key]|| (key==='created_at'?'created':key==='updated_at'?'updated':null)
     if(converted)result[converted]=val
@@ -355,6 +356,9 @@ const pb={
     return ''
   }},
   async send<T=any>(path:string,opts:{method?:string;body?:unknown}={}):Promise<T>{
+    if(path==='/backend/v1/delivery/routes'){
+      return request('/functions/v1/delivery-routing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts.body||{})},true) as Promise<T>
+    }
     if(path==='/backend/v1/vouchers/issue' || path==='/backend/v1/delivery/neighborhoods'){
       await ensureOperatorSession()
       return request('/rest/v1/rpc/'+(path.includes('vouchers')?'issue_voucher_batch':'save_delivery_neighborhoods'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...opts.body as object,p_tenant:tenantId})},true) as Promise<T>

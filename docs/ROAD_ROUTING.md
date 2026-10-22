@@ -1,0 +1,13 @@
+# Rotas de entrega
+
+O gestor consulta rotas e matrizes OSRM/FOSSGIS sobre vias OpenStreetMap. Distância em km e duração estimada em minutos vêm do percurso roteado; não há substituição por Haversine quando o serviço falha. A geometria desenhada é a rota retornada. Pontos mais de 500 m da malha viária são rejeitados. As consultas em lote usam até 50 destinos, cache de dez minutos e intervalo entre chamadas. A origem vem de landing_content/delivery_origin; deve ser confirmada antes de liberar o frete online.
+
+OSRM usa perfil de automóvel: estimativa conservadora para entregas, sujeita a diferenças de acesso para motocicletas, dados cartográficos e condições locais. O tempo de percurso não inclui preparo, fila ou entrega no imóvel. Não possui trânsito ao vivo nem garante o cadastro de todos os semáforos, radares, bloqueios ou restrições.
+
+A consulta opcional TomTom usa perfil motorcycle, traffic=true, departAt=now e informa atraso estimado. Configurar TOMTOM_ROUTING_API_KEY como segredo da Edge Function no Supabase, nunca no frontend ou no chat. O botão fica disponível para operadores autenticados quando a capacidade é detectada. Sem chave, trânsito ao vivo aparece indisponível. Histórico e trânsito refletem efeitos de lentidão conforme cobertura do provedor, sem garantia de inventário completo de cada fator. O orçamento público e o checkout usam OSRM estático; trânsito ao vivo é consulta operacional manual e não modifica a taxa fixa.
+
+O checkout recalcula a rota no servidor. Só o serviço autorizado chama a RPC com referência de bairro e distância verificada; valores enviados pelo cliente são descartados. Taxas fixas e áreas com polígonos preservam o preço cadastrado; a regra legada de acréscimo após 3 km usa agora a distância pelas vias desde a loja. Taxa pendente bloqueia o pedido, zero explícito permanece válido. O resumo da rota é salvo em payment_details.deliveryRoute e aparece na comanda. Repetições de pedido idempotentes não dependem de nova consulta ao roteador.
+
+O servidor público FOSSGIS é adequado a uso leve, com limite de uma requisição por segundo e atribuição OpenStreetMap/OSRM. Antes de tráfego de produção elevado, contratar roteamento ou hospedar OSRM dedicado e implementar controle global de chamadas; o limitador atual é por instância da função. Não há cobrança de provedor configurada por esta alteração.
+
+Validação: testes unitários de rotas, matriz, falta de rota e cobrança; SQL transacional com dados fictícios e rollback; consulta implantada com origem salva para Centro e Ribeirão Grande. A loja permanece DRAFT e não foram realizados pedidos reais.

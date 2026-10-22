@@ -1,5 +1,7 @@
 // Loyola's Lanches — anonymous checkout / authenticated cashier.
 // All monetary validation and stock updates are done in one PostgreSQL RPC transaction.
+import {roadRoute,validRoadPoint} from '../_shared/roadRouting.ts'
+import {selectFeeReference} from '../_shared/deliveryQuote.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const tenantId = '8c0d61b8-7cf9-44e0-9e17-96832f3848b6'
@@ -76,6 +78,7 @@ Deno.serve(async(request: Request) => {
     if(error||!v||(v.expires_at&&new Date(v.expires_at).getTime()<=Date.now())||(v.customer_phone&&v.customer_phone.replace(/\D/g,'')!==phone))return reply(request,422,{error:'Código inválido, expirado ou indisponível para este telefone'})
     return reply(request,200,{id:v.id,title:v.title,description:v.description,type:v.type,discountPercent:Number(v.discount_percent),discountAmount:Number(v.discount_amount),targetProductId:v.target_product_id,targetProductName:v.target_product_name,expiresAt:v.expires_at,active:true,used:false})
   }
+  delete payload.serverDeliveryRoute // Never accept a route attestation from the browser.
   const origin=payload.origin==='balcao'?'balcao':'online'
   let operatorId: string|null=null
   if (origin==='balcao') {
@@ -100,7 +103,25 @@ Deno.serve(async(request: Request) => {
   if (!Array.isArray(payload.items) || payload.items.length<1 || payload.items.length>40)
     return reply(request,422,{error:'Carrinho vazio ou inválido'})
   try {
-    const { data, error } = await admin.rpc('checkout_finalize_order',{
+    if(origin==='online'&&payload.deliveryType==='entrega'){
+      const {data:existing}=await admin.from('orders').select('id').eq('tenant_id',tenantId).eq('idempotency_key',payload.clientRequestId).maybeSingle()
+      const {data:company}=await admin.from('tenants').select('status').eq('id',tenantId).single()
+      if(!existing&&['ACTIVE','TRIAL'].includes(company?.status)){
+        const {data:originRecord}=await admin.from('landing_content').select('data').eq('tenant_id',tenantId).eq('section','delivery_origin').maybeSingle()
+        const start=originRecord?.data
+        if(!start?.confirmed||!validRoadPoint(start))return reply(request,422,{error:'Confirme a origem das entregas no cadastro de taxas.'})
+        const {data:fees,error:feeError}=await admin.from('delivery_fees').select('id,name,fee,lat,lng,description').eq('tenant_id',tenantId).eq('active',true)
+        if(feeError)return reply(request,503,{error:'Não foi possível consultar as taxas'})
+        const rawPoint={lat:Number(payload.deliveryLat),lng:Number(payload.deliveryLng)}
+        const coordinates=payload.deliveryLat!==undefined&&payload.deliveryLng!==undefined
+        if(coordinates&&!validRoadPoint(rawPoint))return reply(request,422,{error:'Coordenadas fora da região de atendimento'})
+        const reference=selectFeeReference(fees||[],coordinates?rawPoint:undefined,String(payload.deliveryFeeRegion||''))
+        const destination=coordinates?rawPoint:{lat:Number(reference.lat),lng:Number(reference.lng)}
+        const {geometry,...route}=await roadRoute(start,destination)
+        payload.serverDeliveryRoute={...route,referenceId:reference.id,origin:{lat:start.lat,lng:start.lng},destination}
+      }
+    }
+    const { data, error } = await admin.rpc('checkout_finalize_order' ,{
       p_tenant:tenantId,
       p_payload:payload,
       p_operator:operatorId,
@@ -108,7 +129,7 @@ Deno.serve(async(request: Request) => {
     if (error) {
       // Do not return database diagnostics. Surface controlled business validation errors.
       const message=error.message||'Falha na validação do pedido'
-      const safe=/^(Loja |Pedido |Carrinho |Produto |Quantidade |Origem |Identificador |Informe |Endereço |Tipo |Remoções |Adicionais |Receita |Ingrediente |Pão |Troca |Porção |Adicional |Cortesia |Selecione |Coordenadas |Cupom |Forma |Estoque |Sabor |Bebidas |Acesso )/.test(message)
+      const safe=/^(Loja |Pedido |Carrinho |Produto |Quantidade |Origem |Identificador |Informe |Endereço |Tipo |Remoções |Adicionais |Receita |Ingrediente |Pão |Troca |Porção |Adicional |Cortesia |Selecione |Coordenadas |Trajeto |Taxa |Confirme |Cupom |Forma |Estoque |Sabor |Bebidas |Acesso )/.test(message)
         ? message : 'O servidor não conseguiu finalizar o pedido. Confira os dados.'
       console.error('Checkout validation failed',error.code||'unknown')
       return reply(request,422,{error:safe})
@@ -117,6 +138,7 @@ Deno.serve(async(request: Request) => {
     return reply(request,200,data)
   } catch(e) {
     console.error('Checkout failed:',e instanceof Error?e.name:'unknown')
-    return reply(request,503,{error:'Serviço temporariamente indisponível'})
+    const message=e instanceof Error?e.message:''
+    return reply(request,503,{error:/^(Trajeto |Ponto |Serviço de rotas|Selecione uma região|Taxa de entrega)/.test(message)?message:'Serviço temporariamente indisponível'})
   }
 })
