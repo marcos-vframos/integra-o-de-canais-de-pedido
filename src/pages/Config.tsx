@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
+import { ensureOperatorSession } from '@/lib/supabase/compat'
 import pb, { demoGestaoMode } from '@/lib/pocketbase/client'
 import {
   Settings,
@@ -19,6 +20,8 @@ import {
   ChevronRight,
   ArrowLeft,
   ShieldCheck,
+  LogIn,
+  LogOut,
   Save,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -75,7 +78,7 @@ function maskPhone(val: string): string {
 
 export default function Config() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, sessionError, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
 
@@ -86,6 +89,7 @@ export default function Config() {
   const [isOpen, setIsOpen] = useState(true)
 
   const [loading, setLoading] = useState(true)
+  const [loadError,setLoadError]=useState('')
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [cnpjError, setCnpjError] = useState('')
@@ -93,19 +97,23 @@ export default function Config() {
   const [closeChoiceModalOpen, setCloseChoiceModalOpen] = useState(false)
   const [openOrdersCount, setOpenOrdersCount] = useState(0)
 
+  const keepDraft=()=>{try{sessionStorage.setItem('loyolas_config_draft',JSON.stringify({owner:user?.id||null,storeName,cnpj,phone,address}))}catch{}}
+  const restoreDraft=()=>{try{const raw=sessionStorage.getItem('loyolas_config_draft');if(!raw)return;const d=JSON.parse(raw);if(d.owner&&d.owner!==pb.authStore.record?.id)return;if(typeof d.storeName==='string')setStoreName(d.storeName);if(typeof d.cnpj==='string')setCnpj(d.cnpj);if(typeof d.phone==='string')setPhone(d.phone);if(typeof d.address==='string')setAddress(d.address)}catch{}}
   useEffect(() => {
-    if (demoGestaoMode) {
+    setLoadError('')
+    if (demoGestaoMode && !pb.authStore.hasSession) {
+      restoreDraft()
       setLoading(false)
       return
     }
+    setLoading(true)
     let mounted = true
     ;(async () => {
       try {
         const [settingsList, ordersList, closuresList] = await Promise.all([
           pb
             .collection('settings')
-            .getFullList<{ id: string; key: string; value: string }>()
-            .catch(() => []),
+            .getFullList<{ id: string; key: string; value: string }>(),
           pb
             .collection('orders')
             .getFullList<{ id: string; created: string }>()
@@ -137,8 +145,9 @@ export default function Config() {
           : null
         const openOrders = ordersList.filter((o) => !lastClosure || o.created > lastClosure)
         setOpenOrdersCount(openOrders.length)
+        restoreDraft()
       } catch (e) {
-        console.error('Erro ao carregar settings', e)
+        if(mounted)setLoadError('Não foi possível consultar as configurações salvas. Atualize a página antes de salvar para evitar substituir dados por valores padrão.')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -147,7 +156,7 @@ export default function Config() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [user?.id])
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value
@@ -162,10 +171,9 @@ export default function Config() {
     setPhone(maskPhone(e.target.value))
   }
 
-  const handleStatusClick = (targetOpen: boolean) => {
+  const handleStatusClick = async (targetOpen: boolean) => {
     if (targetOpen) {
-      setIsOpen(true)
-      saveSingleSetting('is_open', 'true')
+      if(!await setOperation(true))return
       toast({
         title: 'Loja reaberta',
         description: 'O status foi atualizado para aberto para atendimento.',
@@ -179,8 +187,7 @@ export default function Config() {
 
   const handlePauseOperation = async () => {
     setCloseChoiceModalOpen(false)
-    setIsOpen(false)
-    await saveSingleSetting('is_open', 'false')
+    if(!await setOperation(false))return
     toast({
       title: 'Operação pausada',
       description: 'A lanchonete foi marcada como fechada. O caixa atual permanece ativo.',
@@ -189,8 +196,7 @@ export default function Config() {
 
   const handleCloseRegister = async () => {
     setCloseChoiceModalOpen(false)
-    setIsOpen(false)
-    await saveSingleSetting('is_open', 'false')
+    if(!await setOperation(false))return
     toast({
       title: 'Encerrando expediente',
       description: 'Redirecionando para a conferência e fechamento do caixa...',
@@ -199,23 +205,22 @@ export default function Config() {
   }
 
   const saveSingleSetting = async (key: string, value: string) => {
-    try {
-      const rec = await pb
-        .collection('settings')
-        .getFirstListItem(`key="${key}"`)
-        .catch(() => null)
-      if (rec) {
-        await pb.collection('settings').update(rec.id, { value })
-      } else {
-        await pb.collection('settings').create({ key, value })
-      }
-    } catch (err) {
-      console.error(`Erro ao salvar setting ${key}:`, err)
-    }
+    await ensureOperatorSession()
+    let rec
+    try{rec=await pb.collection('settings').getFirstListItem(`key="${key}"`)}
+    catch(error:any){if(error?.status!==404)throw error}
+    const saved=rec?await pb.collection('settings').update(rec.id,{value}):await pb.collection('settings').create({key,value})
+    const check=await pb.collection('settings').getOne<{value:string}>(saved.id)
+    if(check.value!==value)throw new Error('O banco não confirmou esta configuração. Tente novamente.')
+  }
+  const setOperation=async(open:boolean)=>{
+    try{await saveSingleSetting('is_open',String(open));setIsOpen(open);return true}
+    catch(error:any){toast({title:'Status não salvo',description:error.message,variant:'destructive'});return false}
   }
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
+    if(loadError)return
 
     const trimmedName = storeName.trim()
     if (!trimmedName) {
@@ -254,18 +259,9 @@ export default function Config() {
         { key: 'theme', value: theme },
       ]
 
-      for (const pair of pairs) {
-        const rec = await pb
-          .collection('settings')
-          .getFirstListItem(`key="${pair.key}"`)
-          .catch(() => null)
-        if (rec) {
-          await pb.collection('settings').update(rec.id, { value: pair.value })
-        } else {
-          await pb.collection('settings').create(pair)
-        }
-      }
+      for (const pair of pairs) await saveSingleSetting(pair.key,pair.value)
 
+      try{sessionStorage.removeItem('loyolas_config_draft')}catch{}
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2600)
 
@@ -305,7 +301,7 @@ export default function Config() {
             <button
               type="button"
               onClick={() => handleSave()}
-              disabled={saving || loading}
+              disabled={saving || loading || !!loadError}
               className="sc-btn-small text-xs py-1.5 px-3 h-8 text-[var(--silver)] border-[var(--line)] hover:border-[var(--red)] transition-all"
               title="Salvar alterações"
             >
@@ -330,6 +326,7 @@ export default function Config() {
             impressas.
           </p>
 
+          {loadError&&<p role="alert" className="text-xs text-red-400">{loadError}</p>}
           {loading ? (
             <p className="sc-empty">Carregando configurações…</p>
           ) : (
@@ -631,8 +628,14 @@ export default function Config() {
           <p className="sc-sub" style={{ margin: 0 }}>
             {user?.email
               ? `Operador autenticado: ${user.email}`
-              : 'Terminal operando em modo de acesso direto (sem login obrigatório).'}
+              : 'Prévia sem operador conectado. Entre para gravar alterações no banco.'}
           </p>
+          {sessionError&&<p role="status" className="mt-2 text-xs text-amber-400">{sessionError}</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Link onClick={keepDraft} to="/login?returnTo=/config" className="sc-btn-primary inline-flex items-center gap-2"><LogIn size={15}/>{user?'Entrar novamente / Trocar conta':'Entrar como operador'}</Link>
+            {user&&<button type="button" onClick={logout} className="sc-btn-ghost inline-flex items-center gap-2"><LogOut size={14}/>Sair da conta</button>}
+          </div>
+          <p className="mt-2 text-xs text-[var(--muted)]">A sessão é mantida neste navegador e renovada automaticamente enquanto disponível. Você pode fechar a página após confirmar o salvamento.</p>
         </div>
 
         <StoreCloseChoiceModal

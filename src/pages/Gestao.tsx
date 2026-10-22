@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import pb, { demoGestaoMode } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
+import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import type { MenuItem, InventoryItem, OrderRecord, ClosureRecord, CartLine } from '@/types/loyolas'
 import { fmtBRL, padTicket, uid, seedStock, seedMenu } from '@/lib/seeds'
@@ -61,6 +62,7 @@ export default function Gestao() {
   const [searchParams, setSearchParams] = useSearchParams()
   const currentTab = searchParams.get('tab') || 'pedido'
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const [loaded, setLoaded] = useState(false)
   const [cartName, setCartName] = useState("Loyola's Lanches")
@@ -139,7 +141,7 @@ export default function Gestao() {
 
   // Load initial data
   const loadInitialData = useCallback(async () => {
-    if (demoGestaoMode) {
+    if (demoGestaoMode && !pb.authStore.hasSession) {
       // Read ONLY public storefront data. Private stock/orders/clients require authenticated staff.
       // The demo must never silently replace the 87 imported products with fictitious seed data.
       try {
@@ -271,7 +273,7 @@ export default function Gestao() {
 
       setLoaded(true)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     loadInitialData()
@@ -882,8 +884,8 @@ export default function Gestao() {
     const currentItem = stock.find((s) => s.id === id)
     if (!currentItem) return
     const nextQty = Math.max(0, currentItem.qty + delta)
-    setStock((prev) => prev.map((s) => (s.id === id ? { ...s, qty: nextQty } : s)))
-    await pb.collection('inventory').update(id, { qty: nextQty })
+    const confirmed=await pb.collection('inventory').update<InventoryItem>(id, { qty: nextQty })
+    setStock((prev) => prev.map((s) => (s.id === id ? { ...s, qty: confirmed.qty } : s)))
   }
 
   const handleDeleteStockItem = async (id: string) => {

@@ -172,3 +172,52 @@ test('campaign subscription refreshes every three seconds and on return to a vis
   assert.equal(notifications,3)
   assert.equal(cleared,true)
 })
+
+test('a server-rejected access token renews and retries a write exactly once',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(url,opts)=>{
+  if(url.includes('grant_type=refresh_token'))return renewed()
+  if(opts.headers.Authorization==='Bearer old')return json({message:'JWT expired'},401)
+  return json([{id:'item',name:'Persistido'}])
+ })
+ const saved=await a.pb.collection('menu').update('item',{name:'Persistido'})
+ assert.equal(saved.name,'Persistido')
+ assert.equal(a.calls.filter(c=>c.opts.method==='PATCH').length,2)
+ assert.equal(a.calls.filter(c=>c.url.includes('refresh_token')).length,1)
+})
+test('refresh adopts a token rotated by another tab and an explicit storage logout',async()=>{
+ const window=new EventTarget()
+ const a=adapter(expired(),async()=>{throw Error('Old refresh token must not be used')},{window})
+ a.store.set('loyolas_supabase_auth_v1',JSON.stringify({...expired(),access_token:'other-tab',refresh_token:'other-refresh',expires_at:Date.now()/1000+3600}))
+ await a.ensureOperatorSession()
+ assert.equal(a.pb.authStore.token,'other-tab')
+ assert.equal(a.calls.length,0)
+ a.store.delete('loyolas_supabase_auth_v1')
+ const event=new Event('storage');Object.defineProperty(event,'key',{value:'loyolas_supabase_auth_v1'});window.dispatchEvent(event)
+ assert.equal(a.pb.authStore.hasSession,false)
+})
+test('unconfirmed creation cannot report a successful save',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async()=>json([]))
+ await assert.rejects(a.pb.collection('menu').create({name:'Unconfirmed'}),/não confirmou a criação/)
+})
+test('failed refresh response cannot erase a newer session stored by another tab',async()=>{
+ let a
+ a=adapter(expired(),async()=>{
+  a.store.set('loyolas_supabase_auth_v1',JSON.stringify({...expired(),access_token:'replacement',refresh_token:'replacement-refresh',expires_at:Date.now()/1000+3600}))
+  return json({message:'old token already used'},400)
+ })
+ await a.ensureOperatorSession()
+ assert.equal(a.pb.authStore.token,'replacement')
+ assert.equal(a.pb.authStore.hasSession,true)
+})
+test('Web Locks serialize renewal across independent tabs sharing browser storage',async()=>{
+ const shared=new Map([['loyolas_supabase_auth_v1',JSON.stringify(expired())]])
+ const localStorage={getItem:k=>shared.get(k),setItem:(k,v)=>shared.set(k,v),removeItem:k=>shared.delete(k)}
+ let tail=Promise.resolve(),refreshes=0
+ const navigator={locks:{request:(_name,fn)=>{const task=tail.then(fn);tail=task.catch(()=>{});return task}}}
+ const handler=async(url)=>{assert.ok(url.includes('refresh_token'));refreshes++;await new Promise(r=>setTimeout(r,5));return renewed()}
+ const first=adapter(null,handler,{localStorage,navigator}),second=adapter(null,handler,{localStorage,navigator})
+ await Promise.all([first.ensureOperatorSession(),second.ensureOperatorSession()])
+ assert.equal(refreshes,1)
+ assert.equal(first.pb.authStore.token,'new')
+ assert.equal(second.pb.authStore.token,'new')
+})

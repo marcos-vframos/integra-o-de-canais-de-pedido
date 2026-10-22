@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 type AuthModel = { id: string; email?: string; role?: string; [key: string]: any }
+import { ensureOperatorSession } from '@/lib/supabase/compat'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 
 interface AuthContextType {
   user: AuthModel | null
+  sessionError: string
   loading: boolean
   login: (email: string, pass: string) => Promise<void>
   logout: () => void
@@ -15,12 +17,13 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthModel | null>(pb.authStore.record)
+  const [sessionError,setSessionError]=useState('')
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     let active = true
     const unsubscribe = pb.authStore.onChange((_token, model) => {
-      if (active) setUser(model)
+      if (active) {setUser(model); if(model)setSessionError('')}
     })
     if (!backendConfigured) {
       pb.authStore.clear()
@@ -37,11 +40,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .catch((error) => {
           // A temporary network failure must not destroy a renewable session.
           if ([400,401,403].includes(error?.status) || error?.message?.includes('sem autorização')) pb.authStore.clear()
-          if (active) setUser(null)
+          if (active) {setUser(pb.authStore.hasSession ? pb.authStore.record : null);setSessionError(pb.authStore.hasSession ? 'Conexão temporariamente indisponível. Tentaremos reconectar sem encerrar sua sessão.' : 'Sua sessão expirou. Entre novamente nas configurações.')}
         })
         .finally(() => { if (active) setLoading(false) })
     }
-    return () => { active = false; unsubscribe() }
+    let checking=false
+    const recover=async()=>{
+      if(checking||!pb.authStore.hasSession||document.visibilityState!=='visible')return
+      checking=true
+      try{
+        await ensureOperatorSession()
+        if(!pb.authStore.record?.role)await pb.collection('users').authRefresh()
+        if(active){setUser(pb.authStore.record);setSessionError('')}
+      }catch(error:any){
+        if(active)setSessionError(pb.authStore.hasSession?'Não foi possível renovar a conexão. Seus dados não foram apagados.':'Sua sessão expirou. Entre novamente nas configurações.')
+      }finally{checking=false}
+    }
+    const timer=setInterval(()=>void recover(),30000)
+    const onReturn=()=>void recover()
+    window.addEventListener('focus',onReturn)
+    window.addEventListener('online',onReturn)
+    document.addEventListener('visibilitychange',onReturn)
+    return () => { active = false; unsubscribe();clearInterval(timer);window.removeEventListener('focus',onReturn);window.removeEventListener('online',onReturn);document.removeEventListener('visibilitychange',onReturn) }
   }, [])
 
   const login = async (email: string, pass: string) => {
@@ -64,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, requestPasswordReset, confirmPasswordReset }}
+      value={{ user, sessionError, loading, login, logout, requestPasswordReset, confirmPasswordReset }}
     >
       {children}
     </AuthContext.Provider>

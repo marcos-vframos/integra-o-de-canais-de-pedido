@@ -39,30 +39,48 @@ const authStore={
   clear(){setSession(null)},
   onChange(callback:(token:string,model:any)=>void){listeners.add(callback);return ()=>listeners.delete(callback)},
 }
-// Serialize refreshes: gallery uploads and polling can request a token concurrently.
+// Synchronize refresh-token rotations and explicit logout across tabs.
+function syncStoredSession(){
+ try {
+  const raw=localStorage.getItem(SESSION_KEY)
+  const next=raw?JSON.parse(raw):null
+  if(next&&(!next.access_token||!next.refresh_token))return
+  if(JSON.stringify(next)!==JSON.stringify(session)){session=next;inform()}
+ }catch { /* Keep the current session when browser storage is temporarily unavailable. */ }
+}
+if(typeof window!=='undefined')window.addEventListener('storage',(event:StorageEvent)=>{
+ if(event.key===SESSION_KEY||event.key===null)syncStoredSession()
+})
+// Serialize refreshes in this tab and, with Web Locks, across tabs sharing the origin.
 let refreshing: Promise<void> | null = null
 async function refreshSession(force = false): Promise<void> {
-  if (!session?.refresh_token) return
-  if (!force && Number(session.expires_at || 0) > Date.now()/1000 + 60) return
-  if (refreshing) return refreshing
-  const previous = session
-  refreshing = (async () => {
-    try {
-      const next = await request('/auth/v1/token?grant_type=refresh_token', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({refresh_token:previous.refresh_token}),
-      }, false)
-      // A response arriving after logout must never restore the previous session.
-      if (session !== previous) return
-      setSession({access_token:next.access_token,refresh_token:next.refresh_token,
-        expires_at:Math.floor(Date.now()/1000)+next.expires_in,
-        user:{...next.user,role:previous.user?.role}})
-    } catch (error: any) {
-      if (session === previous && [400,401,403].includes(error?.status)) setSession(null)
-      throw error
-    }
-  })().finally(() => { refreshing = null })
-  return refreshing
+ if(refreshing)return refreshing
+ syncStoredSession()
+ if(!session?.refresh_token)return
+ const failedToken=session.access_token
+ const renew=async()=>{
+  syncStoredSession()
+  if(!session?.refresh_token)return
+  if((!force||session.access_token!==failedToken)&&Number(session.expires_at||0)>Date.now()/1000+60)return
+  const previous=session
+  try{
+   const next=await request('/auth/v1/token?grant_type=refresh_token',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:previous.refresh_token}),
+   },false)
+   syncStoredSession()
+   if(session!==previous)return
+   setSession({access_token:next.access_token,refresh_token:next.refresh_token,
+    expires_at:Math.floor(Date.now()/1000)+next.expires_in,user:{...next.user,role:previous.user?.role}})
+  }catch(error:any){
+   syncStoredSession()
+   if(session!==previous&&session?.refresh_token)return
+   if(session===previous&&[400,401,403].includes(error?.status))setSession(null)
+   throw error
+  }
+ }
+ refreshing=(typeof navigator!=='undefined'&&navigator.locks?.request
+  ? navigator.locks.request('loyolas-supabase-auth-refresh',renew):renew()).finally(()=>{refreshing=null})
+ return refreshing
 }
 export async function ensureOperatorSession(): Promise<void> {
   await refreshSession()
@@ -109,7 +127,7 @@ const tableOf=(name:string)=>{
   return name
 }
 const urlFor=(path:string)=>serverUrl+path
-const request=async(path:string, options:RequestInit={},preferAuth=true)=>{
+const request=async(path:string, options:RequestInit={},preferAuth=true,retried=false)=>{
   if(!backendConfigured)throw new Error(backendConfigMessage)
   if (preferAuth) await refreshSession()
   const headers:Record<string,string>={apikey:publishableKey,...(options.headers as Record<string,string> ||{})}
@@ -118,6 +136,11 @@ const request=async(path:string, options:RequestInit={},preferAuth=true)=>{
   let response:Response
   try {response=await fetch(urlFor(path),{...options,headers,cache:'no-store'})}
   catch {throw new Error('Não foi possível conectar ao Supabase. Verifique sua internet.')}
+  if(response.status===401&&preferAuth&&session?.refresh_token&&!retried){
+    await refreshSession(true)
+    if(!authStore.isValid)throw new Error('Sua sessão expirou. Entre novamente nas configurações do Gestor.')
+    return request(path,options,true,true)
+  }
   if(response.status===204)return null
   const text=await response.text()
   let body:any
@@ -250,6 +273,7 @@ const collection=(name:string)=>{
       if(raw.media_path)payload.media_path=raw.media_path
       const q=new URLSearchParams({select:'*'})
       const rows=await request((await apiPath())+'?'+q,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(payload)})
+      if(!Array.isArray(rows)||rows.length!==1)throw new Error('Supabase não confirmou a criação.')
       return toRow(name,Array.isArray(rows)?rows[0]:rows) as T
     },
     async update<T=any>(id:string,data:FormData|Record<string,any>):Promise<T>{
@@ -303,13 +327,7 @@ const collection=(name:string)=>{
     async authRefresh(){
       if(name!=='users'||!session?.refresh_token)throw new Error('Sessão inexistente')
       await ensureOperatorSession()
-      let user:Operator
-      try {user=await request('/auth/v1/user',{},true)}
-      catch(error: any){
-        if (error?.status !== 401) throw error
-        await refreshSession(true)
-        user=await request('/auth/v1/user',{},true)
-      }
+      const user:Operator=await request('/auth/v1/user',{},true)
       const q=new URLSearchParams({select:'role',tenant_id:'eq.'+tenantId,user_id:'eq.'+user.id,active:'eq.true',limit:'1'})
       const membership=await request('/rest/v1/tenant_memberships?'+q)
       if(!Array.isArray(membership)||!membership.length)throw new Error('Conta sem autorização no Loyola’s Lanches.')

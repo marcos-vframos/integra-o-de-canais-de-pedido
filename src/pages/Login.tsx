@@ -7,7 +7,8 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const next = searchParams.get('returnTo') === '/adm-landing' ? '/adm-landing' : '/gestao'
+  const requested=searchParams.get('returnTo')
+  const next = ['/config','/adm-landing','/gestao'].includes(requested || '') ? requested! : '/gestao'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -59,8 +60,10 @@ export default function Login() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#9A9CA0] mb-1.5">E-mail</label>
+            <label htmlFor="operator-email" className="block text-xs font-semibold text-[#9A9CA0] mb-1.5">E-mail</label>
             <input
+              id="operator-email"
+              autoComplete="username"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,7 +75,7 @@ export default function Login() {
 
           <div>
             <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-semibold text-[#9A9CA0]">Senha</label>
+              <label htmlFor="operator-password" className="text-xs font-semibold text-[#9A9CA0]">Senha</label>
               <Link
                 to="/forgot-password"
                 className="text-xs text-[#7D8085] hover:text-[#C9CDD3] transition-colors"
@@ -81,6 +84,8 @@ export default function Login() {
               </Link>
             </div>
             <input
+              id="operator-password"
+              autoComplete="current-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
