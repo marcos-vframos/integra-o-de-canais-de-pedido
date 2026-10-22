@@ -5,7 +5,7 @@ import { KeyRound, ArrowLeft } from 'lucide-react'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
-  const token = searchParams.get('token') || ''
+  const token = searchParams.get('token_hash') || searchParams.get('token') || ''
   const { confirmPasswordReset } = useAuth()
   const navigate = useNavigate()
 
@@ -19,7 +19,7 @@ export default function ResetPassword() {
     e.preventDefault()
     setError('')
 
-    if (!token) {
+    if (!token && !new URLSearchParams(window.location.hash.slice(1)).get('access_token')) {
       setError('Token de recuperação ausente ou inválido.')
       return
     }

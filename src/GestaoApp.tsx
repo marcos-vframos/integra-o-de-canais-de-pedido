@@ -1,3 +1,4 @@
+import {lazy,Suspense} from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
@@ -7,16 +8,15 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import { LandingProvider } from '@/context/LandingContentContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import BackendStatusNotice from '@/components/BackendStatusNotice'
-import { demoGestaoMode } from '@/lib/pocketbase/client'
 import Layout from '@/components/Layout'
-import Gestao from '@/pages/Gestao'
-import Config from '@/pages/Config'
-import AdmLanding from '@/pages/AdmLanding'
+const Gestao=lazy(()=>import('@/pages/Gestao'))
+const Config=lazy(()=>import('@/pages/Config'))
+const AdmLanding=lazy(()=>import('@/pages/AdmLanding'))
 import Login from '@/pages/Login'
-import ForgotPassword from '@/pages/ForgotPassword'
-import ResetPassword from '@/pages/ResetPassword'
-import VerifyEmail from '@/pages/VerifyEmail'
-import ConfirmEmailChange from '@/pages/ConfirmEmailChange'
+const ForgotPassword=lazy(()=>import('@/pages/ForgotPassword'))
+const ResetPassword=lazy(()=>import('@/pages/ResetPassword'))
+const VerifyEmail=lazy(()=>import('@/pages/VerifyEmail'))
+const ConfirmEmailChange=lazy(()=>import('@/pages/ConfirmEmailChange'))
 
 /** Dedicated administrator PWA. This output must be deployed on its own domain. */
 export default function GestaoApp() {
@@ -28,19 +28,19 @@ export default function GestaoApp() {
             <BackendStatusNotice />
             <Toaster />
             <Sonner />
-            <Routes>
+            <Suspense fallback={<p className="p-6 text-sm" role="status">Carregando módulo…</p>}><Routes>
               <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ForgotPassword />} />
-              <Route path="/reset-password" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ResetPassword />} />
-              <Route path="/verify-email" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <VerifyEmail />} />
-              <Route path="/confirm-email-change" element={demoGestaoMode ? <Navigate to="/gestao" replace /> : <ConfirmEmailChange />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/gestao" element={<Gestao />} />
                 <Route path="/config" element={<Config />} />
                 <Route path="/adm-landing" element={<AdmLanding />} />
               </Route>
               <Route path="*" element={<Navigate to="/gestao" replace />} />
-            </Routes>
+            </Routes></Suspense>
           </TooltipProvider>
         </LandingProvider>
       </ThemeProvider>

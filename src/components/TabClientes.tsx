@@ -1,20 +1,6 @@
 import VoucherBatchForm from '@/components/VoucherBatchForm'
 import React, { useState, useEffect } from 'react'
-import {
-  Users,
-  Search,
-  Tag,
-  AlertTriangle,
-  Gift,
-  CheckCircle2,
-  Clock,
-  ShoppingBag,
-  Sparkles,
-  Phone,
-  Plus,
-  Loader2,
-  Trash2,
-} from 'lucide-react'
+import { Users, Search, Tag, AlertTriangle, Gift, CheckCircle2, Clock, Phone, Loader2, Trash2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { MenuItem, OrderRecord } from '@/types/loyolas'

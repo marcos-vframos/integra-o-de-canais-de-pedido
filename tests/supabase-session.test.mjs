@@ -14,7 +14,7 @@ function adapter(saved, handler, overrides = {}) {
   const calls=[]
   const context = {exports:{}, ENV:{VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test'},
     localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},
-    URLSearchParams, File, FormData, crypto, setInterval, clearInterval,
+    URLSearchParams, File, FormData, crypto, AbortSignal, setInterval, clearInterval,
     fetch:async(url,opts)=>{ calls.push({url,opts}); return handler(url,opts) },
     ...overrides,
   }
@@ -220,4 +220,38 @@ test('Web Locks serialize renewal across independent tabs sharing browser storag
  assert.equal(refreshes,1)
  assert.equal(first.pb.authStore.token,'new')
  assert.equal(second.pb.authStore.token,'new')
+})
+
+test('full lists paginate beyond the API row limit with deterministic ordering',async()=>{
+ const a=adapter(null,async(url)=>{const q=new URL(url).searchParams,offset=Number(q.get('offset'));assert.equal(q.get('limit'),'500');assert.ok(q.get('order').endsWith('id.asc'));return json(Array.from({length:offset<1000?500:1},(_,i)=>({id:String(offset+i)})))})
+ const records=await a.pb.collection('orders').getFullList({sort:'-created'})
+ assert.equal(records.length,1001);assert.equal(records.at(-1).id,'1000');assert.equal(a.calls.length,3)
+})
+test('identical concurrent reads share the request without caching future reads',async()=>{
+ let release
+ const a=adapter(null,()=>new Promise(r=>{release=()=>r(json([{id:'x'}]))}))
+ const first=a.pb.collection('menu').getFullList(),second=a.pb.collection('menu').getFullList()
+ await new Promise(r=>setTimeout(r,0));assert.equal(a.calls.length,1);release();await Promise.all([first,second])
+ const third=a.pb.collection('menu').getFullList();await new Promise(r=>setTimeout(r,0));assert.equal(a.calls.length,2);release();await third
+})
+test('counter checkout refreshes an expired operator token before sending the stable request ID',async()=>{
+ const a=adapter(expired(),async(url,opts)=>{
+  if(url.includes('refresh_token'))return renewed()
+  assert.equal(opts.headers.Authorization,'Bearer new');assert.equal(JSON.parse(opts.body).clientRequestId,'ord-stable-request-123456789');return json({success:true,order:{id:'confirmed'}})
+ })
+ const r=await a.pb.send('/backend/v1/orders/finalize',{body:{origin:'balcao',clientRequestId:'ord-stable-request-123456789'}})
+ assert.equal(r.order.id,'confirmed');assert.equal(a.calls.length,2)
+})
+test('order status uses the authorized operating RPC while direct financial overwrites stay server-validated',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(url,opts)=>{
+  assert.ok(url.includes('/rpc/manage_store_operation'));const p=JSON.parse(opts.body);assert.equal(p.p_action,'order_status');assert.equal(p.p_id,'sale');return json({id:'sale',status:'aceito'})
+ })
+ assert.equal((await a.pb.collection('orders').update('sale',{status:'aceito'})).status,'aceito')
+})
+test('password recovery uses only the verified recovery bearer token and clears the URL afterward',async()=>{
+ let cleaned=false
+ const window={location:{hash:'#type=recovery&access_token=recovery-token',pathname:'/reset-password'},history:{replaceState:()=>{cleaned=true}},addEventListener:()=>{}}
+ const a=adapter(null,async(url,opts)=>{assert.ok(url.endsWith('/auth/v1/user'));assert.equal(opts.headers.Authorization,'Bearer recovery-token');assert.equal(opts.method,'PUT');return json({id:'operator'})},{window})
+ await a.pb.collection('users').confirmPasswordReset('','new-password','new-password')
+ assert.equal(cleaned,true);assert.equal(a.pb.authStore.hasSession,false)
 })

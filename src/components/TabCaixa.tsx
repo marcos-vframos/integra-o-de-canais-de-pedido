@@ -36,10 +36,10 @@ export const TabCaixa: React.FC<TabCaixaProps> = ({
 
   // Pedidos abertos desde o último fechamento (excluindo 'recusado')
   const openOrders = orders.filter((o) => {
-    if (o.status === 'recusado') return false
+    if(o.status==='recusado'||o.status==='cancelado'||o.closureId)return false
     if (!lastClosureTime) return true
     const orderTime = o.created || ''
-    return orderTime > lastClosureTime
+    return new Date(orderTime).getTime()>new Date(lastClosureTime).getTime()
   })
 
   // Separação por origem
@@ -318,7 +318,7 @@ export const TabCaixa: React.FC<TabCaixaProps> = ({
                             }
                           }}
                         >
-                          {isDeletingOrderId === o.id ? 'Excluindo…' : 'Excluir?'}
+                          {isDeletingOrderId === o.id ? 'Cancelando…' : 'Cancelar?'}
                         </button>
                         <button
                           type="button"

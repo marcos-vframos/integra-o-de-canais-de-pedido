@@ -15,7 +15,7 @@ test('independent flavor quantities charge every unit and omit zero selections',
  assert.equal(validDrinkFlavor({name:'Suco natural'},'Laranja com Acerola'),true)
 })
 test('CRM normalizes phones, excludes cancelled sales and computes spend and inactivity',()=>{
- const orders=[{customerPhone:'12999999999',total:100,created:'2026-10-01',status:'Finalizado'},{customerPhone:'(12) 99999-9999',total:50,created:'2026-10-03',status:'Finalizado'},{customerPhone:'12999999999',total:999,status:'Cancelado'},{customerPhone:'12888888888',total:999,status:'Finalizado'}]
+ const orders=[{customerPhone:'12999999999',total:100,created:'2026-10-01',status:'Finalizado'},{customerPhone:'(12) 99999-9999',total:50,created:'2026-10-03',status:'Finalizado'},{customerPhone:'12999999999',total:999,status:'Cancelado'},{customerPhone:'12888888888',total:999,status:'Finalizado'},{customerPhone:'12999999999',total:999,status:'recusado'}]
  const m=customerMetrics({phone:'(12)99999-9999'},orders,30,500,Date.parse('2026-10-10'))
  assert.equal(m.count,2);assert.equal(m.total,150);assert.equal(m.average,75);assert.equal(m.segment,'Recorrente')
  assert.equal(customerMetrics({phone:'12999999999'},orders,5,500,Date.parse('2026-10-10')).segment,'Inativo')

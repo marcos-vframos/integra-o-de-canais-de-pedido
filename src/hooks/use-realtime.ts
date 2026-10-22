@@ -27,7 +27,7 @@ export function useRealtime<TRecord extends RecordModel = RecordModel>(
     let unsubscribeFn: (() => Promise<void>) | undefined
     let cancelled = false
 
-    pb.collection<TRecord>(collectionName)
+    pb.collection(collectionName)
       .subscribe('*', (e) => {
         callbackRef.current(e)
       })

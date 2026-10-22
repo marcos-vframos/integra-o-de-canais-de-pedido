@@ -1,18 +1,5 @@
 import React, { useState } from 'react'
-import {
-  User,
-  Phone,
-  Lock,
-  LogOut,
-  ShoppingBag,
-  Sparkles,
-  ChevronRight,
-  Loader2,
-  Clock,
-  MapPin,
-  Check,
-  Tag,
-} from 'lucide-react'
+import { User, Phone, LogOut, ShoppingBag, Sparkles, Loader2, MapPin, Check, Tag } from 'lucide-react'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import { OrderRecord } from '@/types/loyolas'
 

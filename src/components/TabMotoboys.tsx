@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Bike,
-  Plus,
-  Trash2,
-  Phone,
-  CheckCircle2,
-  DollarSign,
-  Calendar,
-  User,
-  Clock,
-  Send,
-  Loader2,
-} from 'lucide-react'
+import { Bike, Plus, Trash2, Clock } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { OrderRecord } from '@/types/loyolas'

@@ -7,3 +7,12 @@ minimumReleaseAgeExclude:
   - date-fns@4.4.0
   - baseline-browser-mapping@2.10.35
   - electron-to-chromium@1.5.370
+
+packages:
+  - .
+overrides:
+  'nanoid@>=3.0.0 <3.3.18': 3.3.18
+  'source-map-js@>=1.0.0 <1.2.2': 1.2.2
+  'tinypool@>=2.0.0 <2.1.2': 2.1.2
+  'browserslist@>=4.0.0 <4.28.7': 4.28.7
+  'baseline-browser-mapping@>=2.0.0 <2.11.0': 2.11.0

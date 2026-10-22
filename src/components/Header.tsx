@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
 import LandingStories from '@/components/LandingStories'
-import { BUSINESS_INFO, checkIsOpenNow } from '@/data/loyolasData'
+import { checkIsOpenNow } from '@/data/loyolasData'
 import pb from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 

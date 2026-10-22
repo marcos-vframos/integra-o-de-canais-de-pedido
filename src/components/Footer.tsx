@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+
 import { ArrowUp } from 'lucide-react'
 import { BUSINESS_INFO } from '@/data/loyolasData'
 

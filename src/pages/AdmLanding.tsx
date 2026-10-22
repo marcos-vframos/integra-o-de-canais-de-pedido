@@ -16,14 +16,7 @@ import {
   ShieldAlert,
   ArrowLeft,
 } from 'lucide-react'
-import {
-  useLandingContent,
-  LandingThemeColors,
-  LandingSlide,
-  LandingFeedPost,
-  DEFAULT_THEME_COLORS,
-  DEFAULT_THEME_PRESETS,
-} from '@/context/LandingContentContext'
+import { useLandingContent, LandingThemeColors, LandingSlide, LandingFeedPost, DEFAULT_THEME_COLORS } from '@/context/LandingContentContext'
 import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'

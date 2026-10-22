@@ -90,7 +90,7 @@ const fieldAliases:Record<string,Record<string,string>>={
   categories:{order:'sort_order'},
   inventory:{min:'min_qty',group:'inventory_group'},
   orders:{
-    ticketNumber:'ticket_number',deliveryFee:'delivery_fee',deliveryFeeRegion:'delivery_fee_region',
+    ticketNumber:'ticket_number',closureId:'closure_id',deliveryFee:'delivery_fee',deliveryFeeRegion:'delivery_fee_region',
     customerName:'customer_name',customerPhone:'customer_phone',customerAddress:'customer_address',
     deliveryType:'delivery_type',deliveryLat:'delivery_lat',deliveryLng:'delivery_lng',
     customerId:'customer_id',motoboyId:'motoboy_id',motoboyName:'motoboy_name',
@@ -120,7 +120,6 @@ const cols=(name:string,key:string)=>{
   return fieldAliases[name]?.[key] || key
 }
 const invert=(name:string)=>Object.fromEntries(Object.entries(fieldAliases[name]||{}).map(([a,b])=>[b,a]))
-const publicSettings=new Set(['store_name','is_open','force_open','force_closed','pix_key'])
 const tableOf=(name:string)=>{
   if(name==='settings'&&!authStore.isValid)return 'storefront_settings'
   if(name==='inventory'&&!authStore.isValid)return 'catalog_inventory'
@@ -131,10 +130,12 @@ const request=async(path:string, options:RequestInit={},preferAuth=true,retried=
   if(!backendConfigured)throw new Error(backendConfigMessage)
   if (preferAuth) await refreshSession()
   const headers:Record<string,string>={apikey:publishableKey,...(options.headers as Record<string,string> ||{})}
-  if(preferAuth&&authStore.isValid) headers.Authorization='Bearer '+authStore.token
-  else headers.Authorization='Bearer '+publishableKey
+  if(!headers.Authorization){
+    if(preferAuth&&authStore.isValid) headers.Authorization='Bearer '+authStore.token
+    else headers.Authorization='Bearer '+publishableKey
+  }
   let response:Response
-  try {response=await fetch(urlFor(path),{...options,headers,cache:'no-store'})}
+  try {response=await fetch(urlFor(path),{...options,headers,cache:'no-store',signal:options.signal||AbortSignal.timeout(30000)})}
   catch {throw new Error('Não foi possível conectar ao Supabase. Verifique sua internet.')}
   if(response.status===401&&preferAuth&&session?.refresh_token&&!retried){
     await refreshSession(true)
@@ -203,7 +204,7 @@ const fromRow=(name:string,data:JsonRow)=>{
 }
 const publicUrl=(path:string)=>/^https?:\/\//.test(path)?path:
   urlFor('/storage/v1/object/public/loyolas-public-media/'+path.split('/').map(encodeURIComponent).join('/'))
-async function upload(collection:string, file:File, section:string){
+async function upload(collection:string, file:File, _section:string){
   await ensureOperatorSession()
   if(!file || file.size>15*1024*1024)throw new Error('Imagem/vídeo deve ter no máximo 15 MB.')
   if(!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm)|application\/pdf)$/.test(file.type))
@@ -228,6 +229,26 @@ export async function uploadLandingGalleryImage(file: File): Promise<string> {
   return publicUrl(path)
 }
 
+async function confirmEmailToken(token:string,type:'email'|'email_change'){
+ const fragment=new URLSearchParams(window.location.hash.slice(1))
+ const access=fragment.get('access_token')
+ if(access){await request('/auth/v1/user',{headers:{Authorization:'Bearer '+access}},false)}
+ else if(token){await request('/auth/v1/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token_hash:token,type})},false)}
+ else throw new Error('Link de confirmação ausente ou inválido. Solicite um novo e-mail.')
+ window.history.replaceState(null,'',window.location.pathname)
+}
+const pendingReads=new Map<string,Promise<any>>()
+async function sharedRead(path:string){
+ await refreshSession()
+ const key=authStore.token+'|'+path
+ let pending=pendingReads.get(key)
+ if(!pending){pending=request(path).finally(()=>pendingReads.delete(key));pendingReads.set(key,pending)}
+ return pending
+}
+async function storeOperation(action:string,id:string|null,payload:unknown={}){
+ await ensureOperatorSession()
+ return request('/rest/v1/rpc/manage_store_operation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p_tenant:tenantId,p_action:action,p_id:id,p_payload:payload})})
+}
 const collection=(name:string)=>{
   const apiPath=async()=>{ await refreshSession(); return '/rest/v1/'+tableOf(name) }
   return {
@@ -235,11 +256,19 @@ const collection=(name:string)=>{
       if(name==='users')throw new Error('A coleção users foi substituída pelo Supabase Auth.')
       const q=new URLSearchParams({select:'*',tenant_id:'eq.'+tenantId})
       extractWhere(name,opts?.filter,q)
-      if(opts?.sort){
-        q.set('order',opts.sort.split(',').map(s=>(s.startsWith('-')?cols(name,s.slice(1))+'.desc':cols(name,s)+'.asc')).join(','))
+      const order=(opts?.sort||'id').split(',').map(s=>(s.startsWith('-')?cols(name,s.slice(1))+'.desc':cols(name,s)+'.asc'))
+      if(!order.some(s=>s.startsWith('id.')))order.push('id.asc')
+      q.set('order',order.join(','))
+      const path=await apiPath(),result:JsonRow[]=[]
+      // PostgREST caps responses. Read every page instead of silently truncating reports at 1,000 rows.
+      for(let offset=0;;offset+=500){
+        q.set('limit','500');q.set('offset',String(offset))
+        const page=await sharedRead(path+'?'+q)
+        if(!Array.isArray(page))throw new Error('Resposta inválida ao consultar '+name)
+        result.push(...page)
+        if(page.length<500)break
       }
-      const result=await request((await apiPath())+'?'+q)
-      return (Array.isArray(result)?result:[]).map(x=>toRow(name,x)) as T[]
+      return result.map(x=>toRow(name,x)) as T[]
     },
     async getFirstListItem<T=any>(filter:string,opts?:{sort?:string}):Promise<T>{
       const q=new URLSearchParams({select:'*',tenant_id:'eq.'+tenantId,limit:'1'})
@@ -261,7 +290,8 @@ const collection=(name:string)=>{
     },
     async create<T=any>(data:FormData|Record<string,any>):Promise<T>{
       await ensureOperatorSession()
-      if(['orders','closures','users'].includes(name))
+      if(name==='closures')return toRow(name,await storeOperation('close_register',null, data instanceof FormData?Object.fromEntries(data.entries()):data)) as T
+      if(['orders','users'].includes(name))
         throw new Error('Esta operação exige uma API segura dedicada; gravação direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
@@ -279,7 +309,8 @@ const collection=(name:string)=>{
     },
     async update<T=any>(id:string,data:FormData|Record<string,any>):Promise<T>{
       await ensureOperatorSession()
-      if(['orders','closures','users'].includes(name))
+      if(name==='orders')return toRow(name,await storeOperation('order_status',id,data instanceof FormData?Object.fromEntries(data.entries()):data)) as T
+      if(['closures','users'].includes(name))
         throw new Error('Esta operação exige permissão específica do servidor; alteração direta bloqueada.')
       const raw:JsonRow=data instanceof FormData?Object.fromEntries(data.entries()):{...data}
       if(name==='landing_content'&&raw.image instanceof File)raw.image_path=await upload(name,raw.image,String(raw.section||'landing'))
@@ -337,12 +368,25 @@ const collection=(name:string)=>{
     },
     async requestPasswordReset(email:string){
       if(name!=='users')throw new Error('Recurso disponível somente para operadores')
-      await request('/auth/v1/recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})},false)
+      await request('/auth/v1/recover?redirect_to='+encodeURIComponent(window.location.origin+'/reset-password'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})},false)
       return true
     },
-    async confirmPasswordReset(_token?:string, _password?:string, _passwordConfirm?:string){
-      throw new Error('Use o link de recuperação enviado pelo Supabase Auth; o token antigo do PocketBase não é compatível.')
+    async confirmPasswordReset(token:string,password:string,passwordConfirm:string){
+      if(name!=='users')throw new Error('Recurso disponível somente para operadores')
+      if(password.length<8||password!==passwordConfirm)throw new Error('Informe senhas iguais com no mínimo 8 caracteres.')
+      const fragment=new URLSearchParams(window.location.hash.slice(1))
+      let access=fragment.get('type')==='recovery'?fragment.get('access_token'):null
+      if(!access&&token){
+        const verified=await request('/auth/v1/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token_hash:token,type:'recovery'})},false)
+        access=verified?.access_token
+      }
+      if(!access)throw new Error('Link de recuperação ausente ou inválido. Solicite um novo e-mail.')
+      await request('/auth/v1/user',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({password})},false)
+      setSession(null)
+      window.history.replaceState(null,'',window.location.pathname)
     },
+    async confirmVerification(token:string){return confirmEmailToken(token,'email')},
+    async confirmEmailChange(token:string,_password:string){return confirmEmailToken(token,'email_change')},
   }
 }
 const pb={
@@ -365,16 +409,13 @@ const pb={
     }
     if(path==='/backend/v1/delivery/lookup') opts={...opts,body:{...opts.body as object,action:'lookupNeighborhoods'}}
     if(path==='/backend/v1/vouchers/lookup') opts={...opts,body:{...opts.body as object,action:'lookupVoucher'}}
+    if(path==='/backend/v1/orders/reject'||path==='/backend/v1/orders/delete'){
+      return storeOperation('cancel_order',String((opts.body as any)?.orderId||''),{reason:path.endsWith('/reject')?'recusado pelo operador':'cancelado pelo operador'}) as Promise<T>
+    }
     if(path!=='/backend/v1/orders/finalize' && path!=='/backend/v1/vouchers/lookup' && path!=='/backend/v1/delivery/lookup')throw new Error('Endpoint não migrado: '+path)
-    if(!backendConfigured)throw new Error(backendConfigMessage)
-    const headers:Record<string,string>={'Content-Type':'application/json',apikey:publishableKey}
-    if(authStore.isValid)headers.Authorization='Bearer '+authStore.token
-    const res=await fetch(urlFor('/functions/v1/finalize-order'),{
-      method:'POST',headers,body:JSON.stringify(opts.body||{}),cache:'no-store',
-    })
-    const data=await res.json().catch(()=>({error:'Resposta inválida do servidor de pedidos'}))
-    if(!res.ok)throw Object.assign(new Error(data.error||'Não foi possível finalizar o pedido'),{status:res.status,data})
-    return data as T
+    try{
+      return await request('/functions/v1/finalize-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts.body||{})},true) as T
+    }catch(error:any){error.data=error.response||{error:error.message};throw error}
   },
   autoCancellation(_flag:boolean){/* PocketBase compatibility no-op */},
 }

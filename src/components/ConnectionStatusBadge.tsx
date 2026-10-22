@@ -1,5 +1,5 @@
 import React from 'react'
-import { Wifi, WifiOff, CloudUpload, RefreshCw } from 'lucide-react'
+import { WifiOff, CloudUpload, RefreshCw } from 'lucide-react'
 
 interface ConnectionStatusBadgeProps {
   isOnline: boolean

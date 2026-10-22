@@ -55,9 +55,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
         sort: 'name',
       })
       setMotoboys(list)
-      if (list.length > 0 && !selectedMotoboyId) {
-        setSelectedMotoboyId(list[0].id)
-      }
+      if(list.length)setSelectedMotoboyId(previous=>previous||list[0].id)
     } catch (e) {
       console.warn('Erro ao carregar motoboys ativos:', e)
     }
@@ -184,21 +182,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
       if (onOrderUpdated) onOrderUpdated()
     } catch (err: any) {
       console.error('Erro ao recusar pedido:', err)
-      try {
-        await pb.collection('orders').update(orderId, { status: 'recusado' })
-        toast({
-          title: `Pedido #${padTicket(rejectModalOrder.ticketNumber)} recusado`,
-          description: 'Status atualizado para recusado.',
-        })
-        setRejectModalOrder(null)
-        if (onOrderUpdated) onOrderUpdated()
-      } catch (fallbackErr: any) {
-        toast({
-          title: 'Erro ao recusar pedido',
-          description: fallbackErr?.message || 'Tente novamente.',
-          variant: 'destructive',
-        })
-      }
+      toast({title:'Erro ao recusar pedido',description:err?.message||'Tente novamente.',variant:'destructive'})
     } finally {
       setIsProcessing(null)
     }

@@ -3,31 +3,7 @@ import { menuOrder } from '@/lib/productPresentation'
 import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } from '@/lib/beverages'
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ShoppingBag,
-  Search,
-  Plus,
-  Minus,
-  Trash2,
-  CheckCircle2,
-  MapPin,
-  Store,
-  Phone,
-  User,
-  AlertCircle,
-  X,
-  CreditCard,
-  Banknote,
-  QrCode,
-  SlidersHorizontal,
-  ArrowLeft,
-  Share2,
-  Copy,
-  Check,
-  Compass,
-  Tag,
-  History,
-} from 'lucide-react'
+import { ShoppingBag, Search, Plus, Minus, Trash2, CheckCircle2, MapPin, Store, Phone, User, AlertCircle, X, CreditCard, Banknote, QrCode, SlidersHorizontal, ArrowLeft, Share2, Copy, Check, Compass } from 'lucide-react'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
@@ -45,7 +21,7 @@ import { OrderReceiptModal } from '@/components/OrderReceiptModal'
 import { generatePixPayload } from '@/lib/pix'
 import {loadDeliveryQuote,type RoadRoute} from '@/lib/deliveryRouting'
 import { DeliveryFeeItem } from '@/lib/geoDistance'
-import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, lineUnitTotal, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
+import { breadKind, accumulateDeductions, addonUnitTotal, breadSurcharge, hasBread, breadName, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
 export interface CustomerCartLine {
   beverageFlavor?: string

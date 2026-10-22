@@ -97,8 +97,8 @@ export default function Config() {
   const [closeChoiceModalOpen, setCloseChoiceModalOpen] = useState(false)
   const [openOrdersCount, setOpenOrdersCount] = useState(0)
 
-  const keepDraft=()=>{try{sessionStorage.setItem('loyolas_config_draft',JSON.stringify({owner:user?.id||null,storeName,cnpj,phone,address}))}catch{}}
-  const restoreDraft=()=>{try{const raw=sessionStorage.getItem('loyolas_config_draft');if(!raw)return;const d=JSON.parse(raw);if(d.owner&&d.owner!==pb.authStore.record?.id)return;if(typeof d.storeName==='string')setStoreName(d.storeName);if(typeof d.cnpj==='string')setCnpj(d.cnpj);if(typeof d.phone==='string')setPhone(d.phone);if(typeof d.address==='string')setAddress(d.address)}catch{}}
+  const keepDraft=()=>{try{sessionStorage.setItem('loyolas_config_draft',JSON.stringify({owner:user?.id||null,storeName,cnpj,phone,address}))}catch{ /* Private browsing can disable draft storage. */ }}
+  const restoreDraft=()=>{try{const raw=sessionStorage.getItem('loyolas_config_draft');if(!raw)return;const d=JSON.parse(raw);if(d.owner&&d.owner!==pb.authStore.record?.id)return;if(typeof d.storeName==='string')setStoreName(d.storeName);if(typeof d.cnpj==='string')setCnpj(d.cnpj);if(typeof d.phone==='string')setPhone(d.phone);if(typeof d.address==='string')setAddress(d.address)}catch{ /* Private browsing can disable draft storage. */ }}
   useEffect(() => {
     setLoadError('')
     if (demoGestaoMode && !pb.authStore.hasSession) {
@@ -261,7 +261,7 @@ export default function Config() {
 
       for (const pair of pairs) await saveSingleSetting(pair.key,pair.value)
 
-      try{sessionStorage.removeItem('loyolas_config_draft')}catch{}
+      try{sessionStorage.removeItem('loyolas_config_draft')}catch{ /* Private browsing can disable draft storage. */ }
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2600)
 

@@ -1,6 +1,7 @@
 import type { OrderItem } from '@/types/loyolas'
 
 export interface OfflineOrderPayload {
+  clientRequestId?: string
   items: OrderItem[]
   subtotal: number
   discount: number

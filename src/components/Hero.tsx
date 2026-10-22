@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+
 import { ArrowRight, Star, Sparkles, ChevronDown } from 'lucide-react'
 
 // Conjunto de imagens para o crossfade suave em loop contínuo

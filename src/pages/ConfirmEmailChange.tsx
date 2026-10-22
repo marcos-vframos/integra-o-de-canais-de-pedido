@@ -5,7 +5,7 @@ import { CheckCircle, AlertTriangle } from 'lucide-react'
 
 export default function ConfirmEmailChange() {
   const [searchParams] = useSearchParams()
-  const token = searchParams.get('token') || ''
+  const token = searchParams.get('token_hash') || searchParams.get('token') || ''
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -13,7 +13,7 @@ export default function ConfirmEmailChange() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (!token) {
+    if (!token && !new URLSearchParams(window.location.hash.slice(1)).get('access_token')) {
       setError('Token ausente.')
       setLoading(false)
       return

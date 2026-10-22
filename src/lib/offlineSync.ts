@@ -86,10 +86,14 @@ export async function processOfflineQueue(options?: {
 
     for (const item of toProcess) {
       result.totalProcessed++
+      // Upgrade legacy queued payloads before sending: every retry must keep the same identifier.
+      item.payload={...item.payload,clientRequestId:item.payload.clientRequestId||`ord-${crypto.randomUUID()}`}
+
 
       updateOfflineOrderItem(item.id, (prev) => ({
         ...prev,
         status: 'syncing',
+        payload:item.payload,
         lastAttemptAt: new Date().toISOString(),
         retryCount: prev.retryCount + 1,
       }))

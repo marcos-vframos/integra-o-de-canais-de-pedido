@@ -44,17 +44,7 @@ import { StoreCloseChoiceModal } from '@/components/StoreCloseChoiceModal'
 import { OfflineQueueModal } from '@/components/OfflineQueueModal'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import type { OfflineOrderItem } from '@/types/offline'
-import {
-  saveMenuCache,
-  getMenuCache,
-  saveStockCache,
-  getStockCache,
-  saveTicketCounterCache,
-  resetTicketCounterCache,
-  getTicketCounterCache,
-  saveSettingsCache,
-  getSettingsCache,
-} from '@/lib/offlineCache'
+import { saveMenuCache, getMenuCache, saveStockCache, getStockCache, saveTicketCounterCache, getTicketCounterCache, saveSettingsCache, getSettingsCache } from '@/lib/offlineCache'
 import { getOfflineQueue, enqueueOfflineOrder, removeOfflineOrderItem } from '@/lib/offlineQueue'
 import { processOfflineQueue, isCurrentlySyncing } from '@/lib/offlineSync'
 
@@ -91,6 +81,8 @@ export default function Gestao() {
 
   // Cart & Order state (Balcão)
   const [cart, setCart] = useState<CartLine[]>([])
+  const checkoutAttempt=useRef<{fingerprint:string;id:string}|null>(null)
+  const submittingOrder=useRef(false)
   const [payment, setPayment] = useState<'Dinheiro' | 'Pix' | 'Cartão'>('Dinheiro')
   const [orderDiscount, setOrderDiscount] = useState<number>(0)
   const [orderDeliveryFee, setOrderDeliveryFee] = useState<number>(0)
@@ -719,8 +711,12 @@ export default function Gestao() {
       deductions,
     }
 
+    const fingerprint=JSON.stringify(payload)
+    if(!checkoutAttempt.current||checkoutAttempt.current.fingerprint!==fingerprint)checkoutAttempt.current={fingerprint,id:`ord-${crypto.randomUUID()}`}
+    const submission={...payload,clientRequestId:checkoutAttempt.current.id}
     const handleSaveOffline = () => {
-      const offlineItem = enqueueOfflineOrder(payload, ticketCounter)
+      try {
+      const offlineItem = enqueueOfflineOrder(submission, ticketCounter)
       setOfflineQueue(getOfflineQueue())
 
       const provisionalRecord: OrderRecord = {
@@ -743,11 +739,13 @@ export default function Gestao() {
       setCart([])
       setOrderDiscount(0)
       setOrderDeliveryFee(0)
+      checkoutAttempt.current=null
       setBanner(`Sem internet: pedido ${offlineItem.provisionalTicket} salvo na fila offline.`)
       toast({
         title: 'Pedido salvo na fila offline',
         description: `Comanda provisória ${offlineItem.provisionalTicket}.`,
       })
+      }catch(error:any){toast({title:'Pedido não guardado',description:error.message,variant:'destructive'})}
     }
 
     if (!isOnline) {
@@ -755,6 +753,8 @@ export default function Gestao() {
       return
     }
 
+    if(submittingOrder.current)return
+    submittingOrder.current=true
     try {
       const res = await pb.send<{
         success: boolean
@@ -762,9 +762,10 @@ export default function Gestao() {
         lowStockWarnings: string[]
       }>('/backend/v1/orders/finalize', {
         method: 'POST',
-        body: payload,
+        body: submission,
       })
 
+      checkoutAttempt.current=null
       const newOrder = res.order
       setOrders((prev) => [newOrder, ...prev])
       setTicketCounter(newOrder.ticketNumber + 1)
@@ -806,7 +807,7 @@ export default function Gestao() {
           variant: 'destructive',
         })
       }
-    }
+    }finally{submittingOrder.current=false}
   }
 
   // Cardapio CRUD
@@ -897,10 +898,10 @@ export default function Gestao() {
   // Caixa closing logic com diferenciação balcão vs online
   const lastClosureTime = closures.length ? closures[closures.length - 1].closedAt : null
   const openOrders = orders.filter((o) => {
-    if (o.status === 'recusado') return false
+    if (o.status === 'recusado' || o.status === 'cancelado' || o.closureId) return false
     if (!lastClosureTime) return true
     const orderTime = o.created || ''
-    return orderTime > lastClosureTime
+    return new Date(orderTime).getTime() > new Date(lastClosureTime).getTime()
   })
 
   const openBalcaoOrders = openOrders.filter((o) => o.origin !== 'online')
@@ -989,29 +990,6 @@ export default function Gestao() {
     const discount = Number(String(closingDiscount).replace(',', '.')) || 0
     const net = Math.max(0, openTotal - discount)
 
-    // Calcular consumo de ingredientes do período (shoppingReport)
-    const consumedMap: Record<string, number> = {}
-    openOrders.forEach((o) => {
-      ;(o.items || []).forEach((it) => {
-        const itemObj = menu.find((m) => m.name === it.name || m.id === it.itemId)
-        ;(itemObj?.recipe || []).forEach((r) => {
-          const isRemoved = (it.removed || []).some(
-            (rem) => rem === r.ingredientId || rem === stockById(r.ingredientId)?.name,
-          )
-          if (!isRemoved) {
-            consumedMap[r.ingredientId] = (consumedMap[r.ingredientId] || 0) + r.qty * it.qty
-          }
-        })
-        ;(it.added || []).forEach((a) => {
-          const ingObj = stock.find((s) => s.name === a.name || s.id === a.ingredientId)
-          const ingId = ingObj?.id || a.ingredientId
-          consumedMap[ingId] = (consumedMap[ingId] || 0) + a.qty * it.qty
-        })
-      })
-    })
-
-    const shoppingReport = lowStockRows(await pb.collection('inventory').getFullList<InventoryItem>({sort:'name'}))
-
     const closurePayload = {
       closedAt: new Date().toISOString(),
       openedAt: openingTime ? new Date(openingTime).toISOString() : new Date().toISOString(),
@@ -1030,7 +1008,6 @@ export default function Gestao() {
         balcao: openBalcaoTotal,
         online: openOnlineTotal,
       },
-      shoppingReport,
     }
 
     try {
@@ -1038,22 +1015,8 @@ export default function Gestao() {
       setClosures((prev) => [...prev, createdClosure])
       setClosingPreviewOpen(false)
 
-      setTicketCounter(1)
-      resetTicketCounterCache()
-      try {
-        const counterRec = await pb
-          .collection('settings')
-          .getFirstListItem('key="ticket_counter"')
-          .catch(() => null)
-        if (counterRec) {
-          await pb.collection('settings').update(counterRec.id, { value: '1' })
-        } else {
-          await pb.collection('settings').create({ key: 'ticket_counter', value: '1' })
-        }
-      } catch (counterErr) {
-        console.warn('Erro ao zerar contador de comanda no PocketBase:', counterErr)
-      }
-
+      // Ticket numbers remain unique and monotonically increasing across closures.
+      pb.collection('orders').getFullList<OrderRecord>({sort:'-ticketNumber'}).then(setOrders).catch(()=>{ /* Closure is already confirmed; the subscription will refresh orders. */ })
       setJustClosedClosure(createdClosure)
       setBanner(
         `Caixa fechado — líquido de ${fmtBRL(net)} (${openBalcaoOrders.length} balcão, ${openOnlineOrders.length} online).`,
@@ -1094,10 +1057,9 @@ export default function Gestao() {
     const targetOrder = orders.find((o) => o.id === orderId)
     const ticketLabel = targetOrder?.ticketNumber ? padTicket(targetOrder.ticketNumber) : orderId
 
-    removeOfflineOrderItem(orderId)
-    setOfflineQueue(getOfflineQueue())
-
-    const isProvisional = targetOrder?.status?.includes?.('offline') || !isOnline
+    const isProvisional = !!targetOrder?.status?.includes?.('offline')
+    if(!isOnline&&!isProvisional){toast({title:'Conecte-se para cancelar',description:'Uma venda gravada precisa de confirmação do servidor para estornar estoque.',variant:'destructive'});return}
+    if(isProvisional){removeOfflineOrderItem(orderId);setOfflineQueue(getOfflineQueue())}
     let stockRestored = false
 
     try {
@@ -1111,11 +1073,7 @@ export default function Gestao() {
             method: 'POST',
             body: { orderId, restoreStock: true },
           })
-          .catch(async (endpointErr) => {
-            console.warn('Fallback exclusão direta:', endpointErr)
-            await pb.collection('orders').delete(orderId)
-            return { success: true, deletedId: orderId, restoredItems: [] }
-          })
+
 
         if (res?.restoredItems && res.restoredItems.length > 0) {
           stockRestored = true
@@ -1130,13 +1088,13 @@ export default function Gestao() {
           .catch(() => {})
       }
 
-      setOrders((prev) => prev.filter((o) => o.id !== orderId))
+      setOrders((prev) => isProvisional?prev.filter(o=>o.id!==orderId):prev.map(o=>o.id===orderId?{...o,status:'recusado'}:o))
       if (lastFinalizedOrder && lastFinalizedOrder.id === orderId) {
         setLastFinalizedOrder(null)
       }
 
       toast({
-        title: `Comanda ${ticketLabel} removida`,
+        title: `Comanda ${ticketLabel} cancelada`,
         description: stockRestored
           ? 'Pedido cancelado e ingredientes estornados para o estoque com sucesso.'
           : 'Pedido removido com sucesso.',

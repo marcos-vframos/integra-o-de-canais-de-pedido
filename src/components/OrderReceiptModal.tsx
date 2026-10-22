@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { CheckCircle2, Download, Printer, ArrowLeft, Share2, MapPin, QrCode } from 'lucide-react'
+import { CheckCircle2, Printer, Share2 } from 'lucide-react'
 import { fmtBRL, padTicket } from '@/lib/seeds'
 import { OrderRecord } from '@/types/loyolas'
 

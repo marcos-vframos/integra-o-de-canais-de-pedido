@@ -2,7 +2,7 @@ name: CI — Site e Gestor
 
 on:
   push:
-    branches: [main, landing-loja-integradas-20261016]
+    branches: [main, landing-loja-integradas-20261016, feat-supabase-runtime-loyolas-20261019]
   pull_request:
     branches: [main]
 

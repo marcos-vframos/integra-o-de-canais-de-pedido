@@ -1,3 +1,4 @@
+import {lazy,Suspense} from 'react'
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import Hero from '@/components/Hero'
@@ -5,7 +6,7 @@ import StorePromotionCarousel from '@/components/StorePromotionCarousel'
 import Marquee from '@/components/Marquee'
 import Story from '@/components/Story'
 import FeaturedMenu from '@/components/FeaturedMenu'
-import LojaPublica from '@/pages/LojaPublica'
+const LojaPublica=lazy(()=>import('@/pages/LojaPublica'))
 import Reviews from '@/components/Reviews'
 import InstagramSection from '@/components/InstagramSection'
 import OrderCTA from '@/components/OrderCTA'
@@ -70,7 +71,7 @@ export default function Index() {
         {/* 5. Cardápio em Destaque conectado ao menu do PocketBase em tempo real (100vh) */}
         <FeaturedMenu />
         {/* O motor da loja vive na propria landing: sem segundo catalogo nem outra rota. */}
-        <LojaPublica embedded />
+        <Suspense fallback={<p role="status">Carregando loja…</p>}><LojaPublica embedded /></Suspense>
         {/* 6. Avaliações dos Clientes & Prova Social (100vh) */}
         <Reviews />
         {/* 7. Seção Instagram Oficial (@loyolass_lanches) (100vh) */}

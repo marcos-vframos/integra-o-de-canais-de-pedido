@@ -22,6 +22,7 @@ export function saveOfflineQueue(queue: OfflineOrderItem[]): void {
     window.dispatchEvent(new CustomEvent('loyolas_offline_queue_changed', { detail: queue }))
   } catch (err) {
     console.error('Erro ao salvar fila offline:', err)
+    throw new Error('Não foi possível guardar o pedido neste aparelho. Libere espaço ou conecte-se para concluir; o pedido não foi confirmado.')
   }
 }
 
@@ -46,7 +47,7 @@ export function enqueueOfflineOrder(
     provisionalTicket,
     provisionalTicketNumber,
     createdAt: new Date().toISOString(),
-    payload,
+    payload:{...payload,clientRequestId:payload.clientRequestId||`ord-${crypto.randomUUID()}`},
     status: 'pending',
     retryCount: 0,
   }

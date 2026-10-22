@@ -47,6 +47,7 @@ export interface OrderItem {
 export interface OrderRecord {
   id: string
   ticketNumber: number
+  closureId?: string | null
   items: OrderItem[]
   subtotal?: number
   discount?: number

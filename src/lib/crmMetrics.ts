@@ -1,5 +1,5 @@
 export const phoneDigits=(v:string)=>String(v||'').replace(/\D/g,'')
-export const validOrders=(orders:any[])=>orders.filter(o=>!/(cancel|rejeit|estorn)/i.test(o.status||''))
+export const validOrders=(orders:any[])=>orders.filter(o=>!/(cancel|rejeit|recus|estorn)/i.test(o.status||''))
 export function customerMetrics(customer:any,orders:any[],days=30,vip=500,now=Date.now()) {
  const history=validOrders(orders).filter(o=>phoneDigits(o.customerPhone)===phoneDigits(customer.phone)&&phoneDigits(customer.phone))
  const total=history.reduce((n,o)=>n+Number(o.total||0),0)
@@ -10,6 +10,6 @@ export function customerMetrics(customer:any,orders:any[],days=30,vip=500,now=Da
 }
 export function csvCell(value:unknown) {
  let s=String(value??'')
- if(/^[=+@\-]/.test(s))s="'"+s
+ if(/^[=+@-]/.test(s))s="'"+s
  return '"'+s.replace(/"/g,'""')+'"'
 }
