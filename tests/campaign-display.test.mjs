@@ -54,3 +54,29 @@ test('opening campaign honors the saved selection without publishing inactive, s
   assert.equal(select([first], 'deleted', now).id, 'first')
   assert.equal(select([], 'primary', now), null)
 })
+
+const schedule = (overrides = {}) => ({mode:'weekly', weekdays:[2,3], dates:[], allDay:true, startTime:'18:00', endTime:'23:00', ...overrides})
+const live = (schedule, time, extra = {}) => isCampaignLive({active:true,schedule,...extra}, Date.parse(time))
+test('weekly recurrence follows Brasília dates and automatically returns next week', () => {
+  for (const [time, expected] of [['2026-10-20T02:59:59Z',false],['2026-10-20T03:00:00Z',true],['2026-10-22T02:59:59Z',true],['2026-10-22T03:00:00Z',false],['2026-10-27T03:00:00Z',true]]) {
+    assert.equal(live(schedule(),time),expected,time)
+  }
+  assert.equal(live(schedule(),'2026-10-27T03:00:00Z',{active:false}),false)
+  assert.equal(live(schedule(),'2026-10-27T03:00:00Z',{endDate:'2026-10-26T23:00:00Z'}),false)
+})
+test('time windows include start, exclude end, and overnight belongs to the starting day', () => {
+  const evening = schedule({weekdays:[2],allDay:false,endTime:'02:00'})
+  for (const [time, expected] of [['2026-10-20T20:59:59Z',false],['2026-10-20T21:00:00Z',true],['2026-10-21T04:59:59Z',true],['2026-10-21T05:00:00Z',false],['2026-10-21T21:00:00Z',false]]) assert.equal(live(evening,time),expected,time)
+  assert.equal(live(schedule({allDay:false}),'2026-10-21T02:00:00Z'),false)
+})
+test('specific dates repeat only on selected dates including overnight continuation', () => {
+  const dates = schedule({mode:'dates',dates:['2026-10-20','2026-10-27'],allDay:false,endTime:'02:00'})
+  assert.equal(live(dates,'2026-10-21T04:30:00Z'),true)
+  assert.equal(live(dates,'2026-10-22T04:30:00Z'),false)
+  assert.equal(live(dates,'2026-10-28T04:30:00Z'),true)
+})
+test('invalid scheduling fails closed', () => {
+  for (const invalid of [schedule({weekdays:[]}),schedule({weekdays:[7]}),schedule({mode:'dates',dates:['2026-02-30']}),schedule({allDay:false,startTime:'25:00'}),schedule({allDay:false,startTime:'23:00'}),schedule({mode:'invalid'})]) {
+    assert.equal(live(invalid,'2026-10-20T21:00:00Z'),false)
+  }
+})

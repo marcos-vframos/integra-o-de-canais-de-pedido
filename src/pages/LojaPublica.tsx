@@ -35,7 +35,7 @@ import { fmtBRL, padTicket, seedMenu, seedStock } from '@/lib/seeds'
 import { CustomizeModal } from '@/components/CustomizeModal'
 import { DeliveryMapPicker } from '@/components/DeliveryMapPicker'
 import StorePromotionCarousel from '@/components/StorePromotionCarousel'
-import { activeOffer, type PromotionalCampaign, type CampaignOffer } from '@/lib/campaignOffer'
+import { eligibleProductIds, activeOffer, type PromotionalCampaign, type CampaignOffer } from '@/lib/campaignOffer'
 import {
   CustomerAuthDrawer,
   CustomerProfile,
@@ -460,7 +460,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       try {
         if (campaignId) promo = await pb.collection('seasonal_campaigns').getOne<PromotionalCampaign>(campaignId)
       } catch { /* Missing or newly deactivated campaigns must never authorize an offer. */ }
-      if (!promo || !activeOffer(promo) || !promo.offer || !itemId || promo.offer.productId !== itemId) {
+      if (!promo || !activeOffer(promo) || !promo.offer || !itemId || !eligibleProductIds(promo.offer).includes(itemId)) {
         setErrorMsg('Oferta indisponível ou encerrada. Atualize a página para verificar as ofertas.')
         setCartOpen(true); return
       }
@@ -699,7 +699,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     setSubmitting(true)
 
     // Formatar itens para backend com indicação da cortesia gourmet
-    const expiredPromotion = cart.some(l => l.promotionId && !availableOffers.some(p => p.id===l.promotionId && activeOffer(p) && p.offer?.productId===l.itemId))
+    const expiredPromotion = cart.some(l => l.promotionId && !availableOffers.some(p => p.id===l.promotionId && activeOffer(p) && eligibleProductIds(p.offer).includes(l.itemId)))
     if (expiredPromotion) { setSubmitting(false); setErrorMsg('Uma oferta expirou. Remova o item promocional e atualize o carrinho.'); return }
     const items = cart.map((l) => {
       const item = menuById(l.itemId)
@@ -964,7 +964,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
           )}
         </div>
 
-        <StorePromotionCarousel />
+        {!embedded && <StorePromotionCarousel />}
 
         {/* Categorias (Pills horizontais) */}
         <div className="flex flex-wrap items-center gap-2 pb-2 mb-5">

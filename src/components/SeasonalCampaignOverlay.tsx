@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { X, ArrowUpRight } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
-import { notifyOffer, type CampaignOffer } from '@/lib/campaignOffer'
+import { eligibleProductIds, type CampaignOffer } from '@/lib/campaignOffer'
 import { loadPrimaryCampaign } from '@/lib/primaryCampaign'
-import { selectOpeningCampaign } from '@/lib/campaignDisplay'
+import { isCampaignLive, type CampaignSchedule, selectOpeningCampaign } from '@/lib/campaignDisplay'
 import useRealtime from '@/hooks/use-realtime'
 import type { LandingThemeColors } from '@/context/LandingContentContext'
 
@@ -21,6 +21,7 @@ interface SeasonalCampaign {
   palette?: Partial<LandingThemeColors>
   images?: string[]
   media?: string
+  schedule?: CampaignSchedule
   offer?: CampaignOffer
 }
 
@@ -49,6 +50,9 @@ export default function SeasonalCampaignOverlay() {
     const timer = setInterval(() => setNow(Date.now()), 15000)
     return () => clearInterval(timer)
   }, [])
+  useEffect(() => {
+    if (dismissedId && !campaigns.some(c => c.id === dismissedId && isCampaignLive(c, now))) setDismissedId(null)
+  }, [campaigns, dismissedId, now])
   const active = selectOpeningCampaign(campaigns, primaryId, now)
 
   // Promoções podem trocar texto/imagens, mas NUNCA a paleta global da Landing.
@@ -76,9 +80,9 @@ export default function SeasonalCampaignOverlay() {
             <h2 className="font-heading text-4xl font-extrabold leading-tight text-white sm:text-5xl">{active.title}</h2>
             {active.description && <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--landing-silver)]">{active.description}</p>}
             <div className="mt-8">
-              {active.offer?.productId ? (
-                <button type="button" onClick={() => {notifyOffer(active); setDismissedId(active.id)}} className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-vinho)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--landing-vinho-hover)]">
-                  {active.ctaText || 'Adicionar oferta ao carrinho'} <ArrowUpRight className="h-4 w-4" />
+              {eligibleProductIds(active.offer).length > 0 ? (
+                <button type="button" onClick={() => {window.dispatchEvent(new CustomEvent('loyolas:open-offer', { detail: {campaignId: active.id} })); setDismissedId(active.id)}} className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-vinho)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--landing-vinho-hover)]">
+                  {active.ctaText || 'Aproveitar oferta'} <ArrowUpRight className="h-4 w-4" />
                 </button>
               ) : internal ? (
                 <Link to={cta} onClick={(event) => { setDismissedId(active.id); if (cta.startsWith('#')) { event.preventDefault(); document.getElementById(cta.slice(1))?.scrollIntoView({behavior:'smooth',block:'start'}) } }} className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-vinho)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--landing-vinho-hover)]">

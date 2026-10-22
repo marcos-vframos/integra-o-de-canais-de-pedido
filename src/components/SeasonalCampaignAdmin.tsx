@@ -10,9 +10,10 @@ import { OCCASION_PALETTES } from '@/lib/occasionPalettes'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { loadPrimaryCampaign, savePrimaryCampaign } from '@/lib/primaryCampaign'
-import { isCampaignLive } from '@/lib/campaignDisplay'
+import { defaultCampaignSchedule, scheduleError, campaignScheduleLabel, type CampaignSchedule, isCampaignLive } from '@/lib/campaignDisplay'
 
-type CampaignOffer = { productId: string; unitPrice?: number; included: { ingredientId: string; qty: number }[] }
+import { eligibleProductIds, type CampaignOffer } from '@/lib/campaignOffer'
+import CampaignScheduleFields from '@/components/CampaignScheduleFields'
 interface CampaignRow {
   id: string
   title: string
@@ -26,6 +27,7 @@ interface CampaignRow {
   palette?: Partial<LandingThemeColors>
   images?: string[]
   media?: string
+  schedule?: CampaignSchedule
   offer?: CampaignOffer
   created?: string
 }
@@ -42,22 +44,25 @@ interface CampaignDraft {
   imageUrl: string
   palette: LandingThemeColors
   existingMedia?: string
+  schedule: CampaignSchedule
   offer: CampaignOffer
 }
 const emptyDraft = (): CampaignDraft => ({
   title: '', badge: '', description: '', active: false, startDate: '', endDate: '',
   ctaText: 'Ver oferta', ctaUrl: '#fazer-pedido', imageUrl: '',
   palette: { ...DEFAULT_THEME_COLORS },
-  offer: { productId: '', included: [] },
+  schedule: defaultCampaignSchedule(),
+  offer: { productId: '', productIds: [], included: [] },
 })
 const toInputDate = (value?: string) => {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return local.toISOString().slice(0, 16)
+  const parts = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date)
+  const part = (key: string) => parts.find(p => p.type === key)!.value
+  return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`
 }
-const toPocketBaseDate = (value: string) => value ? new Date(value).toISOString().replace('T',' ') : ''
+const toPocketBaseDate = (value: string) => value ? new Date(value + '-03:00').toISOString().replace('T',' ') : ''
 const fields: { key: keyof LandingThemeColors; label: string; role: string }[] = [
   {key:'bgPrimary', label:'Fundo principal',role:'Overlay e fundo de destaque'},
   {key:'bgSecondary',label:'Fundo secundário',role:'Painel da campanha'},
@@ -138,7 +143,8 @@ export default function SeasonalCampaignAdmin() {
       imageUrl: Array.isArray(row.images) ? row.images[0] || '' : '',
       existingMedia: row.media ? pb.files.getURL(row, row.media) : '',
       palette: { ...DEFAULT_THEME_COLORS, ...(row.palette || {}) },
-      offer: { productId: row.offer?.productId || '', unitPrice: row.offer?.unitPrice, included: Array.isArray(row.offer?.included) ? row.offer.included : [] },
+      schedule: row.schedule || defaultCampaignSchedule(),
+      offer: { productIds: eligibleProductIds(row.offer), productId: row.offer?.productId || '', unitPrice: row.offer?.unitPrice, included: Array.isArray(row.offer?.included) ? row.offer.included : [] },
     })
     setMediaFile(null); setError(''); setSuccess(''); setFieldErrors({})
   }
@@ -194,6 +200,9 @@ export default function SeasonalCampaignAdmin() {
       setError('Campanha não salva. Para publicar dados reais, entre com uma conta de operador autorizada no Supabase. Você poderá retornar aqui com os dados preenchidos.')
       return
     }
+    const timingError = scheduleError(draft.schedule)
+    if (timingError) { setError(timingError); return }
+    if (eligibleProductIds(draft.offer).some(id => !products.some(p => p.id === id))) { setError('Há produtos indisponíveis na seleção. Revise a oferta.'); return }
     if (draft.offer.productId) {
       const product = products.find(p => p.id === draft.offer.productId)
       if (!product) { setError('Escolha um produto válido na lista de ofertas.'); return }
@@ -216,6 +225,7 @@ export default function SeasonalCampaignAdmin() {
       payload.append('ctaText', draft.ctaText.trim() || 'Ver oferta')
       payload.append('ctaUrl', draft.ctaUrl.trim() || '#fazer-pedido')
       payload.append('palette', JSON.stringify(draft.palette))
+      payload.append('schedule', JSON.stringify(draft.schedule))
       payload.append('offer', JSON.stringify(draft.offer.productId ? draft.offer : {}))
       payload.append('images', JSON.stringify(draft.imageUrl.trim() ? [draft.imageUrl.trim()] : []))
       if (mediaFile) payload.append('media', mediaFile)
@@ -305,8 +315,8 @@ export default function SeasonalCampaignAdmin() {
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-xs text-zinc-300">Título da campanha<input value={draft.title} onChange={e=>update('title',e.target.value)} placeholder="Ex.: Halloween do Loyola's" className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
         <label className="text-xs text-zinc-300">Selo<input value={draft.badge} onChange={e=>update('badge',e.target.value)} placeholder="Halloween 2026" className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
-        <label className="text-xs text-zinc-300">Início<input type="datetime-local" value={draft.startDate} onChange={e=>update('startDate',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
-        <label className="text-xs text-zinc-300">Fim<input type="datetime-local" value={draft.endDate} onChange={e=>update('endDate',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
+        <label className="text-xs text-zinc-300">Início da validade (Brasília)<input type="datetime-local" value={draft.startDate} onChange={e=>update('startDate',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
+        <label className="text-xs text-zinc-300">Fim da validade (Brasília)<input type="datetime-local" value={draft.endDate} onChange={e=>update('endDate',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
         <label className="text-xs text-zinc-300">Texto do botão<input value={draft.ctaText} onChange={e=>update('ctaText',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
         <label className="text-xs text-zinc-300">Destino do botão (URL ou #fazer-pedido)<input value={draft.ctaUrl} onChange={e=>update('ctaUrl',e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
         <label className="text-xs text-zinc-300 md:col-span-2">Endereço de imagem/vídeo (opcional)<input value={draft.imageUrl} onChange={e=>update('imageUrl',e.target.value)} placeholder="https://..." className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
@@ -321,18 +331,23 @@ export default function SeasonalCampaignAdmin() {
         <label className="md:col-span-2 text-xs text-zinc-300">Descrição<textarea value={draft.description} onChange={e=>update('description',e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white"/></label>
       </div>
       <div className="space-y-3 rounded-xl border border-amber-500/20 bg-zinc-950/70 p-4">
+        <CampaignScheduleFields value={draft.schedule} onChange={value => update('schedule', value)} />
         <h3 className="text-sm font-bold text-white">Oferta vinculada ao carrinho</h3>
         <p className="text-xs text-zinc-400">Configure o produto anunciado e os ingredientes oferecidos sem custo. O checkout confirma preço e cortesia diretamente no banco.</p>
-        <label className="block text-xs text-zinc-200">Produto da oferta
-          <select value={draft.offer.productId} onChange={e => update('offer',{productId:e.target.value,included:[]})} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white">
-            <option value="">Somente campanha institucional (sem produto)</option>
-            {products.map(p=><option key={p.id} value={p.id}>{p.name} — R$ {Number(p.price).toFixed(2)}</option>)}
-          </select>
-        </label>
+        <p className="text-xs text-zinc-300">Produtos participantes ({eligibleProductIds(draft.offer).length}). Sem seleção, o anúncio é institucional. Cada unidade escolhida recebe a cortesia abaixo.</p>
+        <div className="grid max-h-72 grid-cols-1 gap-2 overflow-y-auto rounded-lg border border-white/10 p-3 sm:grid-cols-2">
+          {products.map(p => <label key={p.id} className="flex items-center gap-2 text-xs text-zinc-200">
+            <input type="checkbox" checked={eligibleProductIds(draft.offer).includes(p.id)} onChange={e => {
+              const ids = e.target.checked ? [...eligibleProductIds(draft.offer), p.id] : eligibleProductIds(draft.offer).filter(id => id !== p.id)
+              update('offer', {...draft.offer, productIds: ids, productId: ids[0] || '', unitPrice: undefined})
+            }} />
+            <span>{p.name} — R$ {Number(p.price).toFixed(2)}</span>
+          </label>)}
+        </div>
         {draft.offer.productId && <>
-          <label className="block text-xs text-zinc-200">Preço anunciado por unidade (R$)
+          {eligibleProductIds(draft.offer).length === 1 ? <label className="block text-xs text-zinc-200">Preço anunciado por unidade (R$)
             <input type="number" min="0" step="0.01" value={draft.offer.unitPrice ?? products.find(p=>p.id===draft.offer.productId)?.price ?? ''} onChange={e=>update('offer',{...draft.offer,unitPrice:e.target.value===''?undefined:Number(e.target.value)})} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white"/>
-          </label>
+          </label> : <p className="text-xs text-zinc-300">Cada produto mantém seu preço normal. As cortesias não acrescentam valor.</p>}
           <div className="space-y-2">
             <div className="text-xs font-semibold text-zinc-200">Adicionais incluídos no anúncio — sem custo</div>
             {draft.offer.included.map((entry,idx)=><div key={idx} className="flex flex-wrap items-center gap-2">
@@ -378,13 +393,14 @@ export default function SeasonalCampaignAdmin() {
         <h3 className="text-xs font-bold uppercase text-zinc-300">Campanhas cadastradas {loading ? '— carregando' : '('+items.length+')'}</h3>
         {items.length > 0 && <div className="mt-3 grid gap-3 md:grid-cols-2">{items.map(row => {
           const live = isCampaignLive(row)
-          const scheduled = !!row.active && !!row.startDate && new Date(row.startDate).getTime() > Date.now()
-          const status = !row.active ? 'Inativa' : live ? 'Ativa na Landing' : scheduled ? 'Agendada' : 'Período encerrado'
+          const scheduled = !!row.active && !live && (!row.endDate || Date.parse(row.endDate) >= Date.now())
+          const status = !row.active ? 'Inativa' : live ? 'Ativa na Landing' : scheduled ? 'Aguardando próxima exibição' : 'Período encerrado'
           return <article key={row.id} aria-label={'Campanha ' + row.title} className="rounded-xl border border-white/10 bg-zinc-900 p-3">
             <div className="flex items-start justify-between gap-2">
               <button type="button" onClick={() => edit(row)} className="min-w-0 flex-1 text-left">
                 <span className="block break-words text-sm font-bold text-white">{row.title}</span>
                 <span className={'mt-1 block text-[11px] ' + (live ? 'text-emerald-300' : 'text-zinc-400')}>{status} • {row.startDate ? new Date(row.startDate).toLocaleDateString('pt-BR') : 'Sem início'} a {row.endDate ? new Date(row.endDate).toLocaleDateString('pt-BR') : 'sem fim'}</span>
+                <span className="mt-1 block text-xs text-zinc-400">{campaignScheduleLabel(row.schedule)}</span>
                 <span className="mt-2 flex items-center gap-1 text-xs text-emerald-400"><Pencil size={12}/> Editar campanha e cores</span>
               </button>
               <button type="button" disabled={!!togglingId || saving} aria-label={'Excluir campanha ' + row.title} onClick={() => void remove(row.id)} className="p-1 text-zinc-400 hover:text-red-400 disabled:opacity-40"><Trash2 size={16}/></button>
@@ -402,7 +418,7 @@ export default function SeasonalCampaignAdmin() {
               <Star size={13} fill={primaryId === row.id ? 'currentColor' : 'none'} />
               {primaryId === row.id ? 'Promoção principal' : 'Definir como principal'}
             </button>
-            {scheduled && <p className="mt-2 text-[11px] text-amber-200">Aparecerá na Landing no início do período. Para exibir agora, altere a data de início.</p>}
+            {scheduled && <p className="mt-2 text-[11px] text-amber-200">Será exibida automaticamente nos dias e horários programados, dentro do período de validade.</p>}
           </article>
         })}</div>}
       </div>

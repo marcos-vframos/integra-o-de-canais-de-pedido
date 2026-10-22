@@ -1,6 +1,8 @@
-/** One campaign announces one canonical item. Customer selections never authorize free extras. */
+import { isCampaignLive, type CampaignSchedule } from '@/lib/campaignDisplay'
+/** Eligibility, price and gifts are revalidated by the checkout against saved campaign data. */
 export interface CampaignOffer {
   productId: string
+  productIds?: string[]
   unitPrice?: number
   included: Array<{ ingredientId: string; qty: number }>
 }
@@ -10,17 +12,18 @@ export interface PromotionalCampaign {
   active?: boolean
   startDate?: string
   endDate?: string
+  schedule?: CampaignSchedule
   offer?: CampaignOffer
 }
 export function activeOffer(campaign: PromotionalCampaign): boolean {
-  const now=Date.now()
-  const start=campaign.startDate ? new Date(campaign.startDate).getTime():-Infinity
-  const end=campaign.endDate ? new Date(campaign.endDate).getTime():Infinity
-  return !!campaign.active && now >= start && now <= end && !!campaign.offer?.productId
+  return isCampaignLive(campaign) && eligibleProductIds(campaign.offer).length > 0
 }
-export function notifyOffer(campaign: PromotionalCampaign): void {
-  if (!activeOffer(campaign)) return
+export function eligibleProductIds(offer?: CampaignOffer): string[] {
+  return [...new Set((Array.isArray(offer?.productIds) ? offer.productIds : [offer?.productId]).filter((id): id is string => typeof id === 'string' && !!id))]
+}
+export function notifyOffer(campaign: PromotionalCampaign, itemId = eligibleProductIds(campaign.offer)[0]): void {
+  if (!activeOffer(campaign) || !eligibleProductIds(campaign.offer).includes(itemId)) return
   window.dispatchEvent(new CustomEvent('loyolas:select-offer', {
-    detail: { campaignId: campaign.id, itemId: campaign.offer!.productId },
+    detail: { campaignId: campaign.id, itemId },
   }))
 }
