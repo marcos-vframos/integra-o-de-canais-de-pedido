@@ -411,7 +411,7 @@ const pb={
     if(path==='/backend/v1/vouchers/lookup') opts={...opts,body:{...opts.body as object,action:'lookupVoucher'}}
     if(path==='/backend/v1/orders/assign-courier'){
       const body=opts.body as any
-      return storeOperation('assign_courier',String(body?.orderId||''),{motoboyId:body?.motoboyId||null,expectedMotoboyId:body?.expectedMotoboyId||null}) as Promise<T>
+      return toRow('orders',await storeOperation('assign_courier',String(body?.orderId||''),{motoboyId:body?.motoboyId||null,expectedMotoboyId:body?.expectedMotoboyId||null})) as T
     }
     if(path==='/backend/v1/orders/reject'||path==='/backend/v1/orders/delete'){
       return storeOperation('cancel_order',String((opts.body as any)?.orderId||''),{reason:path.endsWith('/reject')?'recusado pelo operador':'cancelado pelo operador'}) as Promise<T>

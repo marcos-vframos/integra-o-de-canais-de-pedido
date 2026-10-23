@@ -16,7 +16,7 @@ export function businessDay(value: string | Date = new Date()): string {
 export const deliveryTimestamp = (order: OrderRecord) =>
   order.motoboyAssignedAt || order.created || ''
 export const isDelivery = (order: OrderRecord) =>
-  order.deliveryType === 'entrega' && !/(recus|cancel|rejeit|estorn)/i.test(order.status || '')
+  order.deliveryType === 'entrega' && /^(pronto|concluído|concluido|finalizado|entregue|despachado)$/i.test(order.status || '')
 export const belongsToCourier = (order: OrderRecord, courier: CourierReference) =>
   order.motoboyId
     ? order.motoboyId === courier.id

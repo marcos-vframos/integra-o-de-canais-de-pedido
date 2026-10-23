@@ -263,8 +263,17 @@ test('courier reassignment sends explicit nulls and the expected previous ID to 
  })
  const r=await a.pb.send('/backend/v1/orders/assign-courier',{body:{orderId:'order',motoboyId:null,expectedMotoboyId:'old-courier'}})
  assert.equal(r.motoboy_id,null);assert.equal(r.motoboy_name,null)
+ assert.equal(r.motoboyId,null);assert.equal(r.motoboyName,null)
 })
 test('courier daily-rate alias persists without overwriting legacy per-delivery settings',async()=>{
  const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(_url,opts)=>{const data=JSON.parse(opts.body);assert.equal(data.daily_rate,40);assert.equal('fee_per_delivery' in data,false);return json([{id:'courier',daily_rate:40}])})
  const saved=await a.pb.collection('motoboys').update('courier',{dailyRate:40});assert.equal(saved.dailyRate,40)
+})
+test('dispatch response immediately exposes the confirmed courier, reporting date and actual freight',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(_url,opts)=>{
+  const p=JSON.parse(opts.body);assert.equal(p.p_action,'order_status');assert.equal(p.p_payload.status,'pronto');assert.equal(p.p_payload.motoboyId,'courier');
+  return json({id:'sale',status:'pronto',delivery_type:'entrega',motoboy_id:'courier',motoboy_name:'Courier',motoboy_assigned_at:'2026-10-23T12:00:00Z',created_at:'2026-10-01T12:00:00Z',delivery_fee:7,total:87})
+ })
+ const saved=await a.pb.collection('orders').update('sale',{status:'pronto',motoboyId:'courier'})
+ assert.equal(saved.motoboyId,'courier');assert.equal(saved.motoboyAssignedAt,'2026-10-23T12:00:00Z');assert.equal(saved.created,'2026-10-01T12:00:00Z');assert.equal(saved.deliveryFee,7);assert.equal(saved.total,87)
 })

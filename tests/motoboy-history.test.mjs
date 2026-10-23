@@ -41,3 +41,13 @@ test('recorded dispatch time drives the period; legacy orders retain their origi
  assert.equal(filterDeliveryHistory([row],'month','2026-09-01',courier).length,0)
  assert.equal(deliveryTimestamp({...row,motoboyAssignedAt:null}),row.created)
 })
+test('only dispatched deliveries count; reopening removes them until redispatch and completion never duplicates',()=>{
+ const yesterday=order('sale','2026-10-01T12:00Z',7,{motoboyAssignedAt:'2026-10-22T12:00Z'})
+ const reopened={...yesterday,status:'aceito'}
+ assert.equal(filterDeliveryHistory([reopened],'all','2026-10-23',courier).length,0)
+ const dispatched={...reopened,status:'pronto',motoboyAssignedAt:'2026-10-23T12:00Z'}
+ assert.equal(filterDeliveryHistory([dispatched],'day','2026-10-23',courier).length,1)
+ assert.equal(totalDeliveryFees(filterDeliveryHistory([dispatched],'day','2026-10-23',courier)),7)
+ assert.equal(filterDeliveryHistory([{...dispatched,status:'concluído'}],'day','2026-10-23',courier).length,1)
+ assert.equal(filterDeliveryHistory([{...dispatched,status:'pendente'}],'all','2026-10-23',courier).length,0)
+})

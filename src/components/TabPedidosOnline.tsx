@@ -29,7 +29,7 @@ export interface MotoboySimple {
 interface TabPedidosOnlineProps {
   orders: OrderRecord[]
   onPrintOrderTicket: (order: OrderRecord) => void
-  onOrderUpdated?: () => void
+  onOrderUpdated?: (confirmedOrder?: OrderRecord) => void
 }
 
 type OnlineFilterStatus = 'todos' | 'pendente' | 'aceito' | 'pronto' | 'concluído' | 'recusado'
@@ -107,14 +107,14 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
     setIsProcessing(orderId)
     try {
       const payload: Record<string, any> = { status: newStatus, ...extraFields }
-      await pb.collection('orders').update(orderId, payload)
+      const confirmed = await pb.collection('orders').update<OrderRecord>(orderId, payload)
+      onOrderUpdated?.(confirmed)
       toast({
         title: 'Status atualizado',
         description: `Pedido #${padTicket(
           orders.find((o) => o.id === orderId)?.ticketNumber || 0,
         )} alterado para "${newStatus}".`,
       })
-      if (onOrderUpdated) onOrderUpdated()
       return true
     } catch (err: any) {
       console.error('Erro ao atualizar status do pedido:', err)
@@ -153,7 +153,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
     if (!motoboyModalOrder) return
     setIsProcessing(motoboyModalOrder.id)
     try {
-      await pb.send('/backend/v1/orders/assign-courier', {
+      const confirmed = await pb.send<OrderRecord>('/backend/v1/orders/assign-courier', {
         body: {
           orderId: motoboyModalOrder.id,
           motoboyId,
@@ -166,7 +166,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
           'Vínculo salvo e registrado no histórico. O valor do pedido e o estoque foram preservados.',
       })
       setMotoboyModalOrder(null)
-      onOrderUpdated?.()
+      onOrderUpdated?.(confirmed)
     } catch (error: any) {
       toast({
         title: 'Não foi possível alterar o motoboy',
@@ -184,6 +184,10 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
       return
     }
     const mb = motoboys.find((m) => m.id === selectedMotoboyId)
+    if (!mb) {
+      toast({ title: 'Selecione um motoboy ativo para contabilizar o despacho.', variant: 'destructive' })
+      return
+    }
     const saved = await handleUpdateStatus(motoboyModalOrder.id, 'pronto', {
       motoboyId: mb?.id || '',
       motoboyName: mb?.name || '',
@@ -800,7 +804,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                 className="sc-btn-primary !bg-purple-600 hover:!bg-purple-500 flex items-center gap-1.5"
                 disabled={
                   isProcessing === motoboyModalOrder.id ||
-                  (!assignmentOnly && motoboys.length > 0 && !selectedMotoboyId)
+                  (!assignmentOnly && !motoboys.some((m) => m.id === selectedMotoboyId))
                 }
                 onClick={handleConfirmMotoboyDispatch}
               >

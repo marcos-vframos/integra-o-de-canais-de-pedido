@@ -1308,7 +1308,11 @@ export default function Gestao() {
           <TabPedidosOnline
             orders={orders}
             onPrintOrderTicket={printOrderTicket}
-            onOrderUpdated={() => {
+            onOrderUpdated={(confirmedOrder) => {
+              if (confirmedOrder) {
+                setOrders((previous) => previous.map((order) => order.id === confirmedOrder.id ? confirmedOrder : order))
+                return
+              }
               pb.collection('orders')
                 .getFullList<OrderRecord>({ sort: '-ticketNumber' })
                 .then(setOrders)

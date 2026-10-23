@@ -40,6 +40,19 @@ begin
  denied:=false;begin update public.motoboys set daily_rate=-1 where id=b;exception when check_violation then denied:=true;end;
  assert denied,'Negative daily rate rejected';
  assert (select daily_rate from public.motoboys where id=b)=50,'Daily rate independent of delivery count and reassignment';
+ -- Reopening an old order and dispatching it today must use today's dispatch, not the original date.
+ update public.orders set status='aceito',motoboy_assigned_at=clock_timestamp()-interval '1 day' where id=sale;
+ denied:=false;begin perform public.manage_store_operation(t,'order_status',sale,jsonb_build_object('status','pronto'));exception when others then if sqlerrm not like '%motoboy ativo%' then raise;end if;denied:=true;end;
+ assert denied,'Delivery cannot be dispatched without a courier';
+ result:=public.manage_store_operation(t,'order_status',sale,jsonb_build_object('status','pronto','motoboyId',b));
+ dispatched:=(result->>'motoboy_assigned_at')::timestamptz;
+ assert dispatched>clock_timestamp()-interval '1 minute','Redispatch replaces the stale reporting date';
+ assert result->>'motoboy_id'=b::text and (result->>'delivery_fee')::numeric=7,'Dispatch accounts to selected courier with exact freight';
+ result:=public.manage_store_operation(t,'order_status',sale,jsonb_build_object('status','pronto','motoboyId',b));
+ assert (result->>'motoboy_assigned_at')::timestamptz=dispatched,'Repeated dispatch confirmation does not change reporting time';
+ result:=public.manage_store_operation(t,'order_status',sale,jsonb_build_object('status','concluído'));
+ assert (result->>'motoboy_assigned_at')::timestamptz=dispatched and result->>'motoboy_id'=b::text,'Completion retains courier accounting';
+ assert (result->>'total')::numeric=87 and (select qty from public.inventory where id=stock)=10,'Dispatch and completion preserve finances and stock';
 end $$;
 rollback;
 select 'courier assignment, replacement, removal, concurrency, isolation, rates and stock assertions passed; fixtures rolled back' as result;
