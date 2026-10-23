@@ -255,3 +255,16 @@ test('password recovery uses only the verified recovery bearer token and clears 
  await a.pb.collection('users').confirmPasswordReset('','new-password','new-password')
  assert.equal(cleaned,true);assert.equal(a.pb.authStore.hasSession,false)
 })
+
+test('courier reassignment sends explicit nulls and the expected previous ID to the authorized RPC',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(url,opts)=>{
+  assert.ok(url.includes('/rpc/manage_store_operation'))
+  const p=JSON.parse(opts.body);assert.equal(p.p_action,'assign_courier');assert.equal(p.p_id,'order');assert.equal(p.p_payload.motoboyId,null);assert.equal(p.p_payload.expectedMotoboyId,'old-courier');return json({id:'order',motoboy_id:null,motoboy_name:null})
+ })
+ const r=await a.pb.send('/backend/v1/orders/assign-courier',{body:{orderId:'order',motoboyId:null,expectedMotoboyId:'old-courier'}})
+ assert.equal(r.motoboy_id,null);assert.equal(r.motoboy_name,null)
+})
+test('courier daily-rate alias persists without overwriting legacy per-delivery settings',async()=>{
+ const a=adapter({...expired(),expires_at:Date.now()/1000+3600},async(_url,opts)=>{const data=JSON.parse(opts.body);assert.equal(data.daily_rate,40);assert.equal('fee_per_delivery' in data,false);return json([{id:'courier',daily_rate:40}])})
+ const saved=await a.pb.collection('motoboys').update('courier',{dailyRate:40});assert.equal(saved.dailyRate,40)
+})

@@ -44,6 +44,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
   const [rejectModalOrder, setRejectModalOrder] = useState<OrderRecord | null>(null)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const [motoboyModalOrder, setMotoboyModalOrder] = useState<OrderRecord | null>(null)
+  const [assignmentOnly, setAssignmentOnly] = useState(false)
   const [motoboys, setMotoboys] = useState<MotoboySimple[]>([])
   const [selectedMotoboyId, setSelectedMotoboyId] = useState<string>('')
 
@@ -55,7 +56,6 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
         sort: 'name',
       })
       setMotoboys(list)
-      if(list.length)setSelectedMotoboyId(previous=>previous||list[0].id)
     } catch (e) {
       console.warn('Erro ao carregar motoboys ativos:', e)
     }
@@ -115,6 +115,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
         )} alterado para "${newStatus}".`,
       })
       if (onOrderUpdated) onOrderUpdated()
+      return true
     } catch (err: any) {
       console.error('Erro ao atualizar status do pedido:', err)
       toast({
@@ -122,6 +123,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
         description: err?.message || 'Tente novamente.',
         variant: 'destructive',
       })
+      return false
     } finally {
       setIsProcessing(null)
     }
@@ -131,25 +133,62 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
   const handleTriggerPronto = (order: OrderRecord) => {
     if (order.deliveryType === 'entrega') {
       // Exibir modal seletor de motoboy
+      setAssignmentOnly(false)
+      setSelectedMotoboyId(order.motoboyId || motoboys[0]?.id || '')
       setMotoboyModalOrder(order)
-      if (motoboys.length > 0) {
-        setSelectedMotoboyId(order.motoboyId || motoboys[0].id)
-      }
+      void loadActiveMotoboys()
     } else {
       // Retirada no balcão: pronto direto
       handleUpdateStatus(order.id, 'pronto')
     }
   }
 
-  // Confirmar despacho com motoboy
+  const openAssignment = (order: OrderRecord) => {
+    setAssignmentOnly(true)
+    setSelectedMotoboyId(order.motoboyId || '')
+    setMotoboyModalOrder(order)
+    void loadActiveMotoboys()
+  }
+  const saveAssignment = async (motoboyId: string | null) => {
+    if (!motoboyModalOrder) return
+    setIsProcessing(motoboyModalOrder.id)
+    try {
+      await pb.send('/backend/v1/orders/assign-courier', {
+        body: {
+          orderId: motoboyModalOrder.id,
+          motoboyId,
+          expectedMotoboyId: motoboyModalOrder.motoboyId || null,
+        },
+      })
+      toast({
+        title: motoboyId ? 'Motoboy atualizado' : 'Motoboy removido',
+        description:
+          'Vínculo salvo e registrado no histórico. O valor do pedido e o estoque foram preservados.',
+      })
+      setMotoboyModalOrder(null)
+      onOrderUpdated?.()
+    } catch (error: any) {
+      toast({
+        title: 'Não foi possível alterar o motoboy',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsProcessing(null)
+    }
+  }
   const handleConfirmMotoboyDispatch = async () => {
     if (!motoboyModalOrder) return
+    if (assignmentOnly) {
+      await saveAssignment(selectedMotoboyId || null)
+      return
+    }
     const mb = motoboys.find((m) => m.id === selectedMotoboyId)
-    await handleUpdateStatus(motoboyModalOrder.id, 'pronto', {
+    const saved = await handleUpdateStatus(motoboyModalOrder.id, 'pronto', {
       motoboyId: mb?.id || '',
       motoboyName: mb?.name || '',
     })
-    setMotoboyModalOrder(null)
+    if (saved) setMotoboyModalOrder(null)
   }
 
   // Recusar pedido com estorno de estoque
@@ -182,7 +221,11 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
       if (onOrderUpdated) onOrderUpdated()
     } catch (err: any) {
       console.error('Erro ao recusar pedido:', err)
-      toast({title:'Erro ao recusar pedido',description:err?.message||'Tente novamente.',variant:'destructive'})
+      toast({
+        title: 'Erro ao recusar pedido',
+        description: err?.message || 'Tente novamente.',
+        variant: 'destructive',
+      })
     } finally {
       setIsProcessing(null)
     }
@@ -455,11 +498,25 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                       </a>
                     )}
 
-                    {order.motoboyName && (
-                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[11px] text-amber-300 flex items-center gap-1">
+                    {isDelivery && !isRecusado && (
+                      <button
+                        type="button"
+                        onClick={() => openAssignment(order)}
+                        disabled={isProcessing === order.id}
+                        className="flex items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-[11px] text-amber-300 hover:border-amber-500"
+                        title="Clique para remover ou substituir o motoboy"
+                        aria-label={
+                          order.motoboyName
+                            ? 'Alterar motoboy ' +
+                              order.motoboyName +
+                              ' da comanda ' +
+                              padTicket(order.ticketNumber)
+                            : 'Definir motoboy da comanda ' + padTicket(order.ticketNumber)
+                        }
+                      >
                         <Bike size={11} />
-                        <b>{order.motoboyName}</b>
-                      </span>
+                        <b>{order.motoboyName || 'Definir motoboy'}</b>
+                      </button>
                     )}
 
                     <button
@@ -501,7 +558,14 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                         </span>
                       </div>
 
-                      {it.breadChoice && <div className="text-[11px] text-zinc-300 pl-4 mt-0.5">Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}{Number(it.breadSurcharge) > 0 ? ` (+ ${fmtBRL(it.breadSurcharge)} por lanche)` : ''}</div>}
+                      {it.breadChoice && (
+                        <div className="text-[11px] text-zinc-300 pl-4 mt-0.5">
+                          Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}
+                          {Number(it.breadSurcharge) > 0
+                            ? ` (+ ${fmtBRL(it.breadSurcharge)} por lanche)`
+                            : ''}
+                        </div>
+                      )}
                       {it.removed && it.removed.length > 0 && (
                         <div className="text-[11px] text-red-400/90 pl-4 mt-0.5">
                           - Sem: {it.removed.join(', ')}
@@ -527,12 +591,15 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                     </div>
                     {order.deliveryFee ? (
                       <span className="text-[11px] text-amber-300">
-                        Taxa de entrega: {fmtBRL(order.deliveryFee)}{order.deliveryFeeRegion ? ` • ${order.deliveryFeeRegion}` : ''}
+                        Taxa de entrega: {fmtBRL(order.deliveryFee)}
+                        {order.deliveryFeeRegion ? ` • ${order.deliveryFeeRegion}` : ''}
                       </span>
                     ) : null}
                     {order.invoiceRequested && (
                       <span className="text-[11px] text-blue-300">
-                        NF solicitada{order.invoiceDocument ? ` • CPF/CNPJ: ${order.invoiceDocument}` : ''} • {order.invoiceStatus || 'pendente_emissao'}
+                        NF solicitada
+                        {order.invoiceDocument ? ` • CPF/CNPJ: ${order.invoiceDocument}` : ''} •{' '}
+                        {order.invoiceStatus || 'pendente_emissao'}
                       </span>
                     )}
                   </div>
@@ -665,37 +732,48 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
 
       {/* Modal de Seleção de Motoboy ao Marcar Delivery como Pronto */}
       {motoboyModalOrder && (
-        <div className="sc-modal-backdrop" onClick={() => setMotoboyModalOrder(null)}>
+        <div className="sc-modal-backdrop" onClick={() => { if (!isProcessing) setMotoboyModalOrder(null) }}>
           <div className="sc-modal max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="sc-modal-header">
               <div className="flex items-center gap-2 text-purple-400">
                 <Bike size={18} />
-                <span className="sc-modal-title">Despachar Entrega</span>
+                <span className="sc-modal-title">
+                  {assignmentOnly ? 'Alterar motoboy' : 'Despachar Entrega'}
+                </span>
               </div>
             </div>
 
             <div className="py-2 text-xs text-[var(--silver)] space-y-3">
               <p>
                 O pedido da comanda{' '}
-                <b className="text-white">#{padTicket(motoboyModalOrder.ticketNumber)}</b> está
-                pronto. Selecione o motoboy que fará a entrega para registro do histórico e da
-                comissão:
+                <b className="text-white">#{padTicket(motoboyModalOrder.ticketNumber)}</b>.{' '}
+                {assignmentOnly
+                  ? 'Remova o vínculo atual ou selecione outro entregador. O status, os valores da comanda e o estoque serão preservados.'
+                  : 'Selecione o motoboy responsável pelo despacho. As taxas serão registradas no histórico desse entregador.'}
               </p>
 
-              {motoboys.length === 0 ? (
+              {motoboys.length === 0 && !assignmentOnly ? (
                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
                   Nenhum motoboy ativo encontrado. Cadastre ou ative motoboys na aba "Motoboys".
                 </div>
               ) : (
                 <div className="space-y-1.5">
                   <label className="block text-[11px] font-semibold text-zinc-300">
-                    Entregador Responsável *
+                    Entregador responsável
                   </label>
                   <select
+                    aria-label="Entregador responsável pela comanda"
                     value={selectedMotoboyId}
                     onChange={(e) => setSelectedMotoboyId(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white"
                   >
+                    <option value="">Sem motoboy</option>
+                    {motoboyModalOrder.motoboyId &&
+                      !motoboys.some((m) => m.id === motoboyModalOrder.motoboyId) && (
+                        <option value={motoboyModalOrder.motoboyId}>
+                          {motoboyModalOrder.motoboyName} (atual / inativo)
+                        </option>
+                      )}
                     {motoboys.map((mb) => (
                       <option key={mb.id} value={mb.id}>
                         {mb.name} {mb.plate ? `[${mb.plate}]` : ''}
@@ -706,22 +784,39 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
               )}
             </div>
 
-            <div className="sc-form-actions pt-3">
+            <div className="sc-form-actions flex-wrap pt-3">
+              {assignmentOnly && (motoboyModalOrder.motoboyId || motoboyModalOrder.motoboyName) && (
+                <button
+                  type="button"
+                  disabled={!!isProcessing}
+                  onClick={() => void saveAssignment(null)}
+                  className="sc-btn-ghost text-red-400"
+                >
+                  Remover motoboy
+                </button>
+              )}
               <button
                 type="button"
                 className="sc-btn-primary !bg-purple-600 hover:!bg-purple-500 flex items-center gap-1.5"
                 disabled={
                   isProcessing === motoboyModalOrder.id ||
-                  (motoboys.length > 0 && !selectedMotoboyId)
+                  (!assignmentOnly && motoboys.length > 0 && !selectedMotoboyId)
                 }
                 onClick={handleConfirmMotoboyDispatch}
               >
                 <UserCheck size={14} />
-                <span>Confirmar & Marcar Pronto</span>
+                <span>
+                  {isProcessing === motoboyModalOrder.id
+                    ? 'Salvando…'
+                    : assignmentOnly
+                      ? 'Salvar vínculo'
+                      : 'Confirmar & Marcar Pronto'}
+                </span>
               </button>
               <button
                 type="button"
                 className="sc-btn-ghost"
+                disabled={!!isProcessing}
                 onClick={() => setMotoboyModalOrder(null)}
               >
                 Cancelar

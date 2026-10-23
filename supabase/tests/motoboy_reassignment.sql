@@ -1,0 +1,45 @@
+begin;
+do $$
+declare t uuid; t2 uuid; operator uuid:=gen_random_uuid(); a uuid; b uuid; other_mb uuid; sale uuid; stock uuid; result jsonb; denied boolean; dispatched timestamptz;
+begin
+ insert into auth.users(id,email) values(operator,'courier-test-'||operator||'@example.invalid');
+ insert into public.tenants(slug,display_name,status) values('courier-test-'||gen_random_uuid(),'Synthetic courier test','TRIAL') returning id into t;
+ insert into public.tenants(slug,display_name,status) values('courier-other-'||gen_random_uuid(),'Synthetic other','TRIAL') returning id into t2;
+ insert into public.tenant_memberships(tenant_id,user_id,role,active) values(t,operator,'owner',true);
+ insert into public.motoboys(tenant_id,name,daily_rate) values(t,'Synthetic A',40) returning id into a;
+ insert into public.motoboys(tenant_id,name,daily_rate) values(t,'Synthetic B',50) returning id into b;
+ insert into public.motoboys(tenant_id,name) values(t2,'Other tenant courier') returning id into other_mb;
+ insert into public.inventory(tenant_id,code,name,unit,qty,min_qty,inventory_group) values(t,'courier-test','Synthetic stock','un',10,1,'Ingrediente') returning id into stock;
+ insert into public.orders(tenant_id,ticket_number,items,total,delivery_fee,payment,status,origin,delivery_type,customer_address)
+  values(t,1,'[{"name":"Synthetic product","price":80,"qty":1,"stockDeductions":{}}]',87,7,'Pix','pronto','online','entrega','Synthetic address') returning id into sale;
+ denied:=false;begin perform public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',a,'expectedMotoboyId',null));exception when others then if sqlerrm not like '%permissão%' then raise;end if;denied:=true;end;
+ assert denied,'Anonymous reassignment rejected';
+ perform set_config('request.jwt.claim.sub',operator::text,true);
+ result:=public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',a,'expectedMotoboyId',null));
+ assert result->>'motoboy_id'=a::text and result->>'motoboy_name'='Synthetic A','Courier assigned';
+ dispatched:=(result->>'motoboy_assigned_at')::timestamptz;assert dispatched is not null,'Dispatch recorded on server';
+ result:=public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',b,'expectedMotoboyId',a));
+ assert result->>'motoboy_id'=b::text,'Courier replaced';
+ assert (result->>'motoboy_assigned_at')::timestamptz=dispatched,'Replacing courier preserves original reporting date';
+ denied:=false;begin perform public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',a,'expectedMotoboyId',a));exception when others then if sqlerrm not like '%outro terminal%' then raise;end if;denied:=true;end;
+ assert denied,'Stale terminal cannot overwrite another assignment';
+ result:=public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',null,'expectedMotoboyId',b));
+ assert result->>'motoboy_id' is null and result->>'motoboy_name' is null,'Removing clears both ID and name';
+ assert result->>'status'='pronto' and (result->>'total')::numeric=87 and (result->>'delivery_fee')::numeric=7,'Status and financial values preserved';
+ assert (select qty from public.inventory where id=stock)=10,'Assignment never changes stock';
+ denied:=false;begin perform public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',other_mb,'expectedMotoboyId',null));exception when others then if sqlerrm not like '%não encontrado%' then raise;end if;denied:=true;end;
+ assert denied,'Other-tenant courier rejected';
+ update public.motoboys set active=false where id=a;
+ denied:=false;begin perform public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',a,'expectedMotoboyId',null));exception when others then if sqlerrm not like '%inativo%' then raise;end if;denied:=true;end;
+ assert denied,'Inactive courier rejected';
+ result:=public.manage_store_operation(t,'order_status',sale,jsonb_build_object('status','concluído','motoboyId',b));
+ assert result->>'motoboy_id'=b::text and result->>'status'='concluído','Dispatch and status flow still works';
+ result:=public.manage_store_operation(t,'assign_courier',sale,jsonb_build_object('motoboyId',null,'expectedMotoboyId',b));
+ assert result->>'status'='concluído','Completed order can have assignment corrected without reopening';
+ assert (select count(*) from public.operation_audit where tenant_id=t and action='assign_courier')=4,'Assignment history records operator actions';
+ denied:=false;begin update public.motoboys set daily_rate=-1 where id=b;exception when check_violation then denied:=true;end;
+ assert denied,'Negative daily rate rejected';
+ assert (select daily_rate from public.motoboys where id=b)=50,'Daily rate independent of delivery count and reassignment';
+end $$;
+rollback;
+select 'courier assignment, replacement, removal, concurrency, isolation, rates and stock assertions passed; fixtures rolled back' as result;

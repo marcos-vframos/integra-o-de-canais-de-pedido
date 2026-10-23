@@ -63,6 +63,7 @@ export interface OrderRecord {
   deliveryType?: 'retirada' | 'entrega'
   customerAddress?: string
   motoboyId?: string
+  motoboyAssignedAt?: string | null
   motoboyName?: string
   invoiceRequested?: boolean
   invoiceDocument?: string

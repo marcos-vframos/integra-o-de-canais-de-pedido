@@ -93,12 +93,12 @@ const fieldAliases:Record<string,Record<string,string>>={
     ticketNumber:'ticket_number',closureId:'closure_id',deliveryFee:'delivery_fee',deliveryFeeRegion:'delivery_fee_region',
     customerName:'customer_name',customerPhone:'customer_phone',customerAddress:'customer_address',
     deliveryType:'delivery_type',deliveryLat:'delivery_lat',deliveryLng:'delivery_lng',
-    customerId:'customer_id',motoboyId:'motoboy_id',motoboyName:'motoboy_name',
+    customerId:'customer_id',motoboyId:'motoboy_id',motoboyName:'motoboy_name',motoboyAssignedAt:'motoboy_assigned_at',
     campaignId:'campaign_id',paymentDetails:'payment_details',clientRequestId:'idempotency_key',
     invoiceRequested:'invoice_requested',invoiceDocument:'invoice_document',invoiceStatus:'invoice_status',
   },
   customers:{crmProfile:'crm_profile',lastOrderAt:'last_order_at',totalOrders:'total_orders',totalSpent:'total_spent',favoriteItems:'favorite_items'},
-  motoboys:{feePerDelivery:'fee_per_delivery'},
+  motoboys:{feePerDelivery:'fee_per_delivery',dailyRate:'daily_rate'},
   delivery_fees:{areaGeojson:'area_geojson'},
   campaigns:{voucherCode:'voucher_code',
     customerId:'customer_id',customerPhone:'customer_phone',customerName:'customer_name',
@@ -409,6 +409,10 @@ const pb={
     }
     if(path==='/backend/v1/delivery/lookup') opts={...opts,body:{...opts.body as object,action:'lookupNeighborhoods'}}
     if(path==='/backend/v1/vouchers/lookup') opts={...opts,body:{...opts.body as object,action:'lookupVoucher'}}
+    if(path==='/backend/v1/orders/assign-courier'){
+      const body=opts.body as any
+      return storeOperation('assign_courier',String(body?.orderId||''),{motoboyId:body?.motoboyId||null,expectedMotoboyId:body?.expectedMotoboyId||null}) as Promise<T>
+    }
     if(path==='/backend/v1/orders/reject'||path==='/backend/v1/orders/delete'){
       return storeOperation('cancel_order',String((opts.body as any)?.orderId||''),{reason:path.endsWith('/reject')?'recusado pelo operador':'cancelado pelo operador'}) as Promise<T>
     }
