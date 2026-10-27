@@ -1270,6 +1270,8 @@ div:has(> a[href*='goskip.dev']) {
 .landing-scope [class*="hover:bg-[#990000]"]:hover { background-color: var(--landing-vinho-hover, #990000) !important; }
 .landing-scope [class*="hover:border-[#990000]"]:hover { border-color: var(--landing-vinho-hover, #990000) !important; }
 .landing-scope .editorial-tag { color: var(--landing-silver, #C4C4C4); }
+.landing-scope .card-premium { background-color: var(--landing-bg-card, #0D1A11); }
+.landing-scope .card-premium:hover { background-color: color-mix(in srgb, var(--landing-bg-card, #0D1A11) 90%, white); }
 
 
 /* Gestor: preserve branding width, put settings icons above stacked status indicators. */
