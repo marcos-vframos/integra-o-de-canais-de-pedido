@@ -24,3 +24,8 @@ test('a gourmet courtesy and an extra outside the recipe appear in the preview',
  assert.equal(result.find(l=>l.code==='ing-catupiry').qty,1)
  assert.equal(result.some(l=>l.code==='ing-pao'||l.code==='ing-refri-lata'),false)
 })
+test('fractional stock portions remain part of the visual composition',()=>{
+ const part={id:'mass',code:'ing-carne-gourmet',name:'Carne em kg',group:'Ingrediente',unit:'kg'}
+ const result=sandwichPreviewLayers({recipe:[{ingredientId:'mass',qty:.15}]},{},{},id=>id==='mass'?part:undefined)
+ assert.equal(result[0].qty,.15);assert.equal(result[0].unit,'kg')
+})

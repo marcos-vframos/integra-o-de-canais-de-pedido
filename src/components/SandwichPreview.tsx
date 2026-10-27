@@ -11,11 +11,12 @@ const appearances:Record<string,[string,string]>={
  'ing-ketchup':['#b93b2a','sauce'],'ing-mostarda':['#d8ad28','sauce'],'ing-brocolis':['#56813a','leaf'],'ing-linguica':['#9c6341','sausage'],
 }
 export default function SandwichPreview({layers,bread}:{layers:SandwichLayer[];bread:BreadChoice}) {
- const count=layers.reduce((s,l)=>s+l.qty,0),gap=Math.min(8,118/Math.max(1,count))
+ const pieces=(layer:SandwichLayer)=>['g','kg','ml','l'].includes(layer.unit||'')?1:Math.min(Math.ceil(layer.qty),20)
+ const count=layers.reduce((s,l)=>s+pieces(l),0),gap=Math.min(8,118/Math.max(1,count))
  const description=[previewBreadLabel(bread),...layers.map(l=>`${l.qty} × ${l.name}`)].join(', ')
- return <figure className={'sandwich-preview '+(bread==='frances'?'sandwich-french':'')} role="img" aria-label={'Composição ilustrativa: '+description} style={{'--layer-gap':gap+'px'} as CSSProperties}>
+ return <figure className={'sandwich-preview '+(bread==='frances'?'sandwich-french':'')} role="img" aria-label={'Composição ilustrativa: '+description} style={{'--layer-gap':gap+'px','--layer-count':count} as CSSProperties}>
   <div className="sandwich-bun-top" aria-hidden="true"><i/><i/><i/><i/><i/></div>
-  <div className="sandwich-layers" aria-hidden="true">{layers.flatMap(layer=>Array.from({length:Math.min(layer.qty,20)},(_,i)=>{const [color,kind]=appearances[layer.code]||['#b29773','bits'];return <span key={layer.code+'_'+i} data-ingredient={layer.code} className={'sandwich-layer layer-'+kind} style={{'--ingredient-color':color} as CSSProperties}/> }))}</div>
+  <div className="sandwich-layers" aria-hidden="true">{layers.flatMap(layer=>Array.from({length:pieces(layer)},(_,i)=>{const [color,kind]=appearances[layer.code]||['#b29773','bits'];return <span key={layer.code+'_'+i} data-ingredient={layer.code} className={'sandwich-layer layer-'+kind} style={{'--ingredient-color':color} as CSSProperties}/> }))}</div>
   <div className="sandwich-bun-base" aria-hidden="true"/>
   <figcaption>Seu lanche · composição</figcaption><span className="sr-only">{description}</span>
  </figure>
