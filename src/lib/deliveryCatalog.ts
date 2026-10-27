@@ -11,6 +11,15 @@ export const DEFAULT_DELIVERY_ORIGIN={name:"Loyola's Lanches",lat:-22.9238,lng:-
 export type DeliveryOrigin=typeof DEFAULT_DELIVERY_ORIGIN
 export const normalizeNeighborhood=(name:string)=>name.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR')
 export const validCoordinates=(lat:number,lng:number)=>Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180
+export function newDeliveryLocation(draft:{name:string;lat:string;lng:string;fee:string;zone:DeliveryZoneType},existing:{name:string}[]){
+ const name=draft.name.trim(),lat=Number(draft.lat),lng=Number(draft.lng)
+ if(name.length<2||!draft.lat.trim()||!draft.lng.trim()||!validCoordinates(lat,lng))throw Error('Informe um nome e marque um ponto válido no mapa ou preencha as coordenadas.')
+ if(existing.some(row=>normalizeNeighborhood(row.name)===normalizeNeighborhood(name)))throw Error('Este local já está cadastrado. Use a busca para editar a taxa existente.')
+ const fee=draft.fee.trim()===''?null:Number(draft.fee)
+ if(fee!==null&&(!Number.isFinite(fee)||fee<0))throw Error('Informe uma taxa válida, maior ou igual a zero, ou deixe o valor em branco.')
+ if(!(draft.zone in DELIVERY_ZONES))throw Error('Selecione uma zona válida.')
+ return {name,lat,lng,fee,description:JSON.stringify({zoneType:draft.zone,classificationStatus:'manager',neighborhood:true,fixedFee:true})}
+}
 export function distanceBand(km:number){
  const i=DISTANCE_BANDS.findIndex(b=>km<=b.max)
  if(!Number.isFinite(km)||km<0)return {label:'Trajeto não calculado',color:'#71717a'}

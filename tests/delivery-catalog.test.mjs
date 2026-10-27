@@ -45,3 +45,18 @@ test('editing zone preserves legacy polygons and area membership even for double
  assert.equal(parsed.zoneId,'area');assert.deepEqual(parsed.zonePolygon,metadata.zonePolygon)
  assert.equal(deliveryZone({description}),'central')
 })
+
+test('map location draft preserves coordinates, chosen zone and its individual fee',()=>{
+ const {newDeliveryLocation}=module('deliveryCatalog')
+ const row=newDeliveryLocation({name:'  Condomínio Teste  ',lat:'-22.923800',lng:'-45.474000',fee:'12.50',zone:'rural'},[])
+ assert.equal(row.name,'Condomínio Teste');assert.equal(row.lat,-22.9238);assert.equal(row.lng,-45.474)
+ assert.equal(row.fee,12.5);assert.equal(deliveryZone(row),'rural');assert.equal(JSON.parse(row.description).fixedFee,true)
+})
+test('new map locations distinguish pending fees from free delivery and reject invalid data',()=>{
+ const {newDeliveryLocation}=module('deliveryCatalog')
+ const draft={name:'Novo local',lat:'-22.9',lng:'-45.4',fee:'',zone:'urban'}
+ assert.equal(newDeliveryLocation(draft,[]).fee,null)
+ assert.equal(newDeliveryLocation({...draft,fee:'0'},[]).fee,0)
+ for(const patch of [{name:'a'},{lat:''},{lng:' '},{lat:'91'},{lng:'181'},{lat:'NaN'},{fee:'-1'},{fee:'Infinity'},{fee:'abc'},{zone:'unknown'}]) assert.throws(()=>newDeliveryLocation({...draft,...patch},[]))
+ assert.throws(()=>newDeliveryLocation({...draft,name:' Condomínio São José '},[{name:'condominio sao jose'}]),/já está cadastrado/)
+})
