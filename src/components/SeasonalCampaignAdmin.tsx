@@ -75,7 +75,7 @@ const validCta = (value: string) => value.startsWith('/') || value.startsWith('#
 
 export default function SeasonalCampaignAdmin() {
   const navigate = useNavigate()
-  const { content, saveTheme } = useLandingContent()
+  const { content, saveSection } = useLandingContent()
   const [primaryId, setPrimaryId] = useState<string | null>(null)
   const [items, setItems] = useState<CampaignRow[]>([])
   const [products, setProducts] = useState<MenuItem[]>([])
@@ -164,8 +164,8 @@ export default function SeasonalCampaignAdmin() {
     setPaletteSaving(true); setError(''); setSuccess('')
     try {
       const id = 'interface_' + Date.now()
-      await saveTheme(id, draft.palette, [...content.themePresets, {id, name: paletteName.trim(), colors: draft.palette}])
-      setSuccess('Paleta salva na área de interface e aplicada à Landing. Atualize a Landing com F5.')
+      await saveSection('theme', { themePresets: [...content.themePresets, {id, name: paletteName.trim(), colors: {...draft.palette}}] })
+      setSuccess('Paleta salva como cartão permanente na interface. Use o botão do cartão para ativá-la.')
       setPaletteName('')
     } catch (e: unknown) { setError('Falha ao salvar paleta de interface: ' + getErrorMessage(e)) }
     finally { setPaletteSaving(false) }
@@ -390,7 +390,7 @@ export default function SeasonalCampaignAdmin() {
             <button type="button" disabled={paletteSaving} onClick={saveAsInterface} className="rounded-lg bg-zinc-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Salvar como paleta da interface</button>
             <button type="button" disabled={paletteSaving} onClick={saveAsPromotion} className="rounded-lg bg-violet-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Salvar como paleta de promoção</button>
           </div>
-          <p className="text-[11px] text-zinc-500">Paleta da interface altera o tema-base da Landing. Paleta de promoção entra no catálogo de campanhas; não muda as demais promoções.</p>
+          <p className="text-[11px] text-zinc-500">Paleta da interface cria um cartão de tema; a ativação é feita pelo botão do cartão. Paleta de promoção entra no catálogo de campanhas.</p>
         </div>
       </div>
       <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" checked={draft.active} onChange={e=>update('active',e.target.checked)}/>Campanha ativa</label>

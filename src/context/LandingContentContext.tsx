@@ -39,6 +39,7 @@ export interface LandingThemeColors {
 export interface LandingThemePreset {
   id: string
   name: string
+  description?: string
   colors: LandingThemeColors
 }
 

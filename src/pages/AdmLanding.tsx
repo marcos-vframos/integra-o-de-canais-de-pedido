@@ -21,7 +21,8 @@ import { AdobeColorPicker } from '@/components/AdobeColorPicker'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
-import { savePromotionPalette } from '@/lib/promotionPaletteStore'
+import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
+import { themePaletteCatalog, catalogThemeId, registerCatalogTheme, describeThemeColors } from '@/lib/themePaletteCatalog'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import MarqueeEditor from '@/components/MarqueeEditor'
@@ -35,7 +36,7 @@ export default function AdmLanding() {
   const returnTo = requestedReturn === '/gestao' || requestedReturn === '/config' ? requestedReturn : '/'
   const returnLabel = returnTo === '/gestao' ? 'Voltar ao Gestor' : returnTo === '/config' ? 'Voltar às Configurações' : 'Voltar à Landing Page'
   const draftTouched = useRef(false)
-  const { content, loading: contentLoading, saveSection, saveTheme, applyPreset, refresh } = useLandingContent()
+  const { content, loading: contentLoading, saveSection, saveTheme, refresh } = useLandingContent()
   const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja' | 'stories'>('textos')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -123,6 +124,39 @@ export default function AdmLanding() {
     content.activeColors || DEFAULT_THEME_COLORS,
   )
   const [newPresetName, setNewPresetName] = useState('')
+  const [savedPalettes, setSavedPalettes] = useState<SavedPromotionPalette[]>([])
+  const [themeBusy, setThemeBusy] = useState(false)
+  const themeSaving = useRef(false)
+  const [themeMessage, setThemeMessage] = useState('')
+  const [themeError, setThemeError] = useState('')
+  const palettes = themePaletteCatalog(savedPalettes)
+
+  useEffect(() => {
+    if (activeTab !== 'temas') return
+    let current = true
+    loadPromotionPalettes().then(rows => { if (current) setSavedPalettes(rows) }).catch(() => {
+      if (current) setThemeError('Não foi possível carregar as paletas salvas. As paletas prontas continuam disponíveis.')
+    })
+    return () => { current = false }
+  }, [activeTab])
+
+  const persistThemeAction = async (action: () => Promise<void>, message: string) => {
+    if (themeSaving.current) return
+    themeSaving.current = true
+    setThemeBusy(true); setThemeError(''); setThemeMessage('')
+    try { await action(); setThemeMessage(message) }
+    catch (error: unknown) { setThemeError(error instanceof Error ? error.message : 'Não foi possível salvar o tema. Tente novamente.') }
+    finally { themeSaving.current = false; setThemeBusy(false) }
+  }
+
+  const handleRegisterPalette = (key: string) => {
+    const palette = palettes.find(p => p.key === key)
+    if (!palette) return
+    const updated = registerCatalogTheme(content.themePresets, palette)
+    if (updated === content.themePresets) return
+    void persistThemeAction(() => saveSection('theme', { themePresets: updated }),
+      `Tema “${palette.name}” salvo. Use o botão do cartão para ativá-lo.`)
+  }
 
   // Carregar configurações de settings (force_open e force_closed)
   const loadStoreSettings = async () => {
@@ -391,8 +425,10 @@ export default function AdmLanding() {
       colors: customColors,
     }
     const updatedPresets = [...content.themePresets, newPreset]
-    await saveTheme(newPreset.id, customColors, updatedPresets)
-    setNewPresetName('')
+    await persistThemeAction(async () => {
+      await saveSection('theme', { themePresets: updatedPresets })
+      setNewPresetName('')
+    }, 'Novo tema salvo. Use o botão do cartão para ativá-lo.')
   }
 
   const handleSaveAdobeForPromotion = async () => {
@@ -402,11 +438,12 @@ export default function AdmLanding() {
       return
     }
     try {
-      await savePromotionPalette({
+      const saved = await savePromotionPalette({
         id: 'promocao_' + Date.now(),
         name: newPresetName.trim(),
         colors: { ...customColors },
       })
+      setSavedPalettes(saved)
       alert('Paleta salva no catálogo de promoções. Abra a seção Campanhas Sazonais para selecioná-la.')
       setNewPresetName('')
     } catch (error: unknown) {
@@ -417,7 +454,7 @@ export default function AdmLanding() {
   const handleDeletePreset = async (id: string) => {
     if (id === 'padrao') return
     const updated = content.themePresets.filter((p) => p.id !== id)
-    await saveTheme(content.activeThemeId, content.activeColors, updated)
+    await persistThemeAction(() => saveSection('theme', { themePresets: updated }), 'Tema removido do catálogo.')
   }
 
   // Adicionar / Remover slides do hero dinamicamente
@@ -1159,31 +1196,35 @@ export default function AdmLanding() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-end gap-2">
                   <button
                     type="button"
-                    onClick={() => {
+                    disabled={themeBusy}
+                    onClick={() => void persistThemeAction(async () => {
+                      await saveTheme('padrao', DEFAULT_THEME_COLORS)
                       setCustomColors(DEFAULT_THEME_COLORS)
-                      saveTheme('padrao', DEFAULT_THEME_COLORS)
-                    }}
+                    }, 'Tema padrão ativado.')}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Voltar ao Padrão Oliva/Vinho/Prata</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={async () => { try { await saveTheme(content.activeThemeId, customColors); await saveSection('theme', { activeThemeId: content.activeThemeId, activeColors: customColors, themePresets: content.themePresets, heroGlowEnabled }); alert('Paleta e fundo salvos.'); } catch (e) { alert('Falha ao salvar tema.'); } }}
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Aplicar Tema Ativo</span>
-                  </button>
+                  <label className="block min-w-0 flex-1 text-xs text-zinc-300 sm:min-w-[280px]">Paletas prontas e salvas
+                    <select value="" disabled={themeBusy || contentLoading} onChange={e => handleRegisterPalette(e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white disabled:opacity-50">
+                      <option value="">Selecione para criar um cartão permanente</option>
+                      {palettes.map(p => {
+                        const registered = content.themePresets.some(preset => preset.id === catalogThemeId(p))
+                        return <option key={p.key} value={p.key} disabled={registered}>{p.source === 'promotion' ? 'Minha paleta: ' : ''}{p.name}{registered ? ' — já cadastrada' : ''}</option>
+                      })}
+                    </select>
+                  </label>
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" checked={heroGlowEnabled} onChange={e=>setHeroGlowEnabled(e.target.checked)}/> Ativar iluminação vermelha no Hero (desligada por padrão)</label>
+              {themeError && <p role="alert" className="text-xs text-red-300">{themeError}</p>}
+              {themeMessage && <p role="status" className="text-xs text-emerald-300">{themeMessage}</p>}
+              <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" disabled={themeBusy} checked={heroGlowEnabled} onChange={e => { const enabled = e.target.checked; void persistThemeAction(async () => { await saveSection('theme', { heroGlowEnabled: enabled }); setHeroGlowEnabled(enabled) }, 'Iluminação do Hero salva.') }}/> Ativar iluminação vermelha no Hero (desligada por padrão)</label>
               <p className="text-xs text-zinc-400">Mapa das cores: Fundo principal = Hero e página; Secundário = faixas e seções; Cards = painéis; Acento = botões e indicadores; Hover = botões ao passar o mouse; Claro = textos secundários e detalhes.</p>
               {/* Presets Salvos */}
               <div>
@@ -1194,8 +1235,9 @@ export default function AdmLanding() {
                   {content.themePresets.map((preset) => {
                     const isSelected = content.activeThemeId === preset.id
                     return (
-                      <div
+                      <article
                         key={preset.id}
+                        aria-label={'Tema ' + preset.name}
                         className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
                           isSelected
                             ? 'bg-amber-500/10 border-amber-400 shadow-lg'
@@ -1208,6 +1250,8 @@ export default function AdmLanding() {
                             <button
                               type="button"
                               onClick={() => handleDeletePreset(preset.id)}
+                              disabled={themeBusy || isSelected}
+                              aria-label={'Remover tema ' + preset.name}
                               className="text-zinc-500 hover:text-red-400 p-1"
                               title="Remover tema"
                             >
@@ -1216,7 +1260,7 @@ export default function AdmLanding() {
                           )}
                         </div>
 
-                        <span className="text-[10px] text-zinc-400">Cores: fundo · cards · botões · detalhes</span>
+                        <span className="break-words text-[10px] text-zinc-400">{preset.description || describeThemeColors(preset.colors)}</span>
                         {/* Amostras das cores do preset */}
                         <div className="flex items-center gap-1.5">
                           <div
@@ -1242,10 +1286,15 @@ export default function AdmLanding() {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setCustomColors(preset.colors)
-                            applyPreset(preset.id)
-                          }}
+                          disabled={themeBusy}
+                          aria-pressed={isSelected}
+                          aria-label={'Ativar tema ' + preset.name}
+                          onClick={() => void persistThemeAction(async () => {
+                            const colors = isSelected ? customColors : preset.colors
+                            const presets = content.themePresets.map(p => p.id === preset.id ? { ...p, colors: { ...colors }, description: describeThemeColors(colors) } : p)
+                            await saveSection('theme', { activeThemeId: preset.id, activeColors: colors, themePresets: presets, heroGlowEnabled })
+                            setCustomColors(colors)
+                          }, `Tema “${preset.name}” ativado.`)}
                           className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer text-center ${
                             isSelected
                               ? 'bg-amber-400 text-zinc-950 font-bold'
@@ -1254,7 +1303,7 @@ export default function AdmLanding() {
                         >
                           {isSelected ? '✓ Tema Ativo' : 'Ativar Este Tema'}
                         </button>
-                      </div>
+                      </article>
                     )
                   })}
                 </div>
@@ -1273,7 +1322,7 @@ export default function AdmLanding() {
                   />
                   <button
                     type="button"
-                    disabled={!newPresetName.trim()}
+                    disabled={!newPresetName.trim() || themeBusy}
                     onClick={handleCreatePreset}
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-white text-xs font-semibold cursor-pointer"
                   >
