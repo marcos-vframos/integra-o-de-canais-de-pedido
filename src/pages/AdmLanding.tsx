@@ -22,7 +22,7 @@ import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
-import { themePaletteCatalog, catalogThemeId, registerCatalogTheme, describeThemeColors } from '@/lib/themePaletteCatalog'
+import { themePaletteCatalog, isCatalogThemeRegistered, registerCatalogTheme, describeThemeColors } from '@/lib/themePaletteCatalog'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import MarqueeEditor from '@/components/MarqueeEditor'
@@ -141,7 +141,7 @@ export default function AdmLanding() {
   }, [activeTab])
 
   const persistThemeAction = async (action: () => Promise<void>, message: string) => {
-    if (themeSaving.current) return
+    if (themeSaving.current || contentLoading) return
     themeSaving.current = true
     setThemeBusy(true); setThemeError(''); setThemeMessage('')
     try { await action(); setThemeMessage(message) }
@@ -1214,7 +1214,7 @@ export default function AdmLanding() {
                     <select value="" disabled={themeBusy || contentLoading} onChange={e => handleRegisterPalette(e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white disabled:opacity-50">
                       <option value="">Selecione para criar um cartão permanente</option>
                       {palettes.map(p => {
-                        const registered = content.themePresets.some(preset => preset.id === catalogThemeId(p))
+                        const registered = isCatalogThemeRegistered(content.themePresets, p)
                         return <option key={p.key} value={p.key} disabled={registered}>{p.source === 'promotion' ? 'Minha paleta: ' : ''}{p.name}{registered ? ' — já cadastrada' : ''}</option>
                       })}
                     </select>

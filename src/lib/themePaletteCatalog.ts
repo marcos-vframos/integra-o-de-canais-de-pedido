@@ -16,6 +16,12 @@ export function catalogThemeId(palette: CatalogPalette) {
   return 'catalog_' + palette.source + '_' + palette.id
 }
 
+export function isCatalogThemeRegistered(presets: LandingThemePreset[], palette: CatalogPalette) {
+  const keys: (keyof LandingThemeColors)[] = ['bgPrimary','bgSecondary','bgCard','accentVinho','accentVinhoHover','accentSilver']
+  return presets.some(p => p.id === catalogThemeId(palette) || keys.every(key =>
+    String(p.colors[key]).toLowerCase() === String(palette.colors[key]).toLowerCase()))
+}
+
 export function describeThemeColors(colors: LandingThemeColors) {
   return `Fundo ${colors.bgPrimary} · cards ${colors.bgCard} · botões ${colors.accentVinho} · detalhes ${colors.accentSilver}`
 }
@@ -23,6 +29,6 @@ export function describeThemeColors(colors: LandingThemeColors) {
 /** Registration never changes activeThemeId or activeColors. Repeated picks retain edits. */
 export function registerCatalogTheme(presets: LandingThemePreset[], palette: CatalogPalette): LandingThemePreset[] {
   const id = catalogThemeId(palette)
-  if (presets.some(p => p.id === id)) return presets
+  if (isCatalogThemeRegistered(presets, palette)) return presets
   return [...presets, { id, name: palette.name, description: describeThemeColors(palette.colors), colors: { ...palette.colors } }]
 }
