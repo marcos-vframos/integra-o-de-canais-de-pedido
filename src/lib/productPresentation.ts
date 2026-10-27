@@ -26,3 +26,32 @@ export const sodaImages = {
   small: 'https://static.paodeacucar.com/img/uploads/1/875/33024875.png',
   large: 'https://assets.ibecom.com.br/ib.item.image.large/l-6914a2bb4f5945e096287835120c831e.png',
 }
+
+// Shared visual fallback: cards and the ordering sheet display the same product image.
+export const productFallbackImage = (item: Product) => {
+    const nameLower = item.name.toLowerCase()
+    if (nameLower.includes('dog') || item.category === 'Hot-Dog') {
+      return 'https://img.usecurling.com/p/800/600?q=hot+dog+gourmet'
+    }
+    if (nameLower.includes('batata') || nameLower.includes('fritas')) {
+      return 'https://img.usecurling.com/p/800/600?q=french+fries+cheese+bacon'
+    }
+    if (
+      nameLower.includes('refri') ||
+      nameLower.includes('suco') ||
+      nameLower.includes('água') ||
+      item.category === 'Bebidas'
+    ) {
+      return 'https://img.usecurling.com/p/800/600?q=cold+soda+can'
+    }
+    if (nameLower.includes('bacon')) {
+      return 'https://img.usecurling.com/p/800/600?q=bacon+cheeseburger'
+    }
+    if (nameLower.includes('gourmet') || nameLower.includes('especial')) {
+      return 'https://img.usecurling.com/p/800/600?q=gourmet+burger+bacon'
+    }
+    if (nameLower.includes('misto') || nameLower.includes('bauru')) {
+      return 'https://img.usecurling.com/p/800/600?q=grilled+cheese+sandwich'
+    }
+    return 'https://img.usecurling.com/p/800/600?q=cheeseburger+melted+cheese'
+  }

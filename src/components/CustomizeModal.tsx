@@ -1,11 +1,21 @@
 import React from 'react'
 import { isBeverage, hasDrinkFlavor, drinkFlavors, drinkUnitCount } from '@/lib/beverages'
-import { Minus, Plus, X } from 'lucide-react'
+import { Minus, Plus, X, ShoppingBag } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, breadSurcharge, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
 
+import { OrderSheet } from '@/components/OrderSheet'
+import ProductImage from '@/components/ProductImage'
+import { productFallbackImage } from '@/lib/productPresentation'
+
+function CustomizeFrame({ sheet, item, children, footer, onClose }: { sheet: boolean; item: MenuItem; children: React.ReactNode; footer: React.ReactNode; onClose: () => void }) {
+  if (sheet) return <OrderSheet key={item.id} title={item.name} price={fmtBRL(item.price)} image={<ProductImage item={item} fallback={productFallbackImage(item)} />} footer={footer} onClose={onClose}>{children}</OrderSheet>
+  return <div className="sc-modal-backdrop" onClick={onClose}><div className="sc-modal" onClick={e => e.stopPropagation()}><div className="sc-modal-header"><div><div className="sc-modal-title">{item.name}</div><div className="sc-modal-price sc-tabular">{fmtBRL(item.price)}</div></div><button type="button" className="sc-icon-btn" onClick={onClose} aria-label="Fechar"><X size={14} /></button></div>{children}{footer}</div></div>
+}
+
 interface CustomizeModalProps {
+  presentation?: 'modal' | 'sheet'
   beverageFlavors?: Record<string,number>
   setBeverageFlavors?: (flavors: Record<string,number>) => void
   item: MenuItem | null
@@ -31,6 +41,7 @@ interface CustomizeModalProps {
 
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   item,
+  presentation = 'modal',
   beverageFlavors = {},
   setBeverageFlavors,
   menu,
@@ -64,31 +75,35 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   const breadExtra = breadSurcharge(item, { breadChoice }, resolveStockItem)
   const currentUnitTotal = beverage ? Number(item.price) : lineUnitTotal(item, { added: extras, breadChoice }, resolveStockItem, menu)
 
-  return (
-    <div className="sc-modal-backdrop" onClick={onClose}>
-      <div className="sc-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="sc-modal-header">
-          <div>
-            <div className="sc-modal-title">{item.name}</div>
-            <div className="sc-modal-price sc-tabular">{fmtBRL(item.price)}</div>
-          </div>
-          <button className="sc-icon-btn" onClick={onClose} aria-label="Fechar">
-            <X size={14} />
-          </button>
-        </div>
-
-        {!soda && <>
-        <div className="sc-field">
-          <label className="sc-label">Quantidade</label>
+  const sheet = presentation === 'sheet'
+  const total = currentUnitTotal * (soda && setBeverageFlavors ? drinkUnitCount(beverageFlavors) : qty)
+  const quantityControl = (
           <div className="sc-qty-ctrl">
-            <button className="sc-round-btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+            <button type="button" aria-label="Diminuir quantidade" disabled={qty <= 1} className="sc-round-btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
               <Minus size={13} />
             </button>
             <span className="sc-tabular font-bold px-2">{qty}</span>
-            <button className="sc-round-btn" onClick={() => setQty((q) => q + 1)}>
+            <button type="button" aria-label="Aumentar quantidade" className="sc-round-btn" onClick={() => setQty((q) => q + 1)}>
               <Plus size={13} />
             </button>
           </div>
+  )
+  const confirmButton = <button type="button" className={sheet ? 'order-sheet-confirm' : 'sc-btn-primary'} disabled={soda && !!setBeverageFlavors && !drinkUnitCount(beverageFlavors)} onClick={onConfirm}>
+    {sheet && <ShoppingBag size={17} aria-hidden="true" />}
+    {isEditing ? 'Salvar alterações' : sheet ? 'Adicionar ao carrinho' : 'Adicionar ao pedido'}
+  </button>
+  const footer = sheet ? <>
+    <div className="order-sheet-total" aria-live="polite"><span>Total</span><strong className="sc-tabular">{fmtBRL(total)}</strong></div>
+    {!soda && <div className="order-sheet-quantity"><span className="sr-only">Quantidade</span>{quantityControl}</div>}
+    {confirmButton}
+  </> : <div className="sc-form-actions">{confirmButton}<button type="button" className="sc-btn-ghost" onClick={onClose}>Cancelar</button></div>
+
+  return (
+    <CustomizeFrame sheet={sheet} item={item} footer={footer} onClose={onClose}>
+        {!soda && !sheet && <>
+        <div className="sc-field">
+          <label className="sc-label">Quantidade</label>
+          {quantityControl}
         </div>
 
         </>}
@@ -419,18 +434,9 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
             <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>
             <span>+ {fmtBRL(extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty)}</span>
           </div>)}
-          <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total</span><span>{fmtBRL(currentUnitTotal * (soda && setBeverageFlavors ? drinkUnitCount(beverageFlavors) : qty))}</span></div>
+          {!sheet && <div className="flex justify-between border-t border-zinc-700 pt-2 text-sm font-bold text-white"><span>Total</span><span>{fmtBRL(total)}</span></div>}
         </div>
 
-        <div className="sc-form-actions">
-          <button className="sc-btn-primary" disabled={soda && !!setBeverageFlavors && !drinkUnitCount(beverageFlavors)} onClick={onConfirm}>
-            {isEditing ? 'Salvar alterações' : 'Adicionar ao pedido'}
-          </button>
-          <button className="sc-btn-ghost" onClick={onClose}>
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
+    </CustomizeFrame>
   )
 }

@@ -1706,6 +1706,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
       {/* 6. Modal de Customização Reutilizado */}
       <CustomizeModal
+        presentation={embedded ? 'sheet' : 'modal'}
         item={customizeItem}
         beverageFlavors={customizeFlavors}
         setBeverageFlavors={setCustomizeFlavors}

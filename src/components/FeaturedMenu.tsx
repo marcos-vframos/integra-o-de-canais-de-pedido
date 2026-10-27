@@ -1,4 +1,4 @@
-import { productCaption, preparationLabel, menuOrder } from '@/lib/productPresentation'
+import { productCaption, preparationLabel, menuOrder, productFallbackImage } from '@/lib/productPresentation'
 import ProductImage from '@/components/ProductImage'
 import { useState, useEffect } from 'react'
 import { ArrowUpRight, AlertCircle, Search } from 'lucide-react'
@@ -125,34 +125,6 @@ export default function FeaturedMenu() {
     return itemCat === currentCategory
   }))
 
-  // Imagens associadas por categoria ou nome para manter o visual premium
-  const getImageForItem = (item: MenuItem) => {
-    const nameLower = item.name.toLowerCase()
-    if (nameLower.includes('dog') || item.category === 'Hot-Dog') {
-      return 'https://img.usecurling.com/p/800/600?q=hot+dog+gourmet'
-    }
-    if (nameLower.includes('batata') || nameLower.includes('fritas')) {
-      return 'https://img.usecurling.com/p/800/600?q=french+fries+cheese+bacon'
-    }
-    if (
-      nameLower.includes('refri') ||
-      nameLower.includes('suco') ||
-      nameLower.includes('água') ||
-      item.category === 'Bebidas'
-    ) {
-      return 'https://img.usecurling.com/p/800/600?q=cold+soda+can'
-    }
-    if (nameLower.includes('bacon')) {
-      return 'https://img.usecurling.com/p/800/600?q=bacon+cheeseburger'
-    }
-    if (nameLower.includes('gourmet') || nameLower.includes('especial')) {
-      return 'https://img.usecurling.com/p/800/600?q=gourmet+burger+bacon'
-    }
-    if (nameLower.includes('misto') || nameLower.includes('bauru')) {
-      return 'https://img.usecurling.com/p/800/600?q=grilled+cheese+sandwich'
-    }
-    return 'https://img.usecurling.com/p/800/600?q=cheeseburger+melted+cheese'
-  }
 
   return (
     <section
@@ -230,7 +202,7 @@ export default function FeaturedMenu() {
                 className="group bg-[#0D1A11] rounded-md overflow-hidden border border-white/[0.08] hover:border-white/[0.18] transition-all flex flex-col justify-between"
               >
                 <div className="relative h-52 sm:h-56 overflow-hidden bg-[#0A150D]">
-                  <ProductImage item={item} fallback={getImageForItem(item)} />
+                  <ProductImage item={item} fallback={productFallbackImage(item)} />
                   {item.category !== 'Bebidas' && <span className="absolute top-3 left-3 bg-[#0A150D]/90 text-[10px] tracking-wider uppercase font-medium text-white px-2.5 py-1 rounded border border-white/10">
                     {item.category}
                   </span>}
