@@ -1224,6 +1224,19 @@
 }
 
 @media print {
+  .receipt-modal-backdrop,
+  .receipt-modal {
+    position: static;
+    display: block;
+    max-height: none;
+    height: auto;
+    overflow: visible;
+    transform: none;
+    animation: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
   body * {
     visibility: hidden;
   }

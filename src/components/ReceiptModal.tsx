@@ -35,8 +35,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const address = storeInfo?.address || ''
 
   return (
-    <div className="sc-modal-backdrop" onClick={onClose}>
-      <div className="sc-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="sc-modal-backdrop receipt-modal-backdrop" onClick={onClose}>
+      <div className="sc-modal receipt-modal" onClick={(e) => e.stopPropagation()}>
         <div className="sc-modal-header">
           <div>
             <div className="sc-modal-title">
@@ -108,7 +108,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
           {/* Dados do Pedido */}
           <div className="receipt-line" style={{ fontWeight: 700, fontSize: 14 }}>
-            {mode === 'kitchen' ? 'COMANDA ' : 'CUPOM / RECIBO '}#{padTicket(ticket.ticketNumber)}
+            {mode === 'kitchen' ? 'COMANDA ' : 'CUPOM / RECIBO '}{padTicket(ticket.ticketNumber)}
             {ticket.origin === 'online' && (
               <span style={{ fontSize: 11, marginLeft: 6, color: '#e10600' }}>(Online)</span>
             )}
@@ -224,6 +224,36 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <div>Agilidade e qualidade no preparo!</div>
             )}
           </div>
+
+          {mode === 'kitchen' && ticket.deliveryType === 'entrega' && (
+            <section
+              aria-label="Via do motoboy"
+              style={{
+                borderTop: '1px dashed #000',
+                marginTop: 14,
+                paddingTop: 10,
+                breakInside: 'avoid',
+                pageBreakInside: 'avoid',
+                overflowWrap: 'anywhere',
+              }}
+            >
+              <div className="receipt-center" style={{ fontWeight: 700, fontSize: 14 }}>
+                VIA DO MOTOBOY
+              </div>
+              <div className="receipt-line" style={{ fontWeight: 700, fontSize: 14 }}>
+                COMANDA {padTicket(ticket.ticketNumber)}
+              </div>
+              <div className="receipt-line">Cliente: {ticket.customerName || 'Não informado'}</div>
+              <div className="receipt-line">Telefone: {ticket.customerPhone || 'Não informado'}</div>
+              <div className="receipt-line">Endereço: {ticket.customerAddress || 'Não informado'}</div>
+              <div className="receipt-line">Forma de pagamento: <b>{ticket.payment || 'Não informada'}</b></div>
+              <div className="receipt-line" style={{ marginTop: 8 }}>Anotações:</div>
+              <div aria-label="Duas linhas para anotações à mão">
+                <div style={{ height: 24, borderBottom: '1px solid #000' }} />
+                <div style={{ height: 24, borderBottom: '1px solid #000' }} />
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Botões de Ação */}
