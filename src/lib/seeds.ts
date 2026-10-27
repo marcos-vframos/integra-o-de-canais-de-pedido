@@ -1182,6 +1182,8 @@ export const seedMenu = (): (Omit<MenuItem, 'id'> & { code: string })[] => [
   mk('x-ovo', 'Ovo (adicional)', 3, 'Complementos', rec('ovo')),
   mk('x-queijo', 'Queijo (adicional)', 4, 'Complementos', rec('queijo')),
   mk('x-presunto', 'Presunto (adicional)', 3, 'Complementos', rec('apres')),
+  mk('x-bacon', 'Bacon (adicional)', 8, 'Complementos', rec('bacon')),
+  mk('x-calabresa', 'Calabresa (adicional)', 8, 'Complementos', rec('calabresa')),
   mk('x-filefrango', 'Filé de Frango (adicional)', 10, 'Complementos', rec('filefrango')),
   mk('x-frangodesf', 'Frango Desfiado (adicional)', 10, 'Complementos', rec('frangodesf')),
   mk('x-carne', 'Carne (adicional)', 3, 'Complementos', rec('hamb')),

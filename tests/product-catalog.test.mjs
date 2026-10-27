@@ -40,3 +40,17 @@ test('only Max recipes use three standard meats and extras consume ordinary patt
  const use={};accumulateDeductions(use,{qty:2,removed:[],added:[{ingredientId:'ing-hamburguer',qty:1}]},max[0],resolve)
  assert.equal(use['ing-hamburguer'],8);assert.equal(use['ing-carne-max'],undefined)
 })
+test('bacon and calabresa extras use owner prices and deduct each ordered portion',async()=>{
+ const {seedMenu,seedStock}=await import('../src/lib/seeds.ts')
+ const {accumulateDeductions,availableIngredientExtras}=await import('../src/lib/orderCustomization.ts')
+ const menu=seedMenu(),stock=seedStock(),resolve=id=>stock.find(s=>s.code===id)
+ const sandwich=menu.find(p=>p.code==='c-xmaxtudo')
+ for(const code of ['ing-bacon','ing-calabresa']) {
+  assert.equal(extraUnitPrice(code,resolve,menu),8)
+  assert.ok(availableIngredientExtras(menu,resolve).some(s=>s.code===code))
+ }
+ const line={qty:2,removed:[],added:[{ingredientId:'ing-bacon',qty:1},{ingredientId:'ing-calabresa',qty:2}]}
+ assert.equal(lineUnitTotal(sandwich,line,resolve,menu),54)
+ const use={};accumulateDeductions(use,line,sandwich,resolve)
+ assert.equal(use['ing-bacon'],4);assert.equal(use['ing-calabresa'],6)
+})

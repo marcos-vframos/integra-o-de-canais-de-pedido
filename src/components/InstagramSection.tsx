@@ -60,7 +60,7 @@ export default function InstagramSection() {
   return (
     <section
       id="instagram"
-      className="min-h-screen w-full bg-[#0C170F] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
+      className="min-h-screen w-full bg-[var(--landing-bg-secondary)] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="instagram-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
@@ -93,7 +93,7 @@ export default function InstagramSection() {
               href={BUSINESS_INFO.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group aspect-square rounded-md overflow-hidden bg-[#0A150D] border border-white/[0.08] hover:border-white/[0.2] transition-colors relative"
+              className="group aspect-square rounded-md overflow-hidden bg-[var(--landing-bg-card)] border border-white/[0.08] hover:border-white/[0.2] transition-colors relative"
               aria-label={post.caption}
             >
               <img
@@ -102,7 +102,7 @@ export default function InstagramSection() {
                 className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 filter contrast-[1.02]"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-[#0A150D]/80 opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end text-left">
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end text-left" style={{ background: 'color-mix(in srgb, var(--landing-bg-card) 85%, transparent)' }}>
                 <p className="text-[11px] text-white line-clamp-3 leading-snug">{post.caption}</p>
               </div>
             </a>

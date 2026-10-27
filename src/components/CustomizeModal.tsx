@@ -145,13 +145,13 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                     : 'border-zinc-700 bg-[#1a1a1f] text-zinc-300 hover:border-zinc-400'}`}
                 >
                   {breadChoice === choice ? '✓ ' : ''}{breadName(choice)}
-                  <span className="mt-1 block text-[10px] font-semibold text-zinc-300">
-                    {choice === 'frances' ? `+ ${fmtBRL(BREAD_FRANCES_SURCHARGE)} por lanche` : 'Incluso no preço'}
-                  </span>
+                  {choice === 'frances' && <span className="mt-1 block text-[10px] font-semibold text-zinc-300">
+                    + {fmtBRL(BREAD_FRANCES_SURCHARGE)} por lanche
+                  </span>}
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-zinc-400">Escolha um pão por lanche. Pão de Hambúrguer incluso; Pão Francês acrescenta {fmtBRL(BREAD_FRANCES_SURCHARGE)} por unidade.</p>
+            <p className="mt-2 text-[11px] text-zinc-400">Escolha um pão por lanche.</p>
           </fieldset>
         )}
 
@@ -335,10 +335,11 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                           <button
                             type="button"
                             className="w-7 h-7 rounded-full bg-[#18181b] border border-[var(--red)] text-white hover:bg-[var(--red)] hover:text-white active:scale-95 flex items-center justify-center transition-all"
+                            disabled={extraCount >= 10}
                             onClick={() =>
                               setAdded((prev) => ({
                                 ...prev,
-                                [ingKey]: (Number(prev[ingKey]) || 0) + 1,
+                                [ingKey]: Math.min(10, (Number(prev[ingKey]) || 0) + 1),
                               }))
                             }
                             title={`Adicionar porção extra de ${si ? si.name : r.ingredientId}`}

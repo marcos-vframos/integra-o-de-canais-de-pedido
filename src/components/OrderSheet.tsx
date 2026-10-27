@@ -28,7 +28,7 @@ export function OrderSheet({ title, price, image, children, footer, onClose }: {
           <div className="order-sheet-handle" aria-hidden="true"><span /></div>
           <header className="order-sheet-header">
             <div className="order-sheet-image">{image}</div>
-            <div className="min-w-0 flex-1">
+            <div className="order-sheet-heading">
               <Dialog.Title ref={heading} tabIndex={-1} className="order-sheet-title">{title}</Dialog.Title>
               <p className="order-sheet-price sc-tabular">{price}</p>
               <Dialog.Description className="order-sheet-description">Personalize do seu jeito.</Dialog.Description>
