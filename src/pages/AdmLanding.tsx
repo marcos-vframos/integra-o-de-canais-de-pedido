@@ -1223,7 +1223,7 @@ export default function AdmLanding() {
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block mb-3">
                   Temas e Ocasiões Cadastradas
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-start gap-3">
                   {content.themePresets.map(preset => <ThemePresetCard key={preset.id} preset={preset} active={content.activeThemeId===preset.id} busy={themeBusy}
                     onDelete={()=>void handleDeletePreset(preset.id)}
                     onActivate={()=>void persistThemeAction(async()=>{

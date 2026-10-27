@@ -28,6 +28,7 @@ export function OrderSheet({ title, price, image, preview, children, footer, onC
         }}>
           <div className="order-sheet-handle" aria-hidden="true"><span /></div>
           <header className="order-sheet-header">
+            <div className="order-sheet-cover-backdrop" aria-hidden="true">{image}</div>
             <div className="order-sheet-image">{image}</div>
             <div className="order-sheet-heading">
               <Dialog.Title ref={heading} tabIndex={-1} className="order-sheet-title">{title}</Dialog.Title>

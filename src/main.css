@@ -1300,7 +1300,10 @@ div:has(> a[href*='goskip.dev']) {
 
 /* The full product stays inside the cover; composition occupies its own corner. */
 .order-sheet-header { min-height: min(270px, 34dvh); padding-top: 44px; }
-.order-sheet-image img { object-fit: contain; object-position: center top; padding: 14px 44px 68px 18px; background: var(--surface); }
+.order-sheet-cover-backdrop { position:absolute; inset:0; z-index:-3; overflow:hidden; filter:blur(12px) brightness(.35); transform:scale(1.08); }
+.order-sheet-cover-backdrop img { width:100%; height:100%; object-fit:cover; }
+.order-sheet-cover-backdrop button { display:none; }
+.order-sheet-image img { object-fit: contain; object-position: center top; padding: 14px 44px 100px 18px; background: transparent; }
 .order-sheet-image:has(+ .order-sheet-heading + .sandwich-preview) img { padding-right: 142px; }
 .order-sheet-image::after { background: linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--surface) 75%,transparent) 76%,var(--surface) 100%); }
 .order-sheet-heading { position: relative; z-index: 1; padding-right: 124px; }

@@ -19,6 +19,7 @@ export function BusinessProfileProvider({children}:{children:ReactNode}) {
   return()=>{stopped=true;controller.abort();clearInterval(interval);clearInterval(clock)}
  },[])
  const current=profileUsable(profile,now)?profile:null
- return <BusinessContext.Provider value={{profile:current,configured,stale,status:current?googleOpenStatus(current,new Date(now)):null,hours:current?googleWeeklyHours(current):null}}>{children}</BusinessContext.Provider>
+ const hasHours=!!current&&(current.periods.length>0||current.special.length>0||current.businessStatus.startsWith('CLOSED'))
+ return <BusinessContext.Provider value={{profile:current,configured,stale,status:current&&hasHours?googleOpenStatus(current,new Date(now)):null,hours:current&&current.periods.length?googleWeeklyHours(current):null}}>{children}</BusinessContext.Provider>
 }
 export const useBusinessProfile=()=>useContext(BusinessContext)
