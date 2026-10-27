@@ -134,9 +134,7 @@ export default function FeaturedMenu() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
-          <span className="editorial-tag block mb-3">
-            {content.menuTag || '02 / Seleção da Casa'}
-          </span>
+
           <h2
             id="cardapio-heading"
             className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white mb-4"

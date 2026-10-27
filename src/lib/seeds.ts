@@ -66,7 +66,9 @@ const R: Record<string, string> = {
 export function rec(...keys: string[]) {
   const map: Record<string, number> = {}
   keys.forEach((k) => {
-    if (k === 'molho') {
+    if (k === 'maxcarne') {
+      map['ing-hamburguer'] = (map['ing-hamburguer'] || 0) + 3
+    } else if (k === 'molho') {
       ;['ing-maionese', 'ing-ketchup', 'ing-mostarda', 'ing-batata-palha'].forEach((id) => {
         map[id] = (map[id] || 0) + 1
       })

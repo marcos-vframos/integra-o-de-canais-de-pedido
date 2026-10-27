@@ -31,13 +31,13 @@ export default function Story() {
   return (
     <section
       id="historia"
-      className="min-h-screen w-full bg-[#0C170F] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
+      className="min-h-screen w-full bg-[var(--landing-bg-secondary)] text-white relative overflow-y-auto overflow-x-hidden border-b border-white/[0.06] snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="historia-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
           <div className="lg:col-span-5">
-            <div className="relative rounded-lg overflow-hidden border border-white/[0.1] bg-[#0E1B11] shadow-xl">
+            <div className="relative rounded-lg overflow-hidden border border-white/[0.1] bg-[var(--landing-bg-card)] shadow-xl">
               <AutoCarousel
                 images={storyImages}
                 className="w-full h-[460px] sm:h-[520px]"
@@ -53,10 +53,6 @@ export default function Story() {
           </div>
 
           <div className="lg:col-span-7 flex flex-col space-y-7">
-            <div className="flex items-center gap-3">
-              <span className="editorial-tag">01 / Origem & Filosofia</span>
-            </div>
-
             <h2
               id="historia-heading"
               className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white leading-tight"

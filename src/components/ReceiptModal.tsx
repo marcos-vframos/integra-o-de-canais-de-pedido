@@ -156,6 +156,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 </span>
                 <span>{fmtBRL(i.price * i.qty)}</span>
               </div>
+              {i.notes && <div className="receipt-line" style={{color:"#222",fontSize:11,whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>Observações: {i.notes}</div>}
               {i.breadChoice && <div className="receipt-line" style={{ color: '#333', fontSize: 11 }}>&nbsp;&nbsp;Pão: {i.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}{Number(i.breadSurcharge) > 0 ? ` (+ ${fmtBRL(i.breadSurcharge)} por lanche)` : ''}</div>}
               {i.removed && i.removed.length > 0 && (
                 <div className="receipt-line" style={{ color: '#555', fontSize: 11 }}>

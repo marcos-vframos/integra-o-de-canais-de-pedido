@@ -562,6 +562,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                         </span>
                       </div>
 
+                      {it.notes && <p className="whitespace-pre-wrap break-words pl-4 text-xs text-amber-200">Observações: {it.notes}</p>}
                       {it.breadChoice && (
                         <div className="text-[11px] text-zinc-300 pl-4 mt-0.5">
                           Pão: {it.breadChoice === 'frances' ? 'Francês' : 'de Hambúrguer'}

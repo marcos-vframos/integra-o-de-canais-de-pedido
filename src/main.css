@@ -1024,6 +1024,14 @@
 .order-sheet-close { display: grid; place-items: center; align-self: flex-start; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: rgb(255 255 255 / .03); color: #d4d4d8; }
 .order-sheet-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 18px 20px 8px; scrollbar-width: thin; scrollbar-color: #555 transparent; }
 .order-sheet-body .sc-field { margin-bottom: 20px; }
+.order-sheet .customize-bread,
+.order-sheet .customize-price-breakdown { background: var(--landing-bg-secondary, #151518); }
+.order-sheet .customize-bread [role="radio"] { background: transparent; }
+.order-sheet .customize-bread [role="radio"][aria-checked="true"] { background: color-mix(in srgb, var(--red) 18%, transparent); border-color: var(--red); }
+.order-sheet .customize-bread [role="radio"][aria-checked="false"] { border-color: var(--line); }
+.ingredient-image { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex-shrink: 0; background-repeat: no-repeat; color: #aaa; }
+.order-sheet .sc-check-row { gap: 9px; }
+.order-sheet .product-notes textarea:focus { outline: 1px solid var(--red); outline-offset: 2px; }
 .order-sheet-body .sc-label { color: #d4d4d8; font-size: 12px; line-height: 1.6; }
 .order-sheet-body .sc-recipe-list { max-height: none; overflow: visible; padding-right: 0; }
 .order-sheet-body .sc-check-row { gap: 12px; min-height: 52px; border: 0; }

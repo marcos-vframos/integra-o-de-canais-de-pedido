@@ -207,6 +207,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
                   {hasBread(item, resolveStockItem) && (
                     <div className="text-[11px] text-zinc-300">Pão: {breadName(l.breadChoice || 'hamburguer')}{breadSurcharge(item, l, resolveStockItem) > 0 ? ` (+ ${fmtBRL(breadSurcharge(item, l, resolveStockItem))} por lanche)` : ''}</div>
                   )}
+                  {l.notes && <p className="whitespace-pre-wrap break-words text-xs text-zinc-300">Observações: {l.notes}</p>}
                   {(l.removed?.length > 0 ||
                     l.added?.length > 0 ||
                     (l.gourmetFreeChoice && l.gourmetFreeChoice !== 'none')) && (

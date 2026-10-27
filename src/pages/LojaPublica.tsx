@@ -28,6 +28,7 @@ export interface CustomerCartLine {
   cartLineId: string
   itemId: string
   qty: number
+  notes?: string
   removed: string[]
   added: { ingredientId: string; qty: number }[]
   gourmetFreeChoice?: 'catupiry' | 'cheddar' | 'none'
@@ -73,6 +74,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
   const [customizeFlavors, setCustomizeFlavors] = useState<Record<string,number>>({})
   const [customizeQty, setCustomizeQty] = useState(1)
+  const [customizeNotes, setCustomizeNotes] = useState('')
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
   const [customizeBreadChoice, setCustomizeBreadChoice] = useState<BreadChoice>('hamburguer')
@@ -332,6 +334,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     setCustomizeItem(item)
     setCustomizeFlavors({})
     setCustomizeQty(1)
+    setCustomizeNotes('')
     setCustomizeRemoved({})
     setCustomizeAdded({})
     setCustomizeGourmetChoice('none')
@@ -345,6 +348,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     setCustomizeItem(item)
     setCustomizeFlavors(line.beverageFlavor ? {[line.beverageFlavor]:line.qty} : {})
     setCustomizeQty(line.qty)
+    setCustomizeNotes(line.notes || '')
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
       removedMap[id] = true
@@ -364,7 +368,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     if (hasDrinkFlavor(customizeItem)) {
       if (!Object.values(customizeFlavors).some(q=>q>0) || Object.keys(customizeFlavors).some(f=>!validDrinkFlavor(customizeItem,f))) return
       const rows = flavorQuantityLines(customizeItem.id,customizeFlavors)
-      setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
+      setCart(prev => [...prev.filter(line=>line.cartLineId!==customizeEditingLineId), ...rows.map(row=>({...row,notes:customizeNotes.trim(),removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
       handleCloseCustomize()
       return
     }
@@ -382,7 +386,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       setCart((prev) =>
         prev.map((l) =>
           l.cartLineId === customizeEditingLineId
-            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice, beverageFlavor }
+            ? { ...l, qty: customizeQty, notes: customizeNotes.trim(), removed, added, gourmetFreeChoice, breadChoice, beverageFlavor }
             : l,
         ),
       )
@@ -394,6 +398,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
           itemId: customizeItem.id,
           beverageFlavor,
           qty: customizeQty,
+          notes: customizeNotes.trim(),
           removed,
           added,
           gourmetFreeChoice,
@@ -416,6 +421,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       const existing = prev.find(
         (l) =>
           l.itemId === item.id && !l.promotionId &&
+          !l.notes?.trim() &&
           (!l.removed || l.removed.length === 0) &&
           (!l.added || l.added.length === 0) &&
           (!l.breadChoice || l.breadChoice === 'hamburguer'),
@@ -714,6 +720,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
       return {
         itemId: l.itemId,
+        notes: l.notes?.trim() || undefined,
         name: l.beverageFlavor ? `${item?.name || 'Item'} — ${l.beverageFlavor}` : item?.name || 'Item',
         beverageFlavor: l.beverageFlavor,
         price: (l.promotionId ? Number(l.promotionPrice ?? baseItemPrice) : baseItemPrice) + unitExtra + breadExtra,
@@ -1197,6 +1204,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                         {hasBread(item, stockById) && (
                           <div className="text-[11px] text-zinc-300">Pão: {breadName(line.breadChoice || 'hamburguer')}{breadSurcharge(item, line, stockById) > 0 ? ` (+ ${fmtBRL(breadSurcharge(item, line, stockById))} por lanche)` : ''}</div>
                         )}
+                        {line.notes && <p className="mt-1 whitespace-pre-wrap break-words text-xs text-zinc-300">Observações: {line.notes}</p>}
                         {line.gourmetFreeChoice && line.gourmetFreeChoice !== 'none' && (
                           <div className="text-[11px] text-amber-300 font-semibold leading-tight">
                             ★ Cortesia Gourmet:{' '}
@@ -1713,6 +1721,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         stock={stock}
         menu={menu}
         qty={customizeQty}
+        notes={customizeNotes}
+        setNotes={setCustomizeNotes}
         removed={customizeRemoved}
         added={customizeAdded}
         isEditing={Boolean(customizeEditingLineId)}

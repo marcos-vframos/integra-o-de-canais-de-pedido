@@ -63,7 +63,6 @@ export default function LocationHours() {
   const mapsEmbedUrl =
     'https://maps.google.com/maps?q=Av.%20Nicanor%20Ramos%20Nogueira%2C%20Araretama%2C%20Pindamonhangaba%20SP&t=&z=15&ie=UTF8&iwloc=&output=embed'
 
-  const locationTag = content.locationTag || '06 / Ponto & Atendimento'
   const locationHeading = content.locationHeading || 'Localização e Horários.'
   const locationSubtitle =
     content.locationSubtitle ||
@@ -79,7 +78,6 @@ export default function LocationHours() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="max-w-2xl mb-12 sm:mb-16">
-          <span className="editorial-tag block mb-3">{locationTag}</span>
           <h2
             id="localizacao-heading"
             className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white mb-4"

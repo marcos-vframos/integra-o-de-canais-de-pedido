@@ -3,7 +3,8 @@ import { isBeverage, hasDrinkFlavor, drinkFlavors, drinkUnitCount } from '@/lib/
 import { Minus, Plus, X, ShoppingBag } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
-import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, breadSurcharge, hasBread, lineUnitTotal, extraUnitPrice, type BreadChoice } from '@/lib/orderCustomization'
+import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, hasBread, lineUnitTotal, extraUnitPrice, availableIngredientExtras, type BreadChoice } from '@/lib/orderCustomization'
+import { IngredientImage } from '@/components/IngredientImage'
 
 import { OrderSheet } from '@/components/OrderSheet'
 import ProductImage from '@/components/ProductImage'
@@ -16,6 +17,8 @@ function CustomizeFrame({ sheet, item, children, footer, onClose }: { sheet: boo
 
 interface CustomizeModalProps {
   presentation?: 'modal' | 'sheet'
+  notes?: string
+  setNotes?: (value: string) => void
   beverageFlavors?: Record<string,number>
   setBeverageFlavors?: (flavors: Record<string,number>) => void
   item: MenuItem | null
@@ -42,6 +45,8 @@ interface CustomizeModalProps {
 export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   item,
   presentation = 'modal',
+  notes = '',
+  setNotes,
   beverageFlavors = {},
   setBeverageFlavors,
   menu,
@@ -72,7 +77,8 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
     .filter(([ingredientId, amount]) => Number(amount) > 0 && !breadKind(ingredientId, resolveStockItem))
     .map(([ingredientId, amount]) => ({ ingredientId, qty: Number(amount) }))
   const extrasTotal = extras.reduce((sum, a) => sum + extraUnitPrice(a.ingredientId, resolveStockItem, menu) * a.qty, 0)
-  const breadExtra = breadSurcharge(item, { breadChoice }, resolveStockItem)
+  const recipeKeys = new Set((item.recipe || []).map(r => resolveStockItem(r.ingredientId)?.code || resolveStockItem(r.ingredientId)?.id || r.ingredientId))
+  const otherExtras = !beverage && showBreadSelector ? availableIngredientExtras(menu, resolveStockItem).filter(ingredient => !recipeKeys.has(ingredient.code || ingredient.id)) : []
   const currentUnitTotal = beverage ? Number(item.price) : lineUnitTotal(item, { added: extras, breadChoice }, resolveStockItem, menu)
 
   const sheet = presentation === 'sheet'
@@ -124,7 +130,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           <ul className="mt-2 space-y-1 text-sm text-zinc-200" aria-live="polite">{Object.entries(beverageFlavors).filter(([,count])=>count>0).map(([flavor,count])=><li key={flavor}>{count} × {item.name} — {flavor} <span className="float-right">{fmtBRL(item.price*count)}</span></li>)}</ul>
         </fieldset>}
         {showBreadSelector && (
-          <fieldset className="sc-field rounded-xl border border-[var(--line)] bg-[#151518] p-3">
+          <fieldset className="sc-field customize-bread rounded-xl border border-[var(--line)] bg-[#151518] p-3">
             <legend className="px-1 text-xs font-bold uppercase tracking-wide text-white">Escolha o pão</legend>
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de pão">
               {(['hamburguer', 'frances'] as const).map(choice => (
@@ -293,11 +299,12 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                               }))
                             }
                           />
-                          <span className="flex flex-col">
+                          <IngredientImage code={si?.code || ingKey} name={si?.name || r.ingredientId} />
+                          <span className="flex min-w-0 flex-col">
                             <span className={checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'}>
-                              {si ? si.name : r.ingredientId}
+                              {si ? si.name : r.ingredientId}{Number(r.qty) > 1 ? ` (${r.qty} unidades inclusas)` : ''}
                             </span>
-                            <span className="text-[10px] text-zinc-500">{unitProduct ? 'Incluído no combo. Para outra unidade, peça a bebida no cardápio.' : extraPrice > 0 ? `Extra: ${fmtBRL(extraPrice)} por porção` : 'Sem adicional disponível'}</span>
+                            {(unitProduct || extraPrice > 0) && <span className="text-[10px] text-zinc-400">{unitProduct ? 'Incluído no combo. Para outra unidade, peça a bebida no cardápio.' : `Extra: ${fmtBRL(extraPrice)} por porção`}</span>}
                           </span>
                         </label>
 
@@ -372,6 +379,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                                       }))
                                     }
                                   />
+                                  <IngredientImage code={toppingItem?.code || topKey} name={label} />
                                   <span>{label}</span>
                                 </label>
                                 <div className="flex items-center gap-2 shrink-0 select-none">
@@ -426,9 +434,33 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
           </div>
         )}
 
-        <div className="rounded-xl border border-[var(--line)] bg-[#121217] p-3 space-y-1" aria-live="polite">
+        {otherExtras.length > 0 && <fieldset className="sc-field ingredient-extras">
+          <legend className="sc-label">Adicione ao seu lanche</legend>
+          <div className="space-y-1">
+            {otherExtras.map(ingredient => {
+              const key = ingredient.code || ingredient.id
+              const count = added[key] || 0
+              return <div key={key} className="flex items-center gap-3 border-b border-[var(--line)] py-2 last:border-0">
+                <IngredientImage code={key} name={ingredient.name} />
+                <div className="min-w-0 flex-1"><span className="block text-sm">{ingredient.name}</span><span className="text-xs text-zinc-400">+ {fmtBRL(extraUnitPrice(key, resolveStockItem, menu))}</span></div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button type="button" className="sc-round-btn" disabled={count <= 0} aria-label={'Reduzir adicional de '+ingredient.name} onClick={() => setAdded(previous => ({...previous,[key]:Math.max(0,(previous[key] || 0)-1)}))}><Minus size={13}/></button>
+                  <span className="sc-tabular min-w-4 text-center">{count}</span>
+                  <button type="button" className="sc-round-btn" disabled={count >= 10} aria-label={'Adicionar '+ingredient.name+' ao lanche'} onClick={() => setAdded(previous => ({...previous,[key]:Math.min(10,(previous[key] || 0)+1)}))}><Plus size={13}/></button>
+                </div>
+              </div>
+            })}
+          </div>
+        </fieldset>}
+
+        {setNotes && <div className="sc-field product-notes">
+          <label htmlFor="product-notes" className="sc-label">Observações sobre este produto</label>
+          <textarea id="product-notes" value={notes} maxLength={500} rows={3} onChange={event => setNotes(event.target.value)} placeholder="Ex.: cortar ao meio ou deixar bem passado." className="mt-2 w-full resize-y rounded-xl border border-[var(--line)] bg-transparent p-3 text-sm text-white placeholder:text-zinc-500" />
+          <p className="mt-1 text-right text-[11px] text-zinc-400">{notes.length}/500</p>
+        </div>}
+
+        <div className="customize-price-breakdown rounded-xl border border-[var(--line)] bg-[#121217] p-3 space-y-1" aria-live="polite">
           <div className="flex justify-between text-xs text-zinc-300"><span>{beverage ? 'Preço da bebida' : 'Preço do produto'}</span><span>{fmtBRL(item.price)}</span></div>
-          {showBreadSelector && <div className="flex justify-between text-xs text-zinc-300"><span>{breadName(breadChoice)} por unidade</span><span>{breadExtra > 0 ? `+ ${fmtBRL(breadExtra)}` : 'Incluso'}</span></div>}
           {!beverage && <div className="flex justify-between text-xs text-zinc-300"><span>Outros adicionais por unidade</span><span>+ {fmtBRL(extrasTotal)}</span></div>}
           {extras.map(a => <div key={a.ingredientId} className="flex justify-between text-[11px] text-zinc-400">
             <span>{resolveStockItem(a.ingredientId)?.name || a.ingredientId} × {a.qty}</span>

@@ -93,6 +93,7 @@ export default function Gestao() {
   const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null)
   const [customizeFlavors,setCustomizeFlavors] = useState<Record<string,number>>({})
   const [customizeQty, setCustomizeQty] = useState(1)
+  const [customizeNotes, setCustomizeNotes] = useState('')
   const [customizeRemoved, setCustomizeRemoved] = useState<Record<string, boolean>>({})
   const [customizeAdded, setCustomizeAdded] = useState<Record<string, number>>({})
   const [customizeBreadChoice, setCustomizeBreadChoice] = useState<BreadChoice>('hamburguer')
@@ -484,6 +485,7 @@ export default function Gestao() {
       const existing = prev.find(
         (l) =>
           l.itemId === item.id &&
+          !l.notes?.trim() &&
           (!l.removed || l.removed.length === 0) &&
           (!l.added || l.added.length === 0) &&
           (!l.breadChoice || l.breadChoice === 'hamburguer'),
@@ -517,6 +519,7 @@ export default function Gestao() {
     setCustomizeItem(item)
     setCustomizeFlavors({})
     setCustomizeQty(1)
+    setCustomizeNotes('')
     setCustomizeRemoved({})
     setCustomizeAdded({})
     setCustomizeGourmetChoice('none')
@@ -530,6 +533,7 @@ export default function Gestao() {
     setCustomizeItem(item)
     setCustomizeFlavors(line.beverageFlavor?{[line.beverageFlavor]:line.qty}:{})
     setCustomizeQty(line.qty)
+    setCustomizeNotes(line.notes || '')
     const removedMap: Record<string, boolean> = {}
     ;(line.removed || []).forEach((id) => {
       removedMap[id] = true
@@ -554,7 +558,7 @@ export default function Gestao() {
     if(hasDrinkFlavor(customizeItem)) {
       if(!Object.values(customizeFlavors).some(q=>q>0) || Object.keys(customizeFlavors).some(f=>!validDrinkFlavor(customizeItem,f))) return
       const rows=flavorQuantityLines(customizeItem.id,customizeFlavors)
-      setCart(prev=>[...prev.filter(l=>l.cartLineId!==customizeEditingLineId),...rows.map(row=>({...row,removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
+      setCart(prev=>[...prev.filter(l=>l.cartLineId!==customizeEditingLineId),...rows.map(row=>({...row,notes:customizeNotes.trim(),removed:isBeverage(customizeItem)?[]:Object.keys(customizeRemoved).filter(k=>customizeRemoved[k]),added:isBeverage(customizeItem)?[]:Object.entries(customizeAdded).filter(([,v])=>v>0).map(([ingredientId,qty])=>({ingredientId,qty})),breadChoice:hasBread(customizeItem,stockById)?customizeBreadChoice:undefined}))])
       closeCustomize();return
     }
     const removed = Object.keys(customizeRemoved).filter((id) => customizeRemoved[id])
@@ -570,7 +574,7 @@ export default function Gestao() {
       setCart((prev) =>
         prev.map((l) =>
           l.cartLineId === customizeEditingLineId
-            ? { ...l, qty: customizeQty, removed, added, gourmetFreeChoice, breadChoice }
+            ? { ...l, qty: customizeQty, notes: customizeNotes.trim(), removed, added, gourmetFreeChoice, breadChoice }
             : l,
         ),
       )
@@ -581,6 +585,7 @@ export default function Gestao() {
           cartLineId: uid('line'),
           itemId: customizeItem.id,
           qty: customizeQty,
+          notes: customizeNotes.trim(),
           removed,
           added,
           gourmetFreeChoice,
@@ -623,6 +628,7 @@ export default function Gestao() {
       }
 
       return {
+        notes: l.notes?.trim() || undefined,
         name: (item?.name || 'Item')+(l.beverageFlavor?' — '+l.beverageFlavor:''),
         beverageFlavor:l.beverageFlavor,
         price: (item?.price || 0) + unitExtra + breadExtra,
@@ -681,6 +687,7 @@ export default function Gestao() {
 
       return {
         itemId: l.itemId,
+        notes: l.notes?.trim() || undefined,
         name: (item?.name || 'Item removido')+(l.beverageFlavor?' — '+l.beverageFlavor:''),
         beverageFlavor:l.beverageFlavor,
         price: (item?.price || 0) + unitExtra + breadExtra,
@@ -1407,6 +1414,8 @@ export default function Gestao() {
           stock={stock}
           menu={menu}
           qty={customizeQty}
+        notes={customizeNotes}
+        setNotes={setCustomizeNotes}
           removed={customizeRemoved}
           added={customizeAdded}
           isEditing={Boolean(customizeEditingLineId)}

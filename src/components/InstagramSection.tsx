@@ -51,7 +51,6 @@ import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function InstagramSection() {
   const { content } = useLandingContent()
-  const instagramTag = content.instagramTag || '04 / Redes Sociais'
   const instagramHeading = content.instagramHeading || '@loyolass_lanches'
   const instagramSubtitle =
     content.instagramSubtitle ||
@@ -67,7 +66,6 @@ export default function InstagramSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12 sm:mb-16">
           <div className="max-w-xl">
-            <span className="editorial-tag block mb-3">{instagramTag}</span>
             <h2
               id="instagram-heading"
               className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white"

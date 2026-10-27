@@ -19,3 +19,24 @@ test('registered ingredient prices replace arbitrary three-real defaults',()=>{
  assert.equal(lineUnitTotal({price:20,recipe:[]},{added:[{ingredientId:'ing-file-frango',qty:2}]},resolve,menu),40)
  assert.equal(lineUnitTotal({price:10,recipe:[]},{added:[]},resolve,menu)*3,30)
 })
+
+test('all active priced ingredient add-ons are available outside the sandwich recipe',async()=>{
+ const {availableIngredientExtras}=await import('../src/lib/orderCustomization.ts')
+ const stock=[{id:'a',code:'ing-ovo',name:'Ovo',group:'Ingrediente'},{id:'b',code:'ing-file-frango',name:'Frango',group:'Ingrediente'},{id:'p',code:'ing-pao-frances',name:'Pão Francês',group:'Ingrediente'},{id:'d',code:'ing-refri-lata',name:'Refri',group:'Ingrediente'},{id:'x',code:'ing-queijo',name:'Queijo',group:'Ingrediente'}]
+ const resolve=id=>stock.find(s=>s.code===id||s.id===id)
+ const addon=(key,active=true,price=3)=>({category:'Complementos',active,price,recipe:[{ingredientId:key,qty:1}]})
+ const menu=[addon('a'),addon('ing-file-frango'),addon('p'),addon('d'),addon('x',false),addon('x',true,0),addon('ing-ovo')]
+ assert.deepEqual(availableIngredientExtras(menu,resolve).map(s=>s.code),['ing-file-frango','ing-ovo'])
+ assert.equal(extraUnitPrice('ing-queijo',resolve,menu.filter(m=>!m.active)),0)
+})
+test('only Max recipes use three standard meats and extras consume ordinary patties',async()=>{
+ const {seedMenu,seedStock}=await import('../src/lib/seeds.ts')
+ const {accumulateDeductions}=await import('../src/lib/orderCustomization.ts')
+ const menu=seedMenu(),stock=seedStock();const resolve=id=>stock.find(s=>s.code===id)
+ const max=menu.filter(p=>p.code==='c-max'||p.code.startsWith('c-xmax'))
+ assert.equal(max.length,8)
+ for(const item of max){assert.equal(item.recipe.find(r=>r.ingredientId==='ing-hamburguer').qty,3);assert.equal(item.recipe.some(r=>r.ingredientId==='ing-carne-max'),false)}
+ assert.equal(menu.find(p=>p.code==='c-xburguer').recipe.find(r=>r.ingredientId==='ing-hamburguer').qty,1)
+ const use={};accumulateDeductions(use,{qty:2,removed:[],added:[{ingredientId:'ing-hamburguer',qty:1}]},max[0],resolve)
+ assert.equal(use['ing-hamburguer'],8);assert.equal(use['ing-carne-max'],undefined)
+})

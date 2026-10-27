@@ -48,7 +48,7 @@ export function extraUnitPrice(
   const isCatupiry = code.includes('catupiry')
   const isCheddar = code.includes('cheddar')
   const match = menu.find(m => {
-    if (m.category !== 'Complementos') return false
+    if (m.category !== 'Complementos' || m.active === false) return false
     const mCode = normalize(m.code || '')
     if (isCatupiry && (mCode === 'x-catupiry' || normalize(m.name).includes('catupiry'))) return true
     if (isCheddar && (mCode === 'x-cheddar' || normalize(m.name).includes('cheddar'))) return true
@@ -60,6 +60,20 @@ export function extraUnitPrice(
   const fallback = isCatupiry ? 4 : isCheddar ? 3 : 0
   const price = match ? Number(match.price) : fallback
   return Number.isFinite(price) ? Math.max(0, price) : fallback
+}
+
+/** Extra ingredients offered by the active, priced add-on catalog, even outside the recipe. */
+export function availableIngredientExtras(menu: MenuItem[], resolve: (id: string) => InventoryItem | undefined) {
+  const found = new Map<string, InventoryItem>()
+  for (const product of menu) {
+    if (product.category !== 'Complementos' || product.active === false || !(Number(product.price) > 0)) continue
+    for (const part of product.recipe || []) {
+      const ingredient = resolve(part.ingredientId)
+      if (!ingredient || ingredient.group !== 'Ingrediente' || breadKind(part.ingredientId, resolve) || /^ing-(refri|agua|suco)/.test(ingredient.code || '')) continue
+      found.set(ingredient.code || ingredient.id, ingredient)
+    }
+  }
+  return [...found.values()].sort((a,b) => a.name.localeCompare(b.name, 'pt-BR'))
 }
 
 export function addonUnitTotal(line: AddedLine, resolveStockItem: (id: string) => InventoryItem | undefined, menu: MenuItem[]) {

@@ -13,7 +13,6 @@ export default function OrderCTA() {
     }
   }
 
-  const ctaTag = content.ctaTag || '05 / Pedidos & Delivery'
   const ctaHeading = content.ctaHeading || 'Pronto para provar o verdadeiro podrão?'
   const ctaDescription =
     content.ctaDescription ||
@@ -36,7 +35,6 @@ export default function OrderCTA() {
         </div>
       )}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 my-auto relative z-10">
-        <span className="editorial-tag block">{ctaTag}</span>
         <h2
           id="order-cta-heading"
           className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white leading-tight"
