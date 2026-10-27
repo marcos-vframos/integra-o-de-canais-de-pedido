@@ -17,12 +17,14 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 import { useLandingContent, LandingThemeColors, LandingSlide, LandingFeedPost, DEFAULT_THEME_COLORS } from '@/context/LandingContentContext'
-import { AdobeColorPicker } from '@/components/AdobeColorPicker'
+import {useBusinessProfile} from '@/context/BusinessProfileContext'
+import ThemePresetCard from '@/components/ThemePresetCard'
+import ThemeAdobeMenu from '@/components/ThemeAdobeMenu'
 import { ImageUploadField } from '@/components/ImageUploadField'
 import { MultiImageField } from '@/components/MultiImageField'
 import SeasonalCampaignAdmin from '@/components/SeasonalCampaignAdmin'
 import { loadPromotionPalettes, savePromotionPalette, type SavedPromotionPalette } from '@/lib/promotionPaletteStore'
-import { themePaletteCatalog, isCatalogThemeRegistered, registerCatalogTheme, describeThemeColors } from '@/lib/themePaletteCatalog'
+import { themePaletteCatalog, isCatalogThemeRegistered, registerCatalogTheme, duplicateThemePreset } from '@/lib/themePaletteCatalog'
 import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import LandingStoriesAdmin from '@/components/LandingStoriesAdmin'
 import MarqueeEditor from '@/components/MarqueeEditor'
@@ -30,17 +32,17 @@ import useRealtime from '@/hooks/use-realtime'
 import { checkIsOpenNow } from '@/data/loyolasData'
 
 export default function AdmLanding() {
+  const business = useBusinessProfile()
   const location = useLocation()
   const requestedReturn = (location.state as { returnTo?: unknown } | null)?.returnTo
   // Restrict return destinations to known internal management routes.
   const returnTo = requestedReturn === '/gestao' || requestedReturn === '/config' ? requestedReturn : '/'
   const returnLabel = returnTo === '/gestao' ? 'Voltar ao Gestor' : returnTo === '/config' ? 'Voltar às Configurações' : 'Voltar à Landing Page'
   const draftTouched = useRef(false)
-  const { content, loading: contentLoading, saveSection, saveTheme, refresh } = useLandingContent()
+  const { content, loading: contentLoading, saveSection } = useLandingContent()
   const [activeTab, setActiveTab] = useState<'textos' | 'imagens' | 'temas' | 'loja' | 'stories'>('textos')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  const [heroGlowEnabled, setHeroGlowEnabled] = useState(Boolean(content.heroGlowEnabled))
   const [allHeadlines, setAllHeadlines] = useState(content.headlines)
 
   // Status da loja (controle manual e horário automático)
@@ -244,7 +246,6 @@ export default function AdmLanding() {
     setStoryImages(content.storyImages || (content.storyImage ? [content.storyImage] : []))
     setCtaImages(content.ctaImages || [])
     setCustomColors(content.activeColors || DEFAULT_THEME_COLORS)
-    setHeroGlowEnabled(Boolean(content.heroGlowEnabled))
     setAllHeadlines(content.headlines)
   }, [content, contentLoading])
 
@@ -1185,7 +1186,7 @@ export default function AdmLanding() {
         {activeTab === 'temas' && (
           <div className="space-y-8">
             <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
-              <div className="border-b border-white/10 pb-3 flex flex-wrap items-center justify-between gap-4">
+              <div className="relative border-b border-white/10 pb-3 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Palette className="w-4 h-4 text-amber-400" />
@@ -1197,18 +1198,11 @@ export default function AdmLanding() {
                 </div>
 
                 <div className="flex flex-wrap items-end gap-2">
-                  <button
-                    type="button"
-                    disabled={themeBusy}
-                    onClick={() => void persistThemeAction(async () => {
-                      await saveTheme('padrao', DEFAULT_THEME_COLORS)
-                      setCustomColors(DEFAULT_THEME_COLORS)
-                    }, 'Tema padrão ativado.')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Voltar ao Padrão Oliva/Vinho/Prata</span>
-                  </button>
+                  <ThemeAdobeMenu colors={customColors} onChange={setCustomColors} busy={themeBusy} onSave={name => persistThemeAction(async () => {
+                    const source = content.themePresets.find(p=>p.id===content.activeThemeId) || content.themePresets[0]
+                    const updated = duplicateThemePreset(content.themePresets, source, name, customColors, 'preset_'+crypto.randomUUID())
+                    await saveSection('theme', {themePresets:updated})
+                  }, 'Novo cartão salvo. Use o botão do cartão para ativá-lo.')} />
 
                   <label className="block min-w-0 flex-1 text-xs text-zinc-300 sm:min-w-[280px]">Paletas prontas e salvas
                     <select value="" disabled={themeBusy || contentLoading} onChange={e => handleRegisterPalette(e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-xs text-white disabled:opacity-50">
@@ -1224,88 +1218,24 @@ export default function AdmLanding() {
 
               {themeError && <p role="alert" className="text-xs text-red-300">{themeError}</p>}
               {themeMessage && <p role="status" className="text-xs text-emerald-300">{themeMessage}</p>}
-              <label className="flex items-center gap-2 text-xs text-zinc-200"><input type="checkbox" disabled={themeBusy} checked={heroGlowEnabled} onChange={e => { const enabled = e.target.checked; void persistThemeAction(async () => { await saveSection('theme', { heroGlowEnabled: enabled }); setHeroGlowEnabled(enabled) }, 'Iluminação do Hero salva.') }}/> Ativar iluminação vermelha no Hero (desligada por padrão)</label>
-              <p className="text-xs text-zinc-400">Mapa das cores: Fundo principal = Hero e página; Secundário = faixas e seções; Cards = painéis; Acento = botões e indicadores; Hover = botões ao passar o mouse; Claro = textos secundários e detalhes.</p>
               {/* Presets Salvos */}
               <div>
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block mb-3">
                   Temas e Ocasiões Cadastradas
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {content.themePresets.map((preset) => {
-                    const isSelected = content.activeThemeId === preset.id
-                    return (
-                      <article
-                        key={preset.id}
-                        aria-label={'Tema ' + preset.name}
-                        className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
-                          isSelected
-                            ? 'bg-amber-500/10 border-amber-400 shadow-lg'
-                            : 'bg-zinc-900 border-white/10 hover:border-white/20'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-xs font-bold text-white">{preset.name}</span>
-                          {preset.id !== 'padrao' && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePreset(preset.id)}
-                              disabled={themeBusy || isSelected}
-                              aria-label={'Remover tema ' + preset.name}
-                              className="text-zinc-500 hover:text-red-400 p-1"
-                              title="Remover tema"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-
-                        <span className="break-words text-[10px] text-zinc-400">{preset.description || describeThemeColors(preset.colors)}</span>
-                        {/* Amostras das cores do preset */}
-                        <div className="flex items-center gap-1.5">
-                          <div
-                            className="w-5 h-5 rounded-full border border-white/20"
-                            style={{ backgroundColor: preset.colors.bgPrimary }}
-                            title="Fundo principal — Hero e página"
-                          />
-                          <div
-                            className="w-5 h-5 rounded-full border border-white/20"
-                            style={{ backgroundColor: preset.colors.bgCard }}
-                            title="Fundo dos cards — painéis"
-                          />                          <div
-                            className="w-5 h-5 rounded-full border border-white/20"
-                            style={{ backgroundColor: preset.colors.accentVinho }}
-                            title="Acento — botões e indicadores"
-                          />
-                          <div
-                            className="w-5 h-5 rounded-full border border-white/20"
-                            style={{ backgroundColor: preset.colors.accentSilver }}
-                            title="Acento claro — detalhes e textos"
-                          />
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={themeBusy}
-                          aria-pressed={isSelected}
-                          aria-label={'Ativar tema ' + preset.name}
-                          onClick={() => void persistThemeAction(async () => {
-                            const colors = isSelected ? customColors : preset.colors
-                            const presets = content.themePresets.map(p => p.id === preset.id ? { ...p, colors: { ...colors }, description: describeThemeColors(colors) } : p)
-                            await saveSection('theme', { activeThemeId: preset.id, activeColors: colors, themePresets: presets, heroGlowEnabled })
-                            setCustomColors(colors)
-                          }, `Tema “${preset.name}” ativado.`)}
-                          className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer text-center ${
-                            isSelected
-                              ? 'bg-amber-400 text-zinc-950 font-bold'
-                              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
-                          }`}
-                        >
-                          {isSelected ? '✓ Tema Ativo' : 'Ativar Este Tema'}
-                        </button>
-                      </article>
-                    )
-                  })}
+                  {content.themePresets.map(preset => <ThemePresetCard key={preset.id} preset={preset} active={content.activeThemeId===preset.id} busy={themeBusy}
+                    onDelete={()=>void handleDeletePreset(preset.id)}
+                    onActivate={()=>void persistThemeAction(async()=>{
+                      const colors=content.activeThemeId===preset.id ? customColors : preset.colors
+                      const themePresets=content.themePresets.map(p=>p.id===preset.id?{...p,colors:{...colors}}:p)
+                      await saveSection('theme',{activeThemeId:preset.id,activeColors:colors,themePresets})
+                      setCustomColors(colors)
+                    }, `Tema “${preset.name}” ativado.`)}
+                    onDuplicate={(name,colors)=>persistThemeAction(async()=>{
+                      const themePresets=duplicateThemePreset(content.themePresets,preset,name,colors,'preset_'+crypto.randomUUID())
+                      await saveSection('theme',{themePresets})
+                    }, 'Cópia salva sem alterar o tema original.')} />)}
                 </div>
 
                 {/* Criar novo preset */}
@@ -1341,44 +1271,7 @@ export default function AdmLanding() {
                 </div>
               </div>
 
-              {/* Roda / Seletor de Cores Adobe */}
-              <div className="border-t border-white/10 pt-6">
-                <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block mb-4">
-                  Ajustar Cores Individuais (Painel Adobe HSV / HEX / RGB)
-                </span>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <AdobeColorPicker
-                    label="Fundo Primário (Landing)"
-                    color={customColors.bgPrimary}
-                    onChange={(hex) => setCustomColors({ ...customColors, bgPrimary: hex })}
-                  />
-                  <AdobeColorPicker
-                    label="Fundo Secundário (Seções)"
-                    color={customColors.bgSecondary}
-                    onChange={(hex) => setCustomColors({ ...customColors, bgSecondary: hex })}
-                  />
-                  <AdobeColorPicker
-                    label="Fundo dos Cards (Destaques)"
-                    color={customColors.bgCard}
-                    onChange={(hex) => setCustomColors({ ...customColors, bgCard: hex })}
-                  />
-                  <AdobeColorPicker
-                    label="Tom de Destaque (Vinho / Acento Principal)"
-                    color={customColors.accentVinho}
-                    onChange={(hex) => setCustomColors({ ...customColors, accentVinho: hex })}
-                  />
-                  <AdobeColorPicker
-                    label="Tom de Destaque Hover"
-                    color={customColors.accentVinhoHover}
-                    onChange={(hex) => setCustomColors({ ...customColors, accentVinhoHover: hex })}
-                  />
-                  <AdobeColorPicker
-                    label="Tom de Acento Claro (Prata / Dourado)"
-                    color={customColors.accentSilver}
-                    onChange={(hex) => setCustomColors({ ...customColors, accentSilver: hex })}
-                  />
-                </div>
-              </div>
+
             </div>
           </div>
         )}
@@ -1389,6 +1282,12 @@ export default function AdmLanding() {
         {/* ================= ABA 4: ABERTO / FECHADO ================= */}
         {activeTab === 'loja' && (
           <div className="space-y-6">
+            <section className="rounded-xl border border-white/10 bg-[#12141c] p-4 text-xs text-zinc-300" aria-label="Sincronização Google Meu Negócio">
+              <h2 className="font-bold text-white">Google Meu Negócio · localização e horários</h2>
+              <p className="mt-2">{business.profile ? `Última consulta: ${new Date(business.profile.fetchedAt).toLocaleString('pt-BR')}${business.stale?' · aguardando atualização':''}. Atualização automática a cada 15 minutos enquanto o sistema está aberto.` : business.configured ? 'Conexão configurada, aguardando consulta ao Google.' : 'Conexão pendente. O projeto Google e a conta administradora do estabelecimento precisam ser autorizados.'}</p>
+              <p className="mt-2 text-zinc-400">A integração lê o endereço, telefone e horários semanais e especiais. Sem conexão, as informações cadastradas continuam em uso.</p>
+            </section>
+
             <div className="bg-[#12141c] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
               <div className="border-b border-white/10 pb-3 flex items-center justify-between">
                 <div>

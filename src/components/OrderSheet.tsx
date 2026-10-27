@@ -3,10 +3,11 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 
 /** Presentation only: customization state and checkout remain in the existing store. */
-export function OrderSheet({ title, price, image, children, footer, onClose }: {
+export function OrderSheet({ title, price, image, preview, children, footer, onClose }: {
   title: string
   price: string
   image: ReactNode
+  preview?: ReactNode
   children: ReactNode
   footer: ReactNode
   onClose: () => void
@@ -33,6 +34,7 @@ export function OrderSheet({ title, price, image, children, footer, onClose }: {
               <p className="order-sheet-price sc-tabular">{price}</p>
               <Dialog.Description className="order-sheet-description">Personalize do seu jeito.</Dialog.Description>
             </div>
+            {preview}
             <Dialog.Close className="order-sheet-close" aria-label="Fechar personalização"><X size={18} /></Dialog.Close>
           </header>
           <div className="order-sheet-body">{children}</div>

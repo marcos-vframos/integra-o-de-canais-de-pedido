@@ -9,9 +9,11 @@ import { IngredientImage } from '@/components/IngredientImage'
 import { OrderSheet } from '@/components/OrderSheet'
 import ProductImage from '@/components/ProductImage'
 import { productFallbackImage } from '@/lib/productPresentation'
+import SandwichPreview from '@/components/SandwichPreview'
+import { sandwichPreviewLayers } from '@/lib/sandwichPreview'
 
-function CustomizeFrame({ sheet, item, children, footer, onClose }: { sheet: boolean; item: MenuItem; children: React.ReactNode; footer: React.ReactNode; onClose: () => void }) {
-  if (sheet) return <OrderSheet key={item.id} title={item.name} price={fmtBRL(item.price)} image={<ProductImage item={item} fallback={productFallbackImage(item)} />} footer={footer} onClose={onClose}>{children}</OrderSheet>
+function CustomizeFrame({ sheet, item, children, footer, preview, onClose }: { sheet: boolean; item: MenuItem; children: React.ReactNode; footer: React.ReactNode; preview?:React.ReactNode; onClose: () => void }) {
+  if (sheet) return <OrderSheet key={item.id} title={item.name} price={fmtBRL(item.price)} image={<ProductImage item={item} fallback={productFallbackImage(item)} />} preview={preview} footer={footer} onClose={onClose}>{children}</OrderSheet>
   return <div className="sc-modal-backdrop" onClick={onClose}><div className="sc-modal" onClick={e => e.stopPropagation()}><div className="sc-modal-header"><div><div className="sc-modal-title">{item.name}</div><div className="sc-modal-price sc-tabular">{fmtBRL(item.price)}</div></div><button type="button" className="sc-icon-btn" onClick={onClose} aria-label="Fechar"><X size={14} /></button></div>{children}{footer}</div></div>
 }
 
@@ -105,7 +107,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
   </> : <div className="sc-form-actions">{confirmButton}<button type="button" className="sc-btn-ghost" onClick={onClose}>Cancelar</button></div>
 
   return (
-    <CustomizeFrame sheet={sheet} item={item} footer={footer} onClose={onClose}>
+    <CustomizeFrame sheet={sheet} item={item} footer={footer} onClose={onClose} preview={showBreadSelector&&item.category!=='Combos'?<SandwichPreview bread={breadChoice} layers={sandwichPreviewLayers(item,removed,added,resolveStockItem,gourmetFreeChoice)}/>:undefined}>
         {!soda && !sheet && <>
         <div className="sc-field">
           <label className="sc-label">Quantidade</label>

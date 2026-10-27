@@ -28,5 +28,5 @@ export default function ProductImage({ item, fallback }: { item: MenuItem; fallb
     </div>
   }
   const beverageImage = soda ? drink : /água|agua/i.test(item.name) ? 'https://images.tcdn.com.br/img/img_prod/1170916/agua_mineral_crystal_sem_gas_500ml_57090_1_6472a1e1d42fbbaacf384b9b0e57e67f.jpg' : /suco/i.test(item.name) ? '/images/suco-tropical.jpg' : fallback
-  return <img src={item.category === 'Bebidas' ? beverageImage : fallback} alt={item.name} className={'h-full w-full ' + (item.category === 'Bebidas' ? 'bg-white object-contain p-3' : 'object-cover object-center')} loading="lazy"/>
+  return <img src={item.category === 'Bebidas' ? beverageImage : fallback} alt={item.name} className={'h-full w-full ' + (item.category === 'Bebidas' ? 'bg-white object-contain p-3' : 'object-contain object-center bg-[var(--landing-bg-card)] p-2')} loading="lazy"/>
 }

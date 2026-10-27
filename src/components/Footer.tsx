@@ -1,3 +1,4 @@
+import { useBusinessProfile } from '@/context/BusinessProfileContext'
 import { useState, useEffect } from 'react'
 
 import { ArrowUp } from 'lucide-react'
@@ -7,13 +8,14 @@ import { useLandingContent } from '@/context/LandingContentContext'
 
 export default function Footer() {
   const { content } = useLandingContent()
+  const business = useBusinessProfile()
   const [showBackToTop, setShowBackToTop] = useState(false)
   const currentYear = new Date().getFullYear()
   const footerDesc =
     content.footerDesc ||
     'O autêntico podrão brasileiro com mais de 18 anos de tradição. Fartura, saboroso, feito com carinho e ingredientes selecionados com capricho.'
-  const addressText = content.addressText || BUSINESS_INFO.address
-  const phoneText = content.phoneText || BUSINESS_INFO.phoneDisplay
+  const addressText = business.profile?.address || content.addressText || BUSINESS_INFO.address
+  const phoneText = business.profile?.phone || content.phoneText || BUSINESS_INFO.phoneDisplay
 
   useEffect(() => {
     const container = document.getElementById('landing-container')
@@ -177,8 +179,7 @@ export default function Footer() {
 
           <div className="space-y-3 text-xs text-[#C4C4C4]">
             <span className="editorial-tag block text-white/90">Horário de Funcionamento</span>
-            <p className="text-white font-medium">Segunda a Sábado: 20:00 às 23:30</p>
-            <p className="text-[#8F0F1B]">Domingo: Encerrado</p>
+            {business.hours ? business.hours.map(day=><p key={day.dayIndex} className="text-white">{day.dayName}: {day.hours}</p>) : <><p className="text-white font-medium">Segunda a Sábado: 20:00 às 23:30</p><p className="text-[var(--landing-silver)]">Domingo: Encerrado</p></>}
             <p className="text-[11px] text-[#C4C4C4]/70 pt-1">
               Atendimento presencial e delivery para toda a região central e bairros atendidos.
             </p>

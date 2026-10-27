@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
 interface AdobeColorPickerProps {
+  compact?: boolean
   label: string
   color: string
   onChange: (hex: string) => void
@@ -101,7 +102,7 @@ function hsvToRgb(h: number, s: number, v: number): { r: number; g: number; b: n
   }
 }
 
-export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color, onChange }) => {
+export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color, onChange, compact=false }) => {
   const [hexInput, setHexInput] = useState(color)
   const [rgb, setRgb] = useState(() => hexToRgb(color))
   const [hsv, setHsv] = useState(() => {
@@ -157,7 +158,7 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
 
   return (
     <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 flex flex-col gap-3 shadow-lg text-white">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
           {label}
         </span>
@@ -214,6 +215,7 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
         </div>
         <input
           type="range"
+          aria-label={label+' — Matiz'}
           min="0"
           max="360"
           value={hsv.h}
@@ -227,11 +229,12 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
       </div>
 
       {/* Valores Numéricos HEX e RGB */}
-      <div className="grid grid-cols-4 gap-2 text-xs pt-1">
+      <div className={'grid gap-2 text-xs pt-1 '+(compact?'grid-cols-2':'grid-cols-4')}>
         <div>
           <label className="text-[10px] text-zinc-400 block mb-0.5">HEX</label>
           <input
             type="text"
+            aria-label={label+' — HEX'}
             value={hexInput}
             onChange={(e) => handleHexChange(e.target.value)}
             className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-center font-mono text-xs focus:border-amber-400 outline-none"
@@ -241,6 +244,7 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
           <label className="text-[10px] text-zinc-400 block mb-0.5">R</label>
           <input
             type="number"
+            aria-label={label+' — R'}
             min="0"
             max="255"
             value={rgb.r}
@@ -252,6 +256,7 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
           <label className="text-[10px] text-zinc-400 block mb-0.5">G</label>
           <input
             type="number"
+            aria-label={label+' — G'}
             min="0"
             max="255"
             value={rgb.g}
@@ -263,6 +268,7 @@ export const AdobeColorPicker: React.FC<AdobeColorPickerProps> = ({ label, color
           <label className="text-[10px] text-zinc-400 block mb-0.5">B</label>
           <input
             type="number"
+            aria-label={label+' — B'}
             min="0"
             max="255"
             value={rgb.b}

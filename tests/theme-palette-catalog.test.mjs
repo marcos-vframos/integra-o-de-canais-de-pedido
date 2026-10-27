@@ -1,6 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { themePaletteCatalog, registerCatalogTheme, catalogThemeId, describeThemeColors, isCatalogThemeRegistered } from '../src/lib/themePaletteCatalog.ts'
+import { duplicateThemePreset,THEME_COLOR_FIELDS } from '../src/lib/themePaletteCatalog.ts'
+import { APPROVED_THEME_PRESETS } from '../src/lib/approvedThemePalettes.ts'
 
 test('occasion and saved promotion with the same ID keep distinct identities and colors', () => {
   const occasion = themePaletteCatalog([]).find(p => p.id === 'natal')
@@ -36,4 +38,17 @@ test('existing manually named cards with the same palette are not duplicated', (
   assert.equal(registerCatalogTheme(cards,halloween),cards)
   const changed = {...halloween,colors:{...halloween.colors,accentSilver:'#ffffff'}}
   assert.equal(isCatalogThemeRegistered(cards,changed),false)
+})
+test('all thirty approved themes have distinct IDs and complete valid color sets',()=>{
+ assert.equal(APPROVED_THEME_PRESETS.length,30)
+ assert.equal(new Set(APPROVED_THEME_PRESETS.map(p=>p.id)).size,30)
+ for(const p of APPROVED_THEME_PRESETS)for(const f of THEME_COLOR_FIELDS)assert.match(p.colors[f.key],/^#[0-9a-f]{6}$/i)
+})
+test('editing a duplicate preserves the original palette and all existing cards',()=>{
+ const original=APPROVED_THEME_PRESETS[0],colors={...original.colors,accentVinho:'#123456'}
+ const next=duplicateThemePreset([original],original,'  Minha versão  ',colors,'new-123')
+ assert.equal(next.length,2);assert.equal(next[0],original);assert.equal(next[1].name,'Minha versão');assert.notEqual(next[1].colors,colors)
+ assert.notEqual(next[0].colors.accentVinho,next[1].colors.accentVinho)
+ assert.throws(()=>duplicateThemePreset(next,original,'',colors,'new-2'))
+ assert.throws(()=>duplicateThemePreset(next,original,'Outra',colors,'new-123'))
 })

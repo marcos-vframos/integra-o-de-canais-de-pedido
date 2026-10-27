@@ -129,7 +129,6 @@ export default function Hero() {
       style={{ backgroundColor: 'var(--landing-bg-primary, #07140B)' }}
     >
       {/* Efeito luminoso opcional, desligado por padrão e controlado pelo ADM. */}
-      {content.heroGlowEnabled && <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 70% 55%, var(--landing-vinho, #8F0F1B) 0%, transparent 65%)', opacity: 0.35 }} />}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
@@ -209,7 +208,7 @@ export default function Hero() {
                   event.preventDefault()
                   document.getElementById('cardapio')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
-                className="inline-flex items-center justify-center gap-2.5 bg-[var(--landing-vinho)] hover:bg-[#990000] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-lg shadow-[#8F0F1B]/30 hover:shadow-[#8F0F1B]/50 hover:scale-[1.02] active:scale-[0.99]"
+                className="inline-flex items-center justify-center gap-2.5 bg-[var(--landing-vinho)] hover:bg-[var(--landing-vinho-hover)] text-white font-heading font-medium text-sm tracking-wide uppercase px-7 py-3.5 rounded-md transition-all duration-200 shadow-none hover:scale-[1.02] active:scale-[0.99]"
               >
                 <span>Fazer Pedido</span>
                 <ArrowRight className="w-4 h-4 text-white/90" />

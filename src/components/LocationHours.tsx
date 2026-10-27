@@ -1,3 +1,4 @@
+import { useBusinessProfile } from '@/context/BusinessProfileContext'
 import { useState, useEffect } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { BUSINESS_INFO, checkIsOpenNow } from '@/data/loyolasData'
@@ -8,6 +9,7 @@ import useRealtime from '@/hooks/use-realtime'
 
 export default function LocationHours() {
   const { content } = useLandingContent()
+  const business = useBusinessProfile()
   const [openStatus, setOpenStatus] = useState(() => checkIsOpenNow())
   const [currentDayIndex, setCurrentDayIndex] = useState(() => new Date().getDay())
   const [overrideState, setOverrideState] = useState<{ forceOpen: boolean; forceClosed: boolean }>({
@@ -58,22 +60,22 @@ export default function LocationHours() {
     ? true
     : overrideState.forceClosed
       ? false
-      : openStatus.isOpen
+      : business.status?.isOpen ?? openStatus.isOpen
 
-  const mapsEmbedUrl =
-    'https://maps.google.com/maps?q=Av.%20Nicanor%20Ramos%20Nogueira%2C%20Araretama%2C%20Pindamonhangaba%20SP&t=&z=15&ie=UTF8&iwloc=&output=embed'
+
 
   const locationHeading = content.locationHeading || 'Localização e Horários.'
   const locationSubtitle =
     content.locationSubtitle ||
     'Ponto físico no Araretama e atendimento delivery em Pindamonhangaba via aplicativo e WhatsApp.'
-  const addressText = content.addressText || BUSINESS_INFO.address
-  const phoneText = content.phoneText || BUSINESS_INFO.phoneDisplay
+  const addressText = business.profile?.address || content.addressText || BUSINESS_INFO.address
+  const phoneText = business.profile?.phone || content.phoneText || BUSINESS_INFO.phoneDisplay
+  const mapsEmbedUrl='https://maps.google.com/maps?q='+encodeURIComponent(addressText)+'&output=embed'
 
   return (
     <section
       id="localizacao"
-      className="min-h-screen w-full bg-[#0A150D] text-white relative overflow-y-auto overflow-x-hidden snap-start flex items-center py-20 lg:py-24"
+      className="min-h-screen w-full bg-[var(--landing-bg-secondary)] text-white relative overflow-y-auto overflow-x-hidden snap-start flex items-center py-20 lg:py-24"
       aria-labelledby="localizacao-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
@@ -89,7 +91,7 @@ export default function LocationHours() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-7">
-            <div className="rounded-md overflow-hidden border border-white/[0.08] bg-[#0D1A11] h-[360px] sm:h-[420px]">
+            <div className="rounded-md overflow-hidden border border-white/[0.08] bg-[var(--landing-bg-card)] h-[360px] sm:h-[420px]">
               <iframe
                 title="Mapa de localização Loyolas Lanches"
                 src={mapsEmbedUrl}
@@ -118,7 +120,7 @@ export default function LocationHours() {
           </div>
 
           <div className="lg:col-span-5 space-y-6">
-            <div className="p-5 rounded-md bg-[#0D1A11] border border-white/[0.08] flex items-center justify-between">
+            <div className="p-5 rounded-md bg-[var(--landing-bg-card)] border border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
@@ -128,21 +130,21 @@ export default function LocationHours() {
                 <div>
                   <span className="font-heading font-semibold text-sm text-white block">
                     {overrideState.forceOpen
-                      ? 'Aberto agora (controle manual)'
+                      ? 'Aberto agora'
                       : overrideState.forceClosed
-                        ? 'Fechado no momento (controle manual)'
-                        : openStatus.statusText}
+                        ? 'Fechado no momento'
+                        : business.status?.statusText || openStatus.statusText}
                   </span>
-                  <span className="text-xs text-[#C4C4C4]">{openStatus.nextInfo}</span>
+                  <span className="text-xs text-[#C4C4C4]">{business.status?.nextInfo || openStatus.nextInfo}</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 rounded-md bg-[#0D1A11] border border-white/[0.08]">
+            <div className="p-6 rounded-md bg-[var(--landing-bg-card)] border border-white/[0.08]">
               <span className="editorial-tag block mb-4">Horário Semanal</span>
               <div className="space-y-2.5 text-xs">
-                {BUSINESS_INFO.hoursSchedule.map((schedule) => {
-                  const isToday = schedule.dayIndex === currentDayIndex
+                {(business.hours || BUSINESS_INFO.hoursSchedule).map((schedule) => {
+                  const isToday = schedule.dayIndex === (business.status?.dayIndex ?? currentDayIndex)
                   return (
                     <div
                       key={schedule.dayName}
@@ -165,7 +167,7 @@ export default function LocationHours() {
               </div>
             </div>
 
-            <div className="p-6 rounded-md bg-[#0D1A11] border border-white/[0.08] space-y-3 text-xs">
+            <div className="p-6 rounded-md bg-[var(--landing-bg-card)] border border-white/[0.08] space-y-3 text-xs">
               <div className="flex justify-between items-center">
                 <span className="text-[#C4C4C4]">WhatsApp / Pedidos:</span>
                 <a

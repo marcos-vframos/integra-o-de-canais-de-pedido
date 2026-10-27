@@ -1,0 +1,37 @@
+import type { LandingThemeColors, LandingThemePreset } from '@/context/LandingContentContext'
+const theme = (id:string,name:string,bg:string,secondary:string,card:string,accent:string,hover:string,detail:string):LandingThemePreset => ({
+  id:'approved_'+id,name,description:name,colors:{bgPrimary:bg,bgSecondary:secondary,bgCard:card,accentVinho:accent,accentVinhoHover:hover,accentSilver:detail} as LandingThemeColors,
+})
+/** Thirty additional themes approved by the owner; activation remains an explicit action. */
+export const APPROVED_THEME_PRESETS:LandingThemePreset[] = [
+ theme('aniversario-loja','Aniversário da loja — Preto & Dourado','#12100C','#1E1910','#2B2416','#B58A28','#93701E','#F2D998'),
+ theme('aniversario-pinda','Aniversário de Pinda — Azul & Terracota','#101C2A','#172C3D','#243C4C','#BA694D','#96523B','#EAD8C4'),
+ theme('dia-cliente','Dia do Cliente — Petróleo & Champagne','#0D2427','#17373B','#23494B','#A9855D','#8B6B47','#F3E3C7'),
+ theme('dia-consumidor','Dia do Consumidor — Grafite & Laranja','#15171B','#20242A','#2B3037','#D86C2A','#B3531C','#F4E5D4'),
+ theme('dia-mulher','Dia da Mulher — Ameixa & Cobre','#231323','#341D34','#452943','#B77B65','#955C48','#EED9D0'),
+ theme('dia-trabalhador','Dia do Trabalhador — Marinho & Vermelho','#0E1B2C','#172B43','#243E57','#C84D4C','#A93737','#EFE3D9'),
+ theme('dia-amigo','Dia do Amigo — Turquesa & Coral','#0C262B','#153C42','#245259','#D87966','#B45D4D','#E5F2E9'),
+ theme('dia-hamburguer','Dia do Hambúrguer — Caramelo & Carvão','#1C1510','#2D2116','#40301F','#C18A42','#9A692D','#F2DEB9'),
+ theme('hotdog','Festival de Hot-Dog — Mostarda & Bordô','#261219','#391C26','#4C2A36','#B99534','#947526','#F0DFC0'),
+ theme('pizza','Noite da Pizza — Tomate & Manjericão','#142019','#1F3025','#2C4234','#C44638','#A23329','#F0DEC2'),
+ theme('bacon','Festival de Bacon — Cobre & Café','#201511','#312019','#442E24','#BD784E','#985B36','#F3D6BD'),
+ theme('queijos','Festival de Queijos — Âmbar & Creme','#251E11','#382D19','#4B3B25','#BB8D30','#947024','#F5E9CD'),
+ theme('batatas','Festival de Batatas — Dourado & Grafite','#16191B','#22282B','#30383C','#C19B35','#997925','#FAEAC5'),
+ theme('familia','Combo Família — Azul & Pêssego','#152238','#203550','#304964','#D39277','#AF7056','#F5E6D7'),
+ theme('churrasco','Churrasco — Brasa & Carvão','#191310','#2A1D16','#3B291E','#C65D2C','#A04720','#EAD9BE'),
+ theme('defumados','Defumados — Madeira & Bronze','#201C16','#302A20','#433A2C','#A88A55','#896D3E','#E8D8B9'),
+ theme('max','Linha Max — Preto & Vermelho','#101012','#1C171A','#2A2025','#C63946','#A12632','#ECE3DE'),
+ theme('gourmet','Experiência Gourmet — Esmeralda & Champagne','#0B211C','#12352B','#20483B','#B3915D','#907246','#F0E2C7'),
+ theme('retro','Retrô — Cereja & Creme','#27171C','#3D242A','#513239','#B93E56','#952C41','#F5E6CE'),
+ theme('rock','Rock — Grafite & Prata','#111317','#1F2229','#2F333C','#818B9C','#616C80','#E5E7EB'),
+ theme('urbano','Urbano — Concreto & Lima','#181C1A','#272F29','#39423A','#8DAB3B','#6D872A','#E5E9DB'),
+ theme('neon','Neon — Violeta & Ciano','#181127','#271B3F','#392957','#39A6B8','#267E91','#E6E0F6'),
+ theme('arcade','Arcade — Índigo & Magenta','#14152D','#232547','#343764','#BF4BA6','#973683','#ECE1F3'),
+ theme('torcida','Dia de Torcida — Marinho & Laranja','#0D1B30','#172C47','#243E60','#D47B32','#B05F21','#F3E4CE'),
+ theme('futebol','Futebol Brasileiro — Verde & Dourado','#102317','#1C3622','#2B4930','#B49A35','#8D7726','#F0E9CE'),
+ theme('vip','Cliente VIP — Preto & Cobre','#121110','#211C19','#302823','#B37E5D','#906043','#F0E0D3'),
+ theme('happy-hour','Happy Hour — Âmbar & Petróleo','#102629','#193A3E','#294F51','#BE8B35','#986B24','#F3DFB4'),
+ theme('madrugada','Madrugada — Azul Profundo & Violeta','#0E1429','#18223C','#273150','#9471BF','#73549C','#E5DCF2'),
+ theme('pet','Pet Friendly — Sálvia & Areia','#1A241E','#29382E','#3D4A3D','#9C8C5E','#7C6D45','#EBE4CD'),
+ theme('tropical','Noite Tropical — Verde Profundo & Manga','#10271D','#1A3A2A','#294E38','#CE9435','#A87524','#F5E8C9'),
+]

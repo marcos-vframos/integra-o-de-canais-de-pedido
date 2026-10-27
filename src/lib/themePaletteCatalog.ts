@@ -2,6 +2,11 @@ import type { LandingThemeColors, LandingThemePreset } from '@/context/LandingCo
 import { OCCASION_PALETTES } from './occasionPalettes.ts'
 
 type SavedPalette = { id: string; name: string; colors: LandingThemeColors }
+export const THEME_COLOR_FIELDS: {key:keyof LandingThemeColors;label:string}[] = [
+  {key:'bgPrimary',label:'Fundo principal'}, {key:'bgSecondary',label:'Fundo das seções'},
+  {key:'bgCard',label:'Fundo dos cartões'}, {key:'accentVinho',label:'Botões e destaques'},
+  {key:'accentVinhoHover',label:'Botões ao passar o mouse'}, {key:'accentSilver',label:'Textos e detalhes'},
+]
 export type CatalogPalette = SavedPalette & { source: 'occasion' | 'promotion'; key: string }
 
 /** Source-qualified identities keep e.g. two different Christmas palettes separate. */
@@ -31,4 +36,11 @@ export function registerCatalogTheme(presets: LandingThemePreset[], palette: Cat
   const id = catalogThemeId(palette)
   if (isCatalogThemeRegistered(presets, palette)) return presets
   return [...presets, { id, name: palette.name, description: describeThemeColors(palette.colors), colors: { ...palette.colors } }]
+}
+
+export function duplicateThemePreset(presets:LandingThemePreset[], source:LandingThemePreset, name:string, colors:LandingThemeColors, id:string):LandingThemePreset[] {
+  if (!name.trim()) throw new Error('Informe o nome da nova versão.')
+  if (presets.some(p=>p.id===id)) throw new Error('Identificador de tema já cadastrado.')
+  if (THEME_COLOR_FIELDS.some(f=>!/^#[\da-f]{6}$/i.test(colors[f.key]))) throw new Error('Use cores HEX válidas em todos os campos.')
+  return [...presets,{id,name:name.trim(),description:`Variação de ${source.name}`,colors:{...colors}}]
 }

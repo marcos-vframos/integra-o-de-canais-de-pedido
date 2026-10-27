@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState, useMemo } from '
 import pb, { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { BUSINESS_INFO, VERIFIED_RATINGS, MARQUEE_ITEMS } from '@/data/loyolasData'
+import { BusinessProfileProvider } from '@/context/BusinessProfileContext'
+import { APPROVED_THEME_PRESETS } from '@/lib/approvedThemePalettes'
 
 export interface LandingSlide {
   image: string
@@ -161,6 +163,7 @@ export const DEFAULT_THEME_PRESETS: LandingThemePreset[] = [
       accentSilver: '#E5E5E5',
     },
   },
+  ...APPROVED_THEME_PRESETS,
 ]
 
 export const DEFAULT_LANDING_CONTENT: LandingContentState = {
@@ -577,7 +580,7 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
     [content, loading],
   )
 
-  return <LandingContext.Provider value={value}>{children}</LandingContext.Provider>
+  return <LandingContext.Provider value={value}><BusinessProfileProvider>{children}</BusinessProfileProvider></LandingContext.Provider>
 }
 
 export function useLandingContent() {

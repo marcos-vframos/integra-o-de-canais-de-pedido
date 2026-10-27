@@ -1,3 +1,4 @@
+import { useBusinessProfile } from '@/context/BusinessProfileContext'
 import { useState, useEffect } from 'react'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
 import LandingStories from '@/components/LandingStories'
@@ -19,6 +20,7 @@ const navLinks = [
 ]
 
 export default function Header({ activeSection = 'inicio' }: HeaderProps) {
+  const business = useBusinessProfile()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [status, setStatus] = useState(() => checkIsOpenNow())
   const [isOpenSetting, setIsOpenSetting] = useState<boolean>(true)
@@ -86,7 +88,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
     }
   }
 
-  const actuallyOpen = forceOpen ? true : forceClosed ? false : status.isOpen && isOpenSetting
+  const actuallyOpen = forceOpen ? true : forceClosed ? false : (business.status?.isOpen ?? status.isOpen) && isOpenSetting
 
   return (
     <>
