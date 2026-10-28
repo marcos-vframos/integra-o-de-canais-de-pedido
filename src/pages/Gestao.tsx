@@ -1,3 +1,4 @@
+import {LayoutDashboard} from 'lucide-react'
 import { hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines, isBeverage } from '@/lib/beverages'
 import StockNotifications from '@/components/StockNotifications'
 import { lowStockRows } from '@/lib/stockAlerts'
@@ -1233,6 +1234,7 @@ export default function Gestao() {
 
             <div className="sc-header-actions">
               <div className="sc-header-icons">
+                <Link to="/painel-de-controle" className="sc-icon-btn" title="Painel de Controle" aria-label="Abrir Painel de Controle"><LayoutDashboard size={15}/></Link>
                 <Link
                   to="/adm-landing"
                   state={{ returnTo: '/gestao' }}

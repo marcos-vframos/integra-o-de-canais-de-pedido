@@ -10,6 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import BackendStatusNotice from '@/components/BackendStatusNotice'
 import Layout from '@/components/Layout'
 const Gestao=lazy(()=>import('@/pages/Gestao'))
+const ControlPanel=lazy(()=>import('@/pages/ControlPanel'))
 const Config=lazy(()=>import('@/pages/Config'))
 const AdmLanding=lazy(()=>import('@/pages/AdmLanding'))
 import Login from '@/pages/Login'
@@ -37,6 +38,8 @@ export default function GestaoApp() {
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/gestao" element={<Gestao />} />
                 <Route path="/config" element={<Config />} />
+                <Route path="/painel-de-controle" element={<ControlPanel />} />
+                <Route path="/painel-de-controle/configuracoes" element={<Config panel />} />
                 <Route path="/adm-landing" element={<AdmLanding />} />
               </Route>
               <Route path="*" element={<Navigate to="/gestao" replace />} />

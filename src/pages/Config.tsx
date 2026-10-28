@@ -1,3 +1,4 @@
+import SourceCodeDownload from '@/components/SourceCodeDownload'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
@@ -76,7 +77,8 @@ function maskPhone(val: string): string {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`
 }
 
-export default function Config() {
+export default function Config({panel=false}:{panel?:boolean}) {
+  const configPath=panel?'/painel-de-controle/configuracoes':'/config'
   const navigate = useNavigate()
   const { user, sessionError, logout } = useAuth()
   const { theme, setTheme } = useTheme()
@@ -286,10 +288,10 @@ export default function Config() {
         {/* Top Header / Navegação */}
         <div className="flex items-center justify-between mb-5">
           <Link
-            to="/gestao"
+            to={panel?'/painel-de-controle':'/gestao'}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--text)] transition-colors py-1 px-2 -ml-2 rounded-lg"
           >
-            <ArrowLeft size={14} /> Voltar ao Painel de Gestão
+            <ArrowLeft size={14} /> {panel?'Voltar ao Painel de Controle':'Voltar ao Painel de Gestão'}
           </Link>
 
           <div className="flex items-center gap-2">
@@ -600,7 +602,7 @@ export default function Config() {
           </p>
           <Link
             to="/adm-landing"
-            state={{ returnTo: '/config' }}
+            state={{ returnTo: configPath }}
             className="flex items-center justify-between p-3 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] hover:border-[var(--red)] hover:bg-[var(--surface)] transition-all group"
             title="Abrir ADM da Landing"
             aria-label="Abrir ADM da Landing"
@@ -632,11 +634,13 @@ export default function Config() {
           </p>
           {sessionError&&<p role="status" className="mt-2 text-xs text-amber-400">{sessionError}</p>}
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Link onClick={keepDraft} to="/login?returnTo=/config" className="sc-btn-primary inline-flex items-center gap-2"><LogIn size={15}/>{user?'Entrar novamente / Trocar conta':'Entrar como operador'}</Link>
+            <Link onClick={keepDraft} to={'/login?returnTo='+encodeURIComponent(configPath)} className="sc-btn-primary inline-flex items-center gap-2"><LogIn size={15}/>{user?'Entrar novamente / Trocar conta':'Entrar como operador'}</Link>
             {user&&<button type="button" onClick={logout} className="sc-btn-ghost inline-flex items-center gap-2"><LogOut size={14}/>Sair da conta</button>}
           </div>
           <p className="mt-2 text-xs text-[var(--muted)]">A sessão é mantida neste navegador e renovada automaticamente enquanto disponível. Você pode fechar a página após confirmar o salvamento.</p>
         </div>
+
+        <SourceCodeDownload />
 
         <StoreCloseChoiceModal
           isOpen={closeChoiceModalOpen}

@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    ...(mode==='gestao'?[{name:'loyola-source-export',async closeBundle(){const {exportSource}=await import('./scripts/export-source.mjs');await exportSource()}}]:[]),
     {
       name: 'loyolas-separate-entrypoints',
       // Both builds use the same repository, but produce distinct HTML shells and JS bundles.

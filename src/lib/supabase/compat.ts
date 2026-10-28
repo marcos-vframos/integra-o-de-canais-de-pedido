@@ -400,6 +400,11 @@ const pb={
     return ''
   }},
   async send<T=any>(path:string,opts:{method?:string;body?:unknown}={}):Promise<T>{
+    const controlRpc:Record<string,string>={'/backend/v1/control/access':'control_access','/backend/v1/control/save':'save_control_record','/backend/v1/control/source-key':'control_source_key'}
+    if(controlRpc[path]){
+      await ensureOperatorSession()
+      return request('/rest/v1/rpc/'+controlRpc[path],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...opts.body as object,p_tenant:tenantId})},true) as Promise<T>
+    }
     if(path==='/backend/v1/delivery/routes'){
       return request('/functions/v1/delivery-routing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts.body||{})},true) as Promise<T>
     }
