@@ -51,3 +51,8 @@ test('zero cost is valid only when explicitly entered and comma decimal input is
  assert.equal(calculateProfit(draft({ingredientCost:'12,50'})).variableCost,12.5)
  const freeCost=calculateProfit(draft({ingredientCost:'0',tax:'0',fixedCost:'0',targetMargin:'100'}));assert.equal(freeCost.suggestedPrice,30);assert.equal(freeCost.suggestedMargin,100)
 })
+test('half-cent taxes and discounts round deterministically using integer percentage units',()=>{
+ const r=calculateProfit(draft({price:'3.75',ingredientCost:'0',tax:'9.2',fixedCost:'0'}));assert.equal(r.fees,0.35)
+ const d=calculateProfit(draft({price:'3.75',ingredientCost:'0',tax:'0',fixedCost:'0',discountMode:'percent',discount:'9.2'}));assert.equal(d.discount,0.35);assert.equal(d.revenue,3.4)
+ assert.throws(()=>calculateProfit(draft({tax:'9.201'})))
+})
