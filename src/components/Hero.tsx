@@ -109,14 +109,6 @@ export default function Hero() {
     return () => clearInterval(slideInterval)
   }, [slides.length])
 
-  const handleScrollToMenu = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
-    const target = document.querySelector('#cardapio')
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
-
   const safeHeadlineIndex = headlineIndex < headlines.length ? headlineIndex : 0
   const currentHeadline = headlines[safeHeadlineIndex] || HERO_HEADLINES[0]
   const traditionBadge = content.traditionBadge || 'TRADIÇÃO & ESSÊNCIA'
@@ -214,14 +206,6 @@ export default function Hero() {
                 <ArrowRight className="w-4 h-4 text-white/90" />
               </a>
 
-              <a
-                href="#cardapio"
-                onClick={handleScrollToMenu}
-                className="inline-flex items-center justify-center gap-2 text-sm text-[#E2E8F0] hover:text-white font-medium px-4 py-3 rounded-md transition-colors group border border-white/10 hover:border-white/30 bg-white/[0.03]"
-              >
-                <span>Conhecer o cardápio</span>
-                <span className="text-xs transition-transform group-hover:translate-x-1">→</span>
-              </a>
             </div>
 
             {/* Avaliação social */}
