@@ -41,4 +41,14 @@ O menu agrupa as subáreas em Financeiro, Operação, Relacionamento e Controle.
 
 O filtro do cabeçalho se aplica aos pedidos, compradores e gráfico financeiro. Saldos e compromissos em aberto continuam considerando o histórico completo, conforme seus rótulos. O gráfico considera somente recebíveis, despesas e contas a pagar confirmados, pela data informada no lançamento; saldo inicial e vendas não são tratados como entrada recebida. A tabela do gráfico permite conferir os valores exatos por data. No histórico completo, os pontos são agrupados por mês.
 
-Clientes recorrentes são compradores identificados pelo telefone com segunda compra válida até o período selecionado. Pedidos cancelados/recusados e compradores sem telefone não compõem a taxa. Resultado líquido, tempo médio de preparo e satisfação permanecem sem apuração quando faltam fontes. A calculadora de precificação não foi implementada: suas fórmulas aguardam validação com o proprietário.
+Clientes recorrentes são compradores identificados pelo telefone com segunda compra válida até o período selecionado. Pedidos cancelados/recusados e compradores sem telefone não compõem a taxa. Resultado líquido, tempo médio de preparo e satisfação permanecem sem apuração quando faltam fontes. A calculadora de precificação fica no cabeçalho do Gestor, ao lado dos atalhos existentes, e não modifica os preços automaticamente.
+
+## Calculadora de preço e lucro
+
+O ícone Calculadora no cabeçalho do Gestor abre um diálogo carregado sob demanda. O produto e o preço podem vir do cardápio já carregado. Trocar o produto limpa os custos anteriores. A simulação pode usar custo agregado de ingredientes ou ficha de compra/receita, com quantidade comprada e utilizada na mesma unidade e aproveitamento percentual aplicado uma única vez.
+
+A receita base é o preço menos o desconto da loja (em reais ou percentual). Impostos, pagamento e comissão incidem sobre essa receita, com cada taxa arredondada individualmente em centavos. A contribuição subtrai custos variáveis e taxas; o resultado estimado subtrai a parcela de despesa fixa informada. Sem essa parcela, não se afirma lucro nem se sugere preço. A meta é margem sobre a receita após desconto, não markup sobre o custo. O preço sugerido é verificado após arredondamento; metas inviáveis são indicadas.
+
+O rateio é uma hipótese manual; o canal identifica a simulação e não aplica taxas presumidas. Campos opcionais vazios são zero e precisam ser conferidos pelo operador. Contratos com outra base de cobrança e descontos financiados por terceiros exigem tratamento próprio. O subsídio de entrega deve conter somente o custo atribuído à unidade, sem duplicar taxas ou embalagens.
+
+A calculadora não grava custos no banco, não altera cardápio e não faz lançamentos financeiros. O rascunho permanece somente enquanto a tela do Gestor estiver montada; fechar e reabrir o diálogo preserva os valores, mas recarregar ou sair do Gestor limpa a simulação. O resumo pode ser copiado explicitamente. A proteção e os fluxos de pedidos existentes permanecem intactos.

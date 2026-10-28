@@ -1,8 +1,8 @@
-import {LayoutDashboard} from 'lucide-react'
+import {LayoutDashboard,Calculator} from 'lucide-react'
 import { hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines, isBeverage } from '@/lib/beverages'
 import StockNotifications from '@/components/StockNotifications'
 import { lowStockRows } from '@/lib/stockAlerts'
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import {
   ShoppingCart,
@@ -49,11 +49,16 @@ import { saveMenuCache, getMenuCache, saveStockCache, getStockCache, saveTicketC
 import { getOfflineQueue, enqueueOfflineOrder, removeOfflineOrderItem } from '@/lib/offlineQueue'
 import { processOfflineQueue, isCurrentlySyncing } from '@/lib/offlineSync'
 
+const ProfitCalculator=lazy(()=>import('@/components/ProfitCalculator'))
+
 export default function Gestao() {
   const [searchParams, setSearchParams] = useSearchParams()
   const currentTab = searchParams.get('tab') || 'pedido'
   const { toast } = useToast()
   const { user } = useAuth()
+  const [calculatorOpen,setCalculatorOpen]=useState(false)
+  const [calculatorVisited,setCalculatorVisited]=useState(false)
+  const calculatorButtonRef=useRef<HTMLButtonElement>(null)
 
   const [loaded, setLoaded] = useState(false)
   const [cartName, setCartName] = useState("Loyola's Lanches")
@@ -1248,6 +1253,7 @@ export default function Gestao() {
                   title="Configurações e instalação"
                   aria-label="Configurações e instalação"
                 ><SettingsIcon size={15} /></Link>
+                <button type="button" ref={calculatorButtonRef} className="sc-icon-btn" title="Calculadora de preço e lucro" aria-label="Abrir calculadora de preço e lucro" aria-haspopup="dialog" aria-expanded={calculatorOpen} onClick={()=>{setCalculatorVisited(true);setCalculatorOpen(true)}}><Calculator size={15}/></button>
               </div>
               <div className="sc-header-statuses">
                 <ConnectionStatusBadge
@@ -1409,6 +1415,7 @@ export default function Gestao() {
         />
 
         {/* Modais */}
+        {calculatorVisited&&<Suspense fallback={<p role="status" className="sc-sub">Carregando calculadora…</p>}><ProfitCalculator open={calculatorOpen} onOpenChange={setCalculatorOpen} menu={menu} returnFocusRef={calculatorButtonRef}/></Suspense>}
         <CustomizeModal
           item={customizeItem}
           beverageFlavors={customizeFlavors}
