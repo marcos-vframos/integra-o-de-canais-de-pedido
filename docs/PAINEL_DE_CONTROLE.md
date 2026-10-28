@@ -33,3 +33,12 @@ Para outra instalação: configure as variáveis públicas VITE_SUPABASE_URL, VI
 ## Validação
 
 Testes automatizados cobrem separação venda/caixa, projeção, estorno, custos ausentes, rateio de desconto, validação monetária e exportação criptografada sem segredos. Testes transacionais no banco verificam leitura por proprietário, criação/edição, concorrência, negação a não proprietário, perda/estorno e auditoria, sempre com rollback. A conferência final no navegador com a conta proprietária ainda é necessária para validar a experiência autenticada no aparelho real.
+# Visão do proprietário e navegação
+
+A tela inicial reúne faturamento, resultado ainda não apurado, saldo confirmado, recorrência por telefone, gráfico de entradas e saídas, compromissos abertos, operação, clientes e prioridades. A interface respeita o modo claro/escuro do gestor. Sem login, exibe somente a estrutura visual, sem números ou informações privadas.
+
+O menu agrupa as subáreas em Financeiro, Operação, Relacionamento e Controle. Visão geral e Precisa da sua atenção permanecem acessíveis diretamente. Registro de despesas tem sua própria subárea financeira; não existe mais botão de nova despesa em todas as telas.
+
+O filtro do cabeçalho se aplica aos pedidos, compradores e gráfico financeiro. Saldos e compromissos em aberto continuam considerando o histórico completo, conforme seus rótulos. O gráfico considera somente recebíveis, despesas e contas a pagar confirmados, pela data informada no lançamento; saldo inicial e vendas não são tratados como entrada recebida. A tabela do gráfico permite conferir os valores exatos por data. No histórico completo, os pontos são agrupados por mês.
+
+Clientes recorrentes são compradores identificados pelo telefone com segunda compra válida até o período selecionado. Pedidos cancelados/recusados e compradores sem telefone não compõem a taxa. Resultado líquido, tempo médio de preparo e satisfação permanecem sem apuração quando faltam fontes. A calculadora de precificação não foi implementada: suas fórmulas aguardam validação com o proprietário.
