@@ -1,3 +1,5 @@
+import MenuSubcategoryTabs from '@/components/MenuSubcategoryTabs'
+import { currentMenuSubcategory, matchesMenuSubcategory } from '@/lib/menuSubcategories'
 import {voucherDiscount} from '@/lib/voucherPricing'
 import { menuOrder } from '@/lib/productPresentation'
 import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } from '@/lib/beverages'
@@ -57,6 +59,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   const [activeCategory, setActiveCategory] = useState<string>('Carnes')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
 
   // Carrinho com persistência localStorage
   const [cart, setCart] = useState<CustomerCartLine[]>(() => {
@@ -310,9 +313,9 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         !query ||
         (item.name || '').toLowerCase().includes(query) ||
         itemCat.toLowerCase().includes(query)
-      return matchCat && matchSearch
+      return matchCat && matchSearch && (Boolean(query) || matchesMenuSubcategory(item, currentMenuSubcategory(currentCategory, selectedSubcategory)))
     }))
-  }, [menu, currentCategory, searchTerm])
+  }, [menu, currentCategory, searchTerm, selectedSubcategory])
 
   // Preços cadastrados dos complementos de Catupiry e Cheddar
   const catupiryAddPrice = useMemo(() => {
@@ -974,7 +977,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => { setActiveCategory(cat); setSelectedSubcategory('') }}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all select-none cursor-pointer ${
                   active
                     ? 'bg-[#E10600] text-white shadow-[0_0_10px_rgba(225,6,0,0.35)]'
@@ -986,6 +989,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
             )
           })}
         </div>
+
+        {!searchTerm.trim() && <MenuSubcategoryTabs category={currentCategory} selected={selectedSubcategory} onSelect={setSelectedSubcategory} />}
 
         {/* Lista de Itens do Cardápio Canônico */}
         {filteredMenu.length === 0 ? (

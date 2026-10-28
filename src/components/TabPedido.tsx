@@ -1,3 +1,5 @@
+import MenuSubcategoryTabs from '@/components/MenuSubcategoryTabs'
+import { currentMenuSubcategory, matchesMenuSubcategory } from '@/lib/menuSubcategories'
 import React, { useState } from 'react'
 import { Search, X, Pencil, Minus, Plus, Trash2, Printer } from 'lucide-react'
 import type { MenuItem, InventoryItem, CartLine } from '@/types/loyolas'
@@ -52,6 +54,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
 }) => {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
 
   const orderCategories = CATEGORIES.filter((c) => c !== 'Complementos')
   const [categoryFilter, setCategoryFilter] = useState<string>(orderCategories[0] || 'Carnes')
@@ -66,7 +69,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
 
   const visibleMenu = menu
     .filter((m) => m.active)
-    .filter((m) => (normalizedQuery ? true : m.category === categoryFilter))
+    .filter((m) => (normalizedQuery ? true : m.category === categoryFilter && matchesMenuSubcategory(m, currentMenuSubcategory(categoryFilter, selectedSubcategory))))
     .filter((m) => !normalizedQuery || normalizeText(m.name).includes(normalizedQuery))
 
   const subtotal = cart.reduce((sum, line) => {
@@ -126,6 +129,7 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
               className={`sc-chip ${categoryFilter === c ? 'active' : ''}`}
               onClick={() => {
                 setCategoryFilter(c)
+                setSelectedSubcategory('')
                 if (searchQuery) setSearchQuery('')
               }}
             >
@@ -133,6 +137,8 @@ export const TabPedido: React.FC<TabPedidoProps> = ({
             </button>
           ))}
         </div>
+
+        {!normalizedQuery && <MenuSubcategoryTabs category={categoryFilter} selected={selectedSubcategory} onSelect={setSelectedSubcategory} />}
 
         {visibleMenu.length === 0 ? (
           <p className="sc-empty">Nenhum item encontrado.</p>

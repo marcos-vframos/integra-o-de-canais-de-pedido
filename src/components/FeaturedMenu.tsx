@@ -1,3 +1,5 @@
+import MenuSubcategoryTabs from '@/components/MenuSubcategoryTabs'
+import { currentMenuSubcategory, matchesMenuSubcategory } from '@/lib/menuSubcategories'
 import { productCaption, preparationLabel, menuOrder, productFallbackImage } from '@/lib/productPresentation'
 import ProductImage from '@/components/ProductImage'
 import { useState, useEffect } from 'react'
@@ -13,6 +15,7 @@ export default function FeaturedMenu() {
   const { content } = useLandingContent()
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => backendConfigured ? [] : seedMenu().filter(i=>i.active).map(i=>({ ...i,id:i.code })) as MenuItem[])
   const [isOpen, setIsOpen] = useState(true)
   const [loading, setLoading] = useState(backendConfigured)
@@ -122,7 +125,7 @@ export default function FeaturedMenu() {
     if (query) {
       return item.name.toLowerCase().includes(query) || itemCat.toLowerCase().includes(query)
     }
-    return itemCat === currentCategory
+    return itemCat === currentCategory && matchesMenuSubcategory(item, currentMenuSubcategory(currentCategory, selectedSubcategory))
   }))
 
 
@@ -162,7 +165,7 @@ export default function FeaturedMenu() {
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setActiveCategory(cat)}
+                  onClick={() => { setActiveCategory(cat); setSelectedSubcategory('') }}
                   className={`pb-3 px-3 sm:px-4 text-xs tracking-wider uppercase font-semibold transition-colors relative whitespace-nowrap cursor-pointer rounded-t ${
                     active ? 'text-white bg-white/[0.04]' : 'text-[#C4C4C4] hover:text-white'
                   }`}
@@ -185,6 +188,8 @@ export default function FeaturedMenu() {
               className="w-full rounded-lg border border-white/10 bg-[#101417] px-10 py-3 text-sm text-white outline-none focus:border-[#E10600]" />
           </div>
         </div>
+
+        {!searchTerm.trim() && <MenuSubcategoryTabs category={currentCategory} selected={selectedSubcategory} onSelect={setSelectedSubcategory} />}
 
         {loading ? (
           <div className="py-16 text-center text-[#C4C4C4]">Carregando cardápio atualizado...</div>

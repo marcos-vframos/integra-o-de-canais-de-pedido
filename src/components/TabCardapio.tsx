@@ -1,3 +1,4 @@
+import { menuSubcategories, menuSubcategory } from '@/lib/menuSubcategories'
 import ProductMediaEditor from '@/components/ProductMediaEditor'
 import React, { useState, useEffect, useMemo } from 'react'
 import { Plus, Pencil, Trash2, X, Check, Layers, ArrowUp, ArrowDown } from 'lucide-react'
@@ -516,12 +517,17 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
       {/* Categorias e Itens */}
       {effectiveCategoriesList.map((cat) => {
         const items = menu.filter((m) => (m.category || '').trim() === cat)
+        const subcategories = menuSubcategories(cat)
+        const groups = subcategories.length ? subcategories.map(name => ({name, items: items.filter(item => menuSubcategory(item) === name)})) : [{name: '', items}]
         if (items.length === 0) return null
 
         return (
           <div key={cat} className="mb-4">
             <div className="sc-group-title">{cat}</div>
-            {items.map((item) => {
+            {groups.filter(group => group.items.length).map(group => (
+              <React.Fragment key={group.name}>
+                {group.name && <h3 className="mb-2 mt-4 text-sm font-semibold text-[var(--silver)]">{group.name}</h3>}
+            {group.items.map((item) => {
               const isEditingThis = editingId === item.id
 
               return (
@@ -723,6 +729,8 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                 </div>
               )
             })}
+              </React.Fragment>
+            ))}
           </div>
         )
       })}
