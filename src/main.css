@@ -1326,7 +1326,7 @@ div:has(> a[href*='goskip.dev']) {
 .order-sheet-cover-backdrop img { object-fit: cover; }
 .order-sheet-cover-backdrop button { display: none; }
 .order-sheet-image {
-  inset: 22px 48px 78px;
+  inset: 22px 48px auto; height: 152px;
   /* Soft edges integrate an existing rectangular photo without cropping the food. */
   mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent),linear-gradient(180deg,#000 78%,transparent);
   mask-composite: intersect;
@@ -1337,6 +1337,7 @@ div:has(> a[href*='goskip.dev']) {
   object-fit: contain; object-position: center; background: transparent;
 }
 .order-sheet-image::after { display: none; }
+.order-sheet-has-preview .order-sheet-image { right: 132px; }
 .order-sheet-heading { position: relative; z-index: 1; padding-right: 0; }
 .order-sheet-has-preview .order-sheet-heading { padding-right: 122px; }
 .order-sheet-title { font-size: 24px; line-height: 1.25; text-wrap: balance; }
@@ -1352,7 +1353,8 @@ div:has(> a[href*='goskip.dev']) {
 .landing-scope { --red-glow: transparent; }
 @media(max-width:420px) {
   .order-sheet-header { min-height: 246px; padding: 165px 18px 18px; }
-  .order-sheet-image { inset: 24px 42px 80px 22px; }
+  .order-sheet-image { inset: 24px 42px auto 22px; height: 132px; }
+  .order-sheet-has-preview .order-sheet-image { right: 112px; }
   .order-sheet-title { font-size: 21px; }
   .order-sheet-price { font-size: 18px; }
   .order-sheet-has-preview .order-sheet-heading { padding-right: 100px; }
@@ -1361,7 +1363,7 @@ div:has(> a[href*='goskip.dev']) {
 }
 @media(max-height:560px) {
   .order-sheet-header { min-height: 180px; padding-top: 108px; padding-bottom: 12px; }
-  .order-sheet-image { inset: 18px 56px 60px 28px; }
+  .order-sheet-image { inset: 18px 56px auto 28px; height: 86px; }
   .order-sheet-title { font-size: 19px; }
   .sandwich-preview { width: 78px; }
   .sandwich-illustration { max-height: 105px; }
