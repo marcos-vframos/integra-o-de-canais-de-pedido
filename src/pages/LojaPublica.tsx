@@ -6,7 +6,7 @@ import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } fro
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingBag, Search, Plus, Minus, Trash2, CheckCircle2, MapPin, Store, Phone, User, AlertCircle, X, CreditCard, Banknote, QrCode, SlidersHorizontal, ArrowLeft, Share2, Copy, Check, Compass } from 'lucide-react'
-import pb, { backendConfigured } from '@/lib/pocketbase/client'
+import pb, { backendConfigured, integrationTestMode } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket, seedMenu, seedStock } from '@/lib/seeds'
@@ -528,6 +528,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
   // Pix Payload gerado em tempo real
   const pixEMV = useMemo(() => {
+    if (integrationTestMode) return ''
     return generatePixPayload({
       key: pixKey,
       merchantName: storeName,
@@ -538,6 +539,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
   }, [pixKey, storeName, finalTotal])
 
   const pixQrCodeUrl = useMemo(() => {
+    if (integrationTestMode) return ''
     return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixEMV)}`
   }, [pixEMV])
 
@@ -671,10 +673,6 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       return
     }
 
-    if (import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true') {
-      setErrorMsg('Homologação Supabase: nenhum pedido nem pagamento real será registrado enquanto a loja estiver em DRAFT.')
-      return
-    }
     if (cart.length === 0) {
       setErrorMsg('Seu carrinho está vazio.')
       return
@@ -753,7 +751,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
         payment === 'Dinheiro' && changeFor && Number(changeFor) > finalTotal
           ? Math.round((Number(changeFor) - finalTotal) * 100) / 100
           : 0,
-      pixKey: payment === 'Pix' ? pixKey : undefined,
+      pixKey: payment === 'Pix' && !integrationTestMode ? pixKey : undefined,
+      integrationTest: integrationTestMode,
     }
 
     // Preserve the same high-entropy key on a retry of an unchanged checkout.
@@ -1478,7 +1477,8 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                       })}
                     </div>
 
-                    {payment === 'Pix' && (
+                    {payment === 'Pix' && integrationTestMode && <p role="status" className="text-sm">Pix em teste: o pedido será registrado sem QR Code ou cobrança. Não faça transferência.</p>}
+                    {payment === 'Pix' && !integrationTestMode && (
                       <div className="mt-2.5 p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-center">
                         <div className="text-xs font-bold text-white flex items-center justify-center gap-1.5">
                           <QrCode size={14} className="text-[#E10600]" />
@@ -1796,3 +1796,4 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     </div>
   )
 }
+

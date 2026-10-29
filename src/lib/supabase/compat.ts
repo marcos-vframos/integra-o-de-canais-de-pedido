@@ -9,6 +9,7 @@ export const tenantId = String(import.meta.env.VITE_SUPABASE_TENANT_ID || '8c0d6
 export const backendConfigured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(serverUrl)
   && (publishableKey.startsWith('sb_publishable_') || publishableKey.startsWith('eyJ'))
   && /^[0-9a-f-]{36}$/i.test(tenantId)
+export const integrationTestMode = import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true'
 export const demoGestaoMode = import.meta.env.MODE === 'gestao'
   && (import.meta.env.VITE_GESTAO_DEMO === 'true' || !backendConfigured)
 export const backendConfigMessage = backendConfigured
@@ -429,3 +430,4 @@ const pb={
   autoCancellation(_flag:boolean){/* PocketBase compatibility no-op */},
 }
 export default pb
+
