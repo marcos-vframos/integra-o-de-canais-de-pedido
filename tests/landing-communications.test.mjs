@@ -7,6 +7,12 @@ const { outputText } = ts.transpileModule(readFileSync(new URL('../src/lib/landi
 const context={exports:{},URL}
 vm.runInNewContext(outputText,context)
 const {marqueeBlocks,selectedMessages,storyIsLive,safeStoryLink}=context.exports
+test('WhatsApp destination follows the displayed local or international phone without inventing invalid contacts',()=>{
+ const {whatsappContactUrl}=context.exports
+ assert.ok(whatsappContactUrl('(12) 99257-5132','fallback').startsWith('https://wa.me/5512992575132?'))
+ assert.ok(whatsappContactUrl('+55 (12) 99257-5132','fallback').startsWith('https://wa.me/5512992575132?'))
+ assert.equal(whatsappContactUrl('','fallback'),'fallback');assert.equal(whatsappContactUrl('123','fallback'),'fallback')
+})
 test('all saved messages survive migration while at most twelve appear',()=>{
   const saved=Array.from({length:15},(_,i)=>'Mensagem '+i)
   const blocks=marqueeBlocks(undefined,saved)
@@ -36,3 +42,4 @@ test('story links allow HTTPS and internal destinations but reject script and pr
   assert.equal(safeStoryLink('#cardapio'),'#cardapio')
   assert.equal(safeStoryLink('https://wa.me/5512991591915'),'https://wa.me/5512991591915')
 })
+

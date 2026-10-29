@@ -24,6 +24,13 @@ function adapter(saved, handler, overrides = {}) {
 const json = (body,status=200) => new Response(JSON.stringify(body),{status})
 const renewed = () => json({access_token:'new',refresh_token:'rotated',expires_in:3600,user:{id:'operator'}})
 
+test('a configured backend never enables the administrative demo bypass',()=>{
+ const real=adapter(null,()=>json([]),{ENV:{MODE:'gestao',VITE_GESTAO_DEMO:'true',VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test'}})
+ assert.equal(real.backendConfigured,true);assert.equal(real.demoGestaoMode,false)
+ const isolated=adapter(null,()=>json([]),{ENV:{MODE:'gestao',VITE_GESTAO_DEMO:'true',VITE_SUPABASE_PUBLISHABLE_KEY:''}})
+ assert.equal(isolated.backendConfigured,false);assert.equal(isolated.demoGestaoMode,true)
+})
+
 test('expired session survives reload and concurrent writes refresh once',async()=>{
   let refreshes=0
   const a=adapter(expired(),async(url,opts)=>{
@@ -277,3 +284,4 @@ test('dispatch response immediately exposes the confirmed courier, reporting dat
  const saved=await a.pb.collection('orders').update('sale',{status:'pronto',motoboyId:'courier'})
  assert.equal(saved.motoboyId,'courier');assert.equal(saved.motoboyAssignedAt,'2026-10-23T12:00:00Z');assert.equal(saved.created,'2026-10-01T12:00:00Z');assert.equal(saved.deliveryFee,7);assert.equal(saved.total,87)
 })
+

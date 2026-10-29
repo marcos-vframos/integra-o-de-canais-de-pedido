@@ -11,7 +11,7 @@ export const backendConfigured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(ser
   && /^[0-9a-f-]{36}$/i.test(tenantId)
 export const integrationTestMode = import.meta.env.VITE_SUPABASE_DRAFT_MODE === 'true'
 export const demoGestaoMode = import.meta.env.MODE === 'gestao'
-  && (import.meta.env.VITE_GESTAO_DEMO === 'true' || !backendConfigured)
+  && !backendConfigured && import.meta.env.VITE_GESTAO_DEMO === 'true'
 export const backendConfigMessage = backendConfigured
   ? 'Supabase conectado. A conta de operador é necessária para gravar dados reais.'
   : 'Configure VITE_SUPABASE_PUBLISHABLE_KEY e VITE_SUPABASE_URL nos dois aplicativos Vercel.'

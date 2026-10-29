@@ -1,3 +1,7 @@
+import {useBusinessProfile} from '@/context/BusinessProfileContext'
+import {useLandingContent} from '@/context/LandingContentContext'
+import {whatsappContactUrl} from '@/lib/landingCommunications'
+import {BUSINESS_INFO} from '@/data/loyolasData'
 import React, { useRef } from 'react'
 import { CheckCircle2, Printer, Share2 } from 'lucide-react'
 import { fmtBRL, padTicket } from '@/lib/seeds'
@@ -18,6 +22,9 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   pixQrUrl,
   pixCode,
 }) => {
+  const {content}=useLandingContent()
+  const business=useBusinessProfile()
+  const contactPhone=business.profile?.phone||content.phoneText||BUSINESS_INFO.phoneDisplay
   const receiptRef = useRef<HTMLDivElement | null>(null)
 
   const handlePrint = () => {
@@ -51,7 +58,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             <p className="text-[11px] text-zinc-600">Araretama - Pindamonhangaba / SP</p>
             <p className="text-[11px] text-zinc-600">WhatsApp: (12) 99159-1915</p>
             <div className="mt-2 text-base font-black text-black">
-              COMANDA #{padTicket(order.ticketNumber)}
+              COMANDA {padTicket(order.ticketNumber)}
             </div>
             <div className="text-[10px] text-zinc-500">
               {order.created
@@ -183,9 +190,9 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             <span>Imprimir / Salvar</span>
           </button>
           <a
-            href={`https://wa.me/5512991591915?text=${encodeURIComponent(
-              `Olá! Segue meu pedido #${padTicket(order.ticketNumber)} no Loyola's Lanches (${order.customerName} - ${fmtBRL(order.total)} - ${order.payment}).`,
-            )}`}
+            href={whatsappContactUrl(contactPhone,BUSINESS_INFO.whatsappUrl,
+              `Olá! Segue meu pedido ${padTicket(order.ticketNumber)} no Loyola's Lanches (${order.customerName} - ${fmtBRL(order.total)} - ${order.payment}).`,
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
@@ -198,3 +205,4 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
     </div>
   )
 }
+

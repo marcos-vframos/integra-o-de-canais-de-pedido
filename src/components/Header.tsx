@@ -88,7 +88,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
     }
   }
 
-  const actuallyOpen = forceOpen ? true : forceClosed ? false : (business.status?.isOpen ?? status.isOpen) && isOpenSetting
+  const actuallyOpen = forceClosed ? false : forceOpen ? true : (business.status?.isOpen ?? status.isOpen) && isOpenSetting
 
   return (
     <>
@@ -145,7 +145,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
                 }`}
               />
               <span className="tracking-wide">
-                {actuallyOpen ? status.statusText : 'Fechado no momento'}
+                {actuallyOpen ? 'Aberto agora' : 'Fechado no momento'}
               </span>
             </div>
             <a
@@ -205,7 +205,7 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
                 }`}
               />
               <span>
-                {actuallyOpen ? status.statusText : 'Fechado no momento'} • {status.nextInfo}
+                {actuallyOpen ? 'Aberto agora' : 'Fechado no momento'}{!forceOpen && !forceClosed && ' • '+status.nextInfo}
               </span>
             </div>
             <a
@@ -225,3 +225,4 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
     </>
   )
 }
+

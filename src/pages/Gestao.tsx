@@ -20,7 +20,7 @@ import {
   Settings as SettingsIcon,
   Store as StoreIcon,
 } from 'lucide-react'
-import pb, { demoGestaoMode } from '@/lib/pocketbase/client'
+import pb, { demoGestaoMode, backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/hooks/use-toast'
@@ -199,9 +199,9 @@ export default function Gestao() {
       const cachedCounter = getTicketCounterCache()
       const cachedSettings = getSettingsCache()
 
-      const resolvedMenu = mRecords ?? cachedMenu ?? seedMenu().map((m) => ({ ...m, id: m.code }))
+      const resolvedMenu = mRecords ?? cachedMenu ?? (backendConfigured ? [] : seedMenu().map((m) => ({ ...m, id: m.code })))
       const resolvedStock =
-        sRecords ?? cachedStock ?? seedStock().map((s) => ({ ...s, id: s.code }))
+        sRecords ?? cachedStock ?? (backendConfigured ? [] : seedStock().map((s) => ({ ...s, id: s.code })))
 
       setMenu(resolvedMenu)
       setStock(resolvedStock)
@@ -1532,3 +1532,4 @@ export default function Gestao() {
     </div>
   )
 }
+

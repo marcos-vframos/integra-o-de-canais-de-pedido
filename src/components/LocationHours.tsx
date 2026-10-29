@@ -1,3 +1,4 @@
+import {whatsappContactUrl} from '@/lib/landingCommunications'
 import { useBusinessProfile } from '@/context/BusinessProfileContext'
 import { useState, useEffect } from 'react'
 import { ArrowUpRight } from 'lucide-react'
@@ -70,6 +71,7 @@ export default function LocationHours() {
     'Ponto físico no Araretama e atendimento delivery em Pindamonhangaba via aplicativo e WhatsApp.'
   const addressText = business.profile?.address || content.addressText || BUSINESS_INFO.address
   const phoneText = business.profile?.phone || content.phoneText || BUSINESS_INFO.phoneDisplay
+  const whatsappUrl=whatsappContactUrl(phoneText,BUSINESS_INFO.whatsappUrl)
   const mapsEmbedUrl='https://maps.google.com/maps?q='+encodeURIComponent(addressText)+'&output=embed'
 
   return (
@@ -135,7 +137,7 @@ export default function LocationHours() {
                         ? 'Fechado no momento'
                         : business.status?.statusText || openStatus.statusText}
                   </span>
-                  <span className="text-xs text-[#C4C4C4]">{business.status?.nextInfo || openStatus.nextInfo}</span>
+                  <span className="text-xs text-[#C4C4C4]">{overrideState.forceClosed ? 'Atendimento fechado manualmente' : overrideState.forceOpen ? 'Atendimento aberto manualmente' : business.status?.nextInfo || openStatus.nextInfo}</span>
                 </div>
               </div>
             </div>
@@ -171,7 +173,7 @@ export default function LocationHours() {
               <div className="flex justify-between items-center">
                 <span className="text-[#C4C4C4]">WhatsApp / Pedidos:</span>
                 <a
-                  href={BUSINESS_INFO.whatsappUrl}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-heading font-semibold text-white hover:text-[#C4C4C4] transition-colors"
@@ -190,3 +192,4 @@ export default function LocationHours() {
     </section>
   )
 }
+

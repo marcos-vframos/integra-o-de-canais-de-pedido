@@ -1,3 +1,7 @@
+import {useBusinessProfile} from '@/context/BusinessProfileContext'
+import {useLandingContent} from '@/context/LandingContentContext'
+import {whatsappContactUrl} from '@/lib/landingCommunications'
+import {BUSINESS_INFO} from '@/data/loyolasData'
 import MenuSubcategoryTabs from '@/components/MenuSubcategoryTabs'
 import { currentMenuSubcategory, matchesMenuSubcategory } from '@/lib/menuSubcategories'
 import {voucherDiscount} from '@/lib/voucherPricing'
@@ -51,6 +55,9 @@ interface LojaPublicaProps {
 }
 
 export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
+  const {content}=useLandingContent()
+  const business=useBusinessProfile()
+  const contactPhone=business.profile?.phone||content.phoneText||BUSINESS_INFO.phoneDisplay
   const [loading, setLoading] = useState(backendConfigured)
   const [storeName, setStoreName] = useState("Loyola's Lanches")
   const [isOpen, setIsOpen] = useState(true)
@@ -1660,7 +1667,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
                 Número da Comanda
               </span>
               <div className="text-3xl font-black text-[#E10600] font-mono tracking-tight">
-                #{padTicket(confirmedOrder.ticketNumber)}
+                {padTicket(confirmedOrder.ticketNumber)}
               </div>
               <div className="text-xs text-[#C0C0C0] pt-1">
                 Total: <b>{fmtBRL(confirmedOrder.total)}</b> ({confirmedOrder.payment})
@@ -1686,9 +1693,9 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
 
             <div className="space-y-2 pt-1">
               <a
-                href={`https://wa.me/5512991591915?text=${encodeURIComponent(
-                  `Olá! Acabei de enviar o pedido #${padTicket(confirmedOrder.ticketNumber)} no app do Loyola's Lanches em nome de ${confirmedOrder.customerName} (${fmtBRL(confirmedOrder.total)}).`,
-                )}`}
+                href={whatsappContactUrl(contactPhone,BUSINESS_INFO.whatsappUrl,
+                  `Olá! Acabei de enviar o pedido ${padTicket(confirmedOrder.ticketNumber)} no app do Loyola's Lanches em nome de ${confirmedOrder.customerName} (${fmtBRL(confirmedOrder.total)}).`,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow"

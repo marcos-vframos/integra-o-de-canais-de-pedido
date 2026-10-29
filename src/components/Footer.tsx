@@ -1,3 +1,4 @@
+import {whatsappContactUrl} from '@/lib/landingCommunications'
 import { useBusinessProfile } from '@/context/BusinessProfileContext'
 import { useState, useEffect } from 'react'
 
@@ -16,6 +17,8 @@ export default function Footer() {
     'O autêntico podrão brasileiro com mais de 18 anos de tradição. Fartura, saboroso, feito com carinho e ingredientes selecionados com capricho.'
   const addressText = business.profile?.address || content.addressText || BUSINESS_INFO.address
   const phoneText = business.profile?.phone || content.phoneText || BUSINESS_INFO.phoneDisplay
+
+  const whatsappUrl=whatsappContactUrl(phoneText,BUSINESS_INFO.whatsappUrl)
 
   useEffect(() => {
     const container = document.getElementById('landing-container')
@@ -91,7 +94,7 @@ export default function Footer() {
               </a>
               <span className="text-white/20">•</span>
               <a
-                href={BUSINESS_INFO.whatsappUrl}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#C4C4C4] hover:text-white transition-colors"
@@ -167,7 +170,7 @@ export default function Footer() {
             <p className="pt-1">
               WhatsApp:{' '}
               <a
-                href={BUSINESS_INFO.whatsappUrl}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:underline"
@@ -205,3 +208,4 @@ export default function Footer() {
     </footer>
   )
 }
+
