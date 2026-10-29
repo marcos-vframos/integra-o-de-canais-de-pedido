@@ -27,13 +27,13 @@ export function OrderSheet({ title, price, image, preview, children, footer, onC
           if (previousFocus.current?.isConnected) previousFocus.current.focus({ preventScroll: true })
         }}>
           <div className="order-sheet-handle" aria-hidden="true"><span /></div>
-          <header className="order-sheet-header">
+          <header className={'order-sheet-header' + (preview ? ' order-sheet-has-preview' : '')}>
             <div className="order-sheet-cover-backdrop" aria-hidden="true">{image}</div>
             <div className="order-sheet-image">{image}</div>
             <div className="order-sheet-heading">
               <Dialog.Title ref={heading} tabIndex={-1} className="order-sheet-title">{title}</Dialog.Title>
               <p className="order-sheet-price sc-tabular">{price}</p>
-              <Dialog.Description className="order-sheet-description">Personalize do seu jeito.</Dialog.Description>
+              <Dialog.Description className="sr-only">Confira os ingredientes, personalize o produto e adicione ao carrinho.</Dialog.Description>
             </div>
             {preview}
             <Dialog.Close className="order-sheet-close" aria-label="Fechar personalização"><X size={18} /></Dialog.Close>
