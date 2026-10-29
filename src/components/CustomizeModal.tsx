@@ -4,6 +4,7 @@ import { Minus, Plus, X, ShoppingBag } from 'lucide-react'
 import type { MenuItem, InventoryItem } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 import { BREAD_FRANCES_SURCHARGE, breadKind, breadName, hasBread, lineUnitTotal, extraUnitPrice, availableIngredientExtras, type BreadChoice } from '@/lib/orderCustomization'
+import { FoodLayerImage } from '@/components/FoodLayerImage'
 import { IngredientImage } from '@/components/IngredientImage'
 
 import { OrderSheet } from '@/components/OrderSheet'
@@ -13,7 +14,7 @@ import SandwichPreview from '@/components/SandwichPreview'
 import { sandwichPreviewLayers } from '@/lib/sandwichPreview'
 
 function CustomizeFrame({ sheet, item, children, footer, preview, onClose }: { sheet: boolean; item: MenuItem; children: React.ReactNode; footer: React.ReactNode; preview?:React.ReactNode; onClose: () => void }) {
-  if (sheet) return <OrderSheet key={item.id} title={item.name} price={fmtBRL(item.price)} image={<ProductImage item={item} fallback={productFallbackImage(item)} />} preview={preview} footer={footer} onClose={onClose}>{children}</OrderSheet>
+  if (sheet) return <OrderSheet key={item.id} title={item.name} price={fmtBRL(item.price)} image={<ProductImage item={item} fallback={productFallbackImage(item)} presentation="cover" />} preview={preview} footer={footer} onClose={onClose}>{children}</OrderSheet>
   return <div className="sc-modal-backdrop" onClick={onClose}><div className="sc-modal" onClick={e => e.stopPropagation()}><div className="sc-modal-header"><div><div className="sc-modal-title">{item.name}</div><div className="sc-modal-price sc-tabular">{fmtBRL(item.price)}</div></div><button type="button" className="sc-icon-btn" onClick={onClose} aria-label="Fechar"><X size={14} /></button></div>{children}{footer}</div></div>
 }
 
@@ -142,14 +143,14 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                   role="radio"
                   aria-checked={breadChoice === choice}
                   onClick={() => setBreadChoice(choice)}
-                  className={`rounded-lg border px-3 py-3 text-xs font-bold transition-colors ${breadChoice === choice
+                  className={`order-bread-option rounded-lg border px-3 py-3 text-xs font-bold transition-colors ${breadChoice === choice
                     ? 'border-[var(--red)] bg-[rgba(225,6,0,0.15)] text-white'
                     : 'border-zinc-700 bg-[#1a1a1f] text-zinc-300 hover:border-zinc-400'}`}
                 >
-                  {breadChoice === choice ? '✓ ' : ''}{breadName(choice)}
+                  {sheet && <FoodLayerImage code={choice === 'frances' ? 'ing-pao-frances' : 'ing-pao'} name={breadName(choice)} />}<span className="order-bread-copy">{breadChoice === choice ? '✓ ' : ''}{breadName(choice)}
                   {choice === 'frances' && <span className="mt-1 block text-[10px] font-semibold text-zinc-300">
                     + {fmtBRL(BREAD_FRANCES_SURCHARGE)} por lanche
-                  </span>}
+                  </span>}</span>
                 </button>
               ))}
             </div>
@@ -272,7 +273,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
         {!beverage && item.recipe && item.recipe.length > 0 && (
           <div className="sc-field">
             <label className="sc-label">
-              Ingredientes inclusos — desmarque para remover ou use o seletor para adicionar extra
+              {sheet ? 'Ingredientes' : 'Ingredientes inclusos — desmarque para remover ou use o seletor para adicionar extra'}
             </label>
             <div className="sc-recipe-list">
               {(() => {
@@ -289,7 +290,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
 
                   return (
                     <React.Fragment key={ingKey}>
-                      <div className="flex items-center justify-between gap-2 py-1 border-b border-[var(--line)]/40 last:border-b-0">
+                      <div className="order-ingredient-row flex items-center justify-between gap-2 py-1 border-b border-[var(--line)]/40 last:border-b-0">
                         <label className="sc-check-row flex-1 cursor-pointer select-none">
                           <input
                             type="checkbox"
@@ -301,7 +302,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                               }))
                             }
                           />
-                          <IngredientImage code={si?.code || ingKey} name={si?.name || r.ingredientId} />
+                          <IngredientImage premium={sheet} code={si?.code || ingKey} name={si?.name || r.ingredientId} />
                           <span className="flex min-w-0 flex-col">
                             <span className={checked ? 'text-[var(--silver)]' : 'line-through text-[var(--muted)]'}>
                               {si ? si.name : r.ingredientId}{Number(r.qty) > 1 ? ` (${r.qty} unidades inclusas)` : ''}
@@ -382,7 +383,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                                       }))
                                     }
                                   />
-                                  <IngredientImage code={toppingItem?.code || topKey} name={label} />
+                                  <IngredientImage premium={sheet} code={toppingItem?.code || topKey} name={label} />
                                   <span>{label}</span>
                                 </label>
                                 <div className="flex items-center gap-2 shrink-0 select-none">
@@ -444,7 +445,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
               const key = ingredient.code || ingredient.id
               const count = added[key] || 0
               return <div key={key} className="flex items-center gap-3 border-b border-[var(--line)] py-2 last:border-0">
-                <IngredientImage code={key} name={ingredient.name} />
+                <IngredientImage premium={sheet} code={key} name={ingredient.name} />
                 <div className="min-w-0 flex-1"><span className="block text-sm">{ingredient.name}</span><span className="text-xs text-zinc-400">+ {fmtBRL(extraUnitPrice(key, resolveStockItem, menu))}</span></div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button type="button" className="sc-round-btn" disabled={count <= 0} aria-label={'Reduzir adicional de '+ingredient.name} onClick={() => setAdded(previous => ({...previous,[key]:Math.max(0,(previous[key] || 0)-1)}))}><Minus size={13}/></button>

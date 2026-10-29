@@ -1311,60 +1311,125 @@ div:has(> a[href*='goskip.dev']) {
 
 @media (max-width: 640px) { .sc-tabs { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 
-/* Ordering cover: a full photo stage, readable metadata, and a separate composition. */
+/* Loyola 2099: responsive photographic ordering surface, scoped to public ordering. */
+.food-layer-image {
+  display: inline-block; flex-shrink: 0; width: 100%; aspect-ratio: 1.6;
+  background-image: url('/images/ordering/ingredients-2099.webp');
+  background-repeat: no-repeat; background-size: 500% 400%;
+  background-position: var(--food-x) var(--food-y);
+}
+.order-sheet {
+  --surface: color-mix(in srgb,var(--landing-bg-card,#191511) 12%,#151310);
+  --line: rgb(219 188 135 / .2);
+  --order-gold: #e3c99c;
+  max-width: 1040px; max-height: 94dvh;
+  border-color: var(--line); box-shadow: 0 22px 80px #0009;
+  background: var(--surface); border-radius: 24px 24px 0 0;
+}
 .order-sheet-header {
-  display: block;
-  min-height: 270px;
-  padding: 184px 24px 20px;
-  background: var(--surface);
+  display: grid; grid-template-columns: minmax(0,1fr) 100px;
+  grid-template-rows: 162px auto; gap: 6px 10px;
+  min-height: 284px; padding: 32px 18px 16px; position: relative;
+  background: radial-gradient(ellipse at 25% 50%,#6b43252b,transparent 65%),linear-gradient(135deg,#100e0b,var(--surface));
+  border-bottom: 1px solid var(--line);
 }
-.order-sheet-cover-backdrop {
-  position: absolute; inset: 0; z-index: -3; overflow: hidden;
-  filter: blur(18px) brightness(.28); transform: scale(1.1);
-}
-.order-sheet-cover-backdrop > *, .order-sheet-cover-backdrop img { width: 100%; height: 100%; }
-.order-sheet-cover-backdrop img { object-fit: cover; }
-.order-sheet-cover-backdrop button { display: none; }
 .order-sheet-image {
-  inset: 22px 48px auto; height: 152px;
-  /* Soft edges integrate an existing rectangular photo without cropping the food. */
-  mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent),linear-gradient(180deg,#000 78%,transparent);
-  mask-composite: intersect;
+  position: relative; inset: auto; z-index: 0; grid-column: 1; grid-row: 1;
+  height: 100%; width: 100%; min-width: 0; overflow: hidden; mask-image: none;
 }
-.order-sheet-image > * { width: 100%; height: 100%; min-height: 0; }
-.order-sheet-image img {
-  display: block; width: 100%; height: 100%; padding: 0;
-  object-fit: contain; object-position: center; background: transparent;
-}
+.order-sheet-image > *, .order-sheet-image img { width: 100%; height: 100%; min-height: 0; }
+.order-sheet-image img { display: block; object-fit: contain; object-position: center; padding: 0; background: transparent; }
 .order-sheet-image::after { display: none; }
-.order-sheet-has-preview .order-sheet-image { right: 132px; }
-.order-sheet-heading { position: relative; z-index: 1; padding-right: 0; }
-.order-sheet-has-preview .order-sheet-heading { padding-right: 122px; }
-.order-sheet-title { font-size: 24px; line-height: 1.25; text-wrap: balance; }
-.order-sheet-price { font-size: 19px; margin-top: 6px; }
-.order-sheet-close { top: 18px; right: 16px; z-index: 4; width: 40px; height: 40px; }
-.order-sheet-handle span { background: rgb(255 255 255 / .65); }
-.sandwich-preview {
-  position: absolute; right: 18px; bottom: 14px; width: 108px;
-  margin: 0; padding: 0; pointer-events: none;
-}
-.sandwich-illustration { display: block; width: 100%; max-height: 152px; overflow: visible; filter: drop-shadow(0 3px 3px rgb(0 0 0 / .28)); }
-.sandwich-preview figcaption { margin-top: 5px; font-size: 10px; line-height: 1.3; color: #e5e5e5; text-align: center; }
+.order-sheet-image button { display: none; }
+.order-sheet-heading { grid-column: 1; grid-row: 2; position: relative; z-index: 1; min-width: 0; padding: 0; text-shadow: none; }
+.order-sheet-title { font-family: Georgia,'Times New Roman',serif; font-size: 22px; line-height: 1.2; font-weight: 500; color: #fff3de; text-wrap: balance; }
+.order-sheet-price { font-family: Georgia,'Times New Roman',serif; font-size: 21px; color: var(--order-gold); margin-top: 8px; }
+.order-sheet-close { top: 12px; right: 12px; z-index: 4; width: 34px; height: 34px; background: #15120dda; border-color: var(--line); }
+.order-sheet-handle span { background: #d8c6a18f; }
+.sandwich-preview-photo { position: relative; inset: auto; grid-column: 2; grid-row: 1 / 3; width: 100%; align-self: end; margin: 0; padding: 0; pointer-events: none; }
+.sandwich-preview-photo figcaption { margin: 0 0 7px; font-family: Georgia,serif; font-size: 11px; line-height: 1.3; color: var(--order-gold); text-align: center; }
+.sandwich-photo-stack { width: 100%; filter: drop-shadow(0 4px 4px #0005); padding-bottom: 4px; }
+.sandwich-photo-bread { position: relative; height: 28px; overflow: visible; }
+.sandwich-photo-bread .food-layer-image { position: absolute; left: 0; bottom: -5px; }
+.sandwich-photo-top { height: 32px; z-index: 2; }
+.sandwich-photo-bottom { height: 15px; }
+.sandwich-photo-bottom .food-layer-image { top: -21px; bottom: auto; transform: scaleY(.55); }
+.sandwich-photo-layer { position: relative; height: calc(11px + (var(--photo-copies) - 1) * 3px); }
+.sandwich-photo-piece { position: absolute; left: 3%; width: 94%; top: calc(var(--photo-copy) * 3px - 22px); transform: scaleY(.48); transform-origin: center; }
+.sandwich-photo-piece .ingredient-image { display: block; width: 100%; height: 56px; }
+.sandwich-photo-sauce { height: 7px; }
+.sandwich-photo-sauce .sandwich-photo-piece { top: -23px; transform: scaleY(.28); }
+.sandwich-photo-condiment { display: block; margin: 24px 5px 0; height: 12px; border-radius: 45%; background: #be3521; box-shadow: inset 0 2px 3px #ffffff60; }
+.sandwich-photo-condiment.ing-mostarda { background: #e0ac24; }
+.sandwich-photo-count { position: absolute; right: -2px; top: 0; z-index: 3; background: #201b17; border: 1px solid #d9be8280; border-radius: 8px; padding: 1px 3px; font-size: 9px; color: #fff3de; }
+.sandwich-photo-name { display: none; }
+.order-sheet-body { padding: 16px 18px 10px; }
+.order-sheet-body .sc-field { margin-bottom: 18px; }
+.order-sheet .customize-bread { border: 0; background: transparent; padding: 0; }
+.order-sheet .customize-bread legend { padding: 0; font-family: Georgia,serif; font-size: 15px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.order-sheet .order-bread-option { display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px; min-height: 80px; border-radius: 12px; background: linear-gradient(130deg,#ffffff05,transparent); }
+.order-sheet .order-bread-option .food-layer-image { width: 58px; }
+.order-sheet .order-bread-option[aria-checked='true'] { border-color: var(--order-gold); background: linear-gradient(135deg,color-mix(in srgb,var(--red) 14%,transparent),#d8ac6812); }
+.order-sheet .order-bread-copy { min-width: 0; font-weight: 500; line-height: 1.4; }
+.order-sheet .customize-bread p { display: none; }
+.order-sheet-body .sc-label { font-family: Georgia,serif; font-size: 15px; color: #f4e7cf; text-transform: none; font-weight: 400; }
+.order-sheet .order-ingredient-row { padding: 6px 10px; border: 1px solid rgb(219 188 135 / .14); border-radius: 11px; margin-bottom: 7px; background: linear-gradient(110deg,#ffffff06,transparent); }
+.order-sheet .sc-check-row { min-height: 42px; gap: 10px; padding: 0; }
+.order-sheet .sc-check-row input { width: 23px; height: 23px; border-radius: 6px; background: #ffffff0a; border: 1px solid #d8c6a14d; }
+.order-sheet .sc-check-row input::after { display: none; }
+.order-sheet .sc-check-row input:checked { background: color-mix(in srgb,var(--red) 70%,#1e1111); border-color: color-mix(in srgb,var(--red) 60%,#d8c6a1); }
+.order-sheet .sc-check-row input:checked::after { display: block; content: '✓'; inset: 0; width: auto; height: auto; transform: none; border-radius: 0; background: transparent; text-align: center; color: white; font-size: 15px; line-height: 21px; }
+.order-sheet .ingredient-image { width: 50px; height: 36px; }
+.order-sheet .food-layer-image.ingredient-image { height: auto; }
+.order-sheet .order-ingredient-row button { background: #d8c6a10b; border-color: #d8c6a12e; border-radius: 9px; width: 30px; height: 30px; }
+.order-sheet .product-notes textarea { min-height: 74px; border-radius: 10px; background: #ffffff03; }
+.order-sheet-footer { background: linear-gradient(120deg,#1c1812,var(--surface)); border-color: var(--line); padding: 12px 18px max(14px,env(safe-area-inset-bottom)); gap: 9px 12px; }
+.order-sheet-total strong { font-family: Georgia,serif; color: var(--order-gold); font-size: 24px; font-weight: 500; }
+.order-sheet-confirm { border-radius: 12px; min-height: 48px; border: 1px solid color-mix(in srgb,var(--red) 60%,#f2dec3); background: linear-gradient(145deg,color-mix(in srgb,var(--red) 88%,white),color-mix(in srgb,var(--red) 65%,#170d0e)); box-shadow: inset 0 1px 0 #ffffff12; }
+.order-sheet-quantity .sc-qty-ctrl { border-radius: 24px; border-color: var(--line); background: #ffffff04; }
+.order-sheet-quantity .sc-round-btn { border-radius: 50%; border-color: transparent; background: #ffffff05; color: #e3c99c; }
 .landing-scope { --red-glow: transparent; }
-@media(max-width:420px) {
-  .order-sheet-header { min-height: 246px; padding: 165px 18px 18px; }
-  .order-sheet-image { inset: 24px 42px auto 22px; height: 132px; }
-  .order-sheet-has-preview .order-sheet-image { right: 112px; }
-  .order-sheet-title { font-size: 21px; }
-  .order-sheet-price { font-size: 18px; }
-  .order-sheet-has-preview .order-sheet-heading { padding-right: 100px; }
-  .sandwich-preview { width: 88px; right: 14px; bottom: 14px; }
-  .sandwich-illustration { max-height: 126px; }
+@media(min-width:640px) {
+  .order-sheet { border-radius: 24px; bottom: 20px; max-height: calc(100dvh - 40px); }
+  .order-sheet-header { grid-template-rows: 200px auto; grid-template-columns: minmax(0,1fr) 120px; padding: 34px 26px 22px; }
+  .order-sheet-body { padding: 20px 26px 12px; }
+  .order-sheet-footer { padding-inline: 26px; }
+  .order-sheet .order-bread-option .food-layer-image { width: 82px; }
+  .order-sheet .ingredient-image { width: 64px; height: 42px; }
+  .order-sheet .food-layer-image.ingredient-image { height: auto; }
 }
-@media(max-height:560px) {
-  .order-sheet-header { min-height: 180px; padding-top: 108px; padding-bottom: 12px; }
-  .order-sheet-image { inset: 18px 56px auto 28px; height: 86px; }
-  .order-sheet-title { font-size: 19px; }
-  .sandwich-preview { width: 78px; }
-  .sandwich-illustration { max-height: 105px; }
+@media(min-width:900px) {
+  .order-sheet-header { grid-template-columns: minmax(0,1.3fr) minmax(0,.95fr) 175px; grid-template-rows: auto; gap: 22px; min-height: 306px; padding: 32px 28px 22px; align-items: center; }
+  .order-sheet-image { grid-column: 1; grid-row: 1; height: 246px; }
+  .order-sheet-heading { grid-column: 2; grid-row: 1; }
+  .order-sheet-title { font-size: 29px; }
+  .order-sheet-price { font-size: 28px; margin-top: 14px; }
+  .sandwich-preview-photo { grid-column: 3; grid-row: 1; align-self: center; padding-right: 48px; }
+  .sandwich-preview-photo figcaption { text-align: left; padding-left: 12px; font-size: 12px; }
+  .sandwich-photo-layer { height: calc(13px + (var(--photo-copies) - 1) * 4px); }
+  .sandwich-photo-sauce { height: 8px; }
+  .sandwich-photo-name { display: block; position: absolute; left: calc(100% + 6px); top: 0; width: 47px; font-size: 8px; line-height: 1.15; color: #e8ddcc; overflow-wrap: anywhere; }
+  .sandwich-photo-name::before { content: ''; position: absolute; width: 5px; left: -6px; top: 4px; border-top: 1px solid #ddc49a60; }
+  .sandwich-photo-count { right: 0; }
+  .order-sheet .order-bread-option { min-height: 82px; }
+  .order-sheet .order-bread-option .food-layer-image { width: 105px; }
+  .order-sheet .order-ingredient-row { min-height: 58px; }
+  .order-sheet .product-notes { display: grid; grid-template-columns: 160px 1fr; align-items: center; column-gap: 16px; }
+  .order-sheet .product-notes textarea { min-height: 56px; margin: 0; }
+  .order-sheet .product-notes p { grid-column: 2; }
+}
+@media(max-width:360px) {
+  .order-sheet-header { grid-template-columns: minmax(0,1fr) 76px; grid-template-rows: 140px auto; min-height: 260px; padding-inline: 14px; }
+  .order-sheet-title { font-size: 20px; }
+  .order-sheet .order-bread-option { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .order-sheet .order-bread-option .food-layer-image { width: 64px; }
+  .sandwich-photo-layer { height: calc(9px + (var(--photo-copies) - 1) * 3px); }
+  .sandwich-photo-piece { top: calc(var(--photo-copy) * 3px - 17px); }
+  .order-sheet .sc-check-row { gap: 7px; font-size: 12px; }
+  .order-sheet .ingredient-image { width: 40px; }
+}
+@media(max-height:600px) and (min-width:640px) {
+  .order-sheet-header { min-height: 190px; padding-top: 24px; grid-template-rows: auto; }
+  .order-sheet-image { height: 150px; }
+  .sandwich-preview-photo { max-height: 150px; overflow: hidden; }
 }

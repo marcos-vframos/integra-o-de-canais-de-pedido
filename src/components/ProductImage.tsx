@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react'
 import {useLandingContent} from '@/context/LandingContentContext'
 import type { MenuItem } from '@/types/loyolas'
 import { sodaImages } from '@/lib/productPresentation'
-export default function ProductImage({ item, fallback }: { item: MenuItem; fallback: string }) {
+export default function ProductImage({ item, fallback, presentation = 'card' }: { item: MenuItem; fallback: string; presentation?: 'card' | 'cover' }) {
   const {content}=useLandingContent()
   const gallery=content.productMedia?.[item.id]
   const images=gallery?.images||[]
@@ -27,6 +27,7 @@ export default function ProductImage({ item, fallback }: { item: MenuItem; fallb
       <span className="absolute bottom-1 right-2 rounded bg-black/75 px-2 text-[9px] text-white">Composição ilustrativa • confira volumes no título</span>
     </div>
   }
-  const beverageImage = soda ? drink : /água|agua/i.test(item.name) ? 'https://images.tcdn.com.br/img/img_prod/1170916/agua_mineral_crystal_sem_gas_500ml_57090_1_6472a1e1d42fbbaacf384b9b0e57e67f.jpg' : /suco/i.test(item.name) ? '/images/suco-tropical.jpg' : fallback
-  return <img src={item.category === 'Bebidas' ? beverageImage : fallback} alt={item.name} className={'h-full w-full ' + (item.category === 'Bebidas' ? 'bg-white object-contain p-3' : 'object-contain object-center bg-[var(--landing-bg-card)] p-2')} loading="lazy"/>
+  const coverImage = presentation === 'cover' && item.code === 'c-xcontrafiletudo' ? '/images/ordering/contra-file-tudo-2099.webp' : fallback
+  const beverageImage = soda ? drink : /água|agua/i.test(item.name) ? 'https://images.tcdn.com.br/img/img_prod/1170916/agua_mineral_crystal_sem_gas_500ml_57090_1_6472a1e1d42fbbaacf384b9b0e57e67f.jpg' : /suco/i.test(item.name) ? '/images/suco-tropical.jpg' : coverImage
+  return <img src={item.category === 'Bebidas' ? beverageImage : coverImage} alt={item.name} className={'h-full w-full ' + (item.category === 'Bebidas' ? 'bg-white object-contain p-3' : 'object-contain object-center bg-[var(--landing-bg-card)] p-2')} loading={presentation === 'cover' ? 'eager' : 'lazy'}/>
 }

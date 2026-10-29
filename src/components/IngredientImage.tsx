@@ -1,5 +1,6 @@
 import { UtensilsCrossed } from 'lucide-react'
 import { sodaImages } from '@/lib/productPresentation'
+import { FoodLayerImage, hasFoodLayerImage } from './FoodLayerImage'
 
 const cells: Record<string, number> = {
   'ing-maionese': 0, 'ing-maionese-casa': 0, 'ing-molho': 0,
@@ -12,7 +13,8 @@ const cells: Record<string, number> = {
 }
 const otherCells: Record<string,number> = {'ing-salsicha':0,'ing-brocolis':1,'ing-batata-300':2,'ing-pure':3,'ing-vinagrete':4,'ing-linguica':5}
 
-export function IngredientImage({ code, name }: { code: string; name: string }) {
+export function IngredientImage({ code, name, premium = false }: { code: string; name: string; premium?: boolean }) {
+  if (premium && hasFoodLayerImage(code)) return <FoodLayerImage code={code} name={name} className="ingredient-image" />
   const cell = cells[code]
   const other = otherCells[code]
   if (other !== undefined) return <span role="img" aria-label={'Imagem ilustrativa de '+name} className="ingredient-image" style={{backgroundImage:'url(/images/ingredients-extra-atlas.webp)',backgroundSize:'200% 300%',backgroundPosition:`${other%2*100}% ${Math.floor(other/2)*50}%`}} />
