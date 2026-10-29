@@ -7,6 +7,7 @@ import { IngredientImage } from './IngredientImage'
 
 const portionUnits = new Set(['g', 'kg', 'ml', 'l', 'porção', 'porcao'])
 const label = (layer: SandwichLayer) => `${layer.qty.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}${layer.unit && layer.unit !== 'un' ? ' ' + layer.unit : ' ×'} ${layer.name}`
+const shortNames: Record<string, string> = { 'ing-apresuntado': 'Presunto', 'ing-queijo': 'Mussarela', 'ing-batata-palha': 'Batata palha', 'ing-contrafile': 'Contra-filé', 'ing-maionese-casa': 'Maionese', 'ing-frango-desfiado': 'Frango desfiado', 'ing-carne-gourmet': 'Carne gourmet' }
 
 /** Photographic layers follow the actual recipe, removals, extras and courtesy. */
 export default function SandwichPreview({ layers, bread }: { layers: SandwichLayer[]; bread: BreadChoice }) {
@@ -23,7 +24,7 @@ export default function SandwichPreview({ layers, bread }: { layers: SandwichLay
             {hasFoodLayerImage(layer.code) ? <FoodLayerImage code={layer.code} name={layer.name} /> : layer.code === 'ing-ketchup' || layer.code === 'ing-mostarda' ? <span className={'sandwich-photo-condiment ' + layer.code} /> : <IngredientImage code={layer.code} name={layer.name} />}
           </div>)}
           {layer.qty > 1 && !portionUnits.has(layer.unit || '') ? <span className="sandwich-photo-count">×{layer.qty}</span> : null}
-          <span className="sandwich-photo-name">{layer.name}</span>
+          <span className="sandwich-photo-name">{shortNames[layer.code] || layer.name}</span>
         </div>
       })}
       <div className="sandwich-photo-bread sandwich-photo-bottom"><FoodLayerImage code={bread === 'frances' ? 'bread-french-base' : 'bread-base'} name="Base do pão" /></div>

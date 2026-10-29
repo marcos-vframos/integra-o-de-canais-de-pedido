@@ -141,6 +141,7 @@ export const CustomizeModal: React.FC<CustomizeModalProps> = ({
                   key={choice}
                   type="button"
                   role="radio"
+                  aria-label={breadName(choice) + (choice === 'frances' ? ' + ' + fmtBRL(BREAD_FRANCES_SURCHARGE) + ' por lanche' : '')}
                   aria-checked={breadChoice === choice}
                   onClick={() => setBreadChoice(choice)}
                   className={`order-bread-option rounded-lg border px-3 py-3 text-xs font-bold transition-colors ${breadChoice === choice

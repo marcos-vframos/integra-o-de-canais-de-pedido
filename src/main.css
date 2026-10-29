@@ -1351,7 +1351,7 @@ div:has(> a[href*='goskip.dev']) {
 .sandwich-photo-stack { width: 100%; filter: drop-shadow(0 4px 4px #0005); padding-bottom: 4px; }
 .sandwich-photo-bread { position: relative; height: 28px; overflow: visible; }
 .sandwich-photo-bread .food-layer-image { position: absolute; left: 0; bottom: -5px; }
-.sandwich-photo-top { height: 32px; z-index: 2; }
+.sandwich-photo-top { height: 48px; z-index: 2; }
 .sandwich-photo-bottom { height: 15px; }
 .sandwich-photo-bottom .food-layer-image { top: -21px; bottom: auto; transform: scaleY(.55); }
 .sandwich-photo-layer { position: relative; height: calc(11px + (var(--photo-copies) - 1) * 3px); }
@@ -1369,7 +1369,7 @@ div:has(> a[href*='goskip.dev']) {
 .order-sheet .customize-bread legend { padding: 0; font-family: Georgia,serif; font-size: 15px; font-weight: 400; text-transform: none; letter-spacing: 0; }
 .order-sheet .order-bread-option { display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px; min-height: 80px; border-radius: 12px; background: linear-gradient(130deg,#ffffff05,transparent); }
 .order-sheet .order-bread-option .food-layer-image { width: 58px; }
-.order-sheet .order-bread-option[aria-checked='true'] { border-color: var(--order-gold); background: linear-gradient(135deg,color-mix(in srgb,var(--red) 14%,transparent),#d8ac6812); }
+.order-sheet .customize-bread .order-bread-option[aria-checked='true'] { border-color: var(--order-gold); background: linear-gradient(135deg,color-mix(in srgb,var(--red) 14%,transparent),#d8ac6812); }
 .order-sheet .order-bread-copy { min-width: 0; font-weight: 500; line-height: 1.4; }
 .order-sheet .customize-bread p { display: none; }
 .order-sheet-body .sc-label { font-family: Georgia,serif; font-size: 15px; color: #f4e7cf; text-transform: none; font-weight: 400; }
@@ -1398,17 +1398,22 @@ div:has(> a[href*='goskip.dev']) {
   .order-sheet .ingredient-image { width: 64px; height: 42px; }
   .order-sheet .food-layer-image.ingredient-image { height: auto; }
 }
+.order-sheet-header:not(.order-sheet-has-preview) .order-sheet-image,
+.order-sheet-header:not(.order-sheet-has-preview) .order-sheet-heading { grid-column: 1 / -1; }
 @media(min-width:900px) {
   .order-sheet-header { grid-template-columns: minmax(0,1.3fr) minmax(0,.95fr) 175px; grid-template-rows: auto; gap: 22px; min-height: 306px; padding: 32px 28px 22px; align-items: center; }
   .order-sheet-image { grid-column: 1; grid-row: 1; height: 246px; }
   .order-sheet-heading { grid-column: 2; grid-row: 1; }
   .order-sheet-title { font-size: 29px; }
   .order-sheet-price { font-size: 28px; margin-top: 14px; }
-  .sandwich-preview-photo { grid-column: 3; grid-row: 1; align-self: center; padding-right: 48px; }
+  .order-sheet-header:not(.order-sheet-has-preview) { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }
+  .order-sheet-header:not(.order-sheet-has-preview) .order-sheet-image { grid-column: 1; }
+  .order-sheet-header:not(.order-sheet-has-preview) .order-sheet-heading { grid-column: 2; }
+  .sandwich-preview-photo { grid-column: 3; grid-row: 1; align-self: center; padding-right: 55px; }
   .sandwich-preview-photo figcaption { text-align: left; padding-left: 12px; font-size: 12px; }
   .sandwich-photo-layer { height: calc(13px + (var(--photo-copies) - 1) * 4px); }
   .sandwich-photo-sauce { height: 8px; }
-  .sandwich-photo-name { display: block; position: absolute; left: calc(100% + 6px); top: 0; width: 47px; font-size: 8px; line-height: 1.15; color: #e8ddcc; overflow-wrap: anywhere; }
+  .sandwich-photo-name { display: block; position: absolute; left: calc(100% + 6px); top: 0; width: 52px; font-size: 8px; line-height: 1.15; color: #e8ddcc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sandwich-photo-name::before { content: ''; position: absolute; width: 5px; left: -6px; top: 4px; border-top: 1px solid #ddc49a60; }
   .sandwich-photo-count { right: 0; }
   .order-sheet .order-bread-option { min-height: 82px; }
@@ -1431,5 +1436,5 @@ div:has(> a[href*='goskip.dev']) {
 @media(max-height:600px) and (min-width:640px) {
   .order-sheet-header { min-height: 190px; padding-top: 24px; grid-template-rows: auto; }
   .order-sheet-image { height: 150px; }
-  .sandwich-preview-photo { max-height: 150px; overflow: hidden; }
+  .sandwich-preview-photo { max-height: none; overflow: visible; }
 }
