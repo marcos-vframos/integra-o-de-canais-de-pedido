@@ -6,7 +6,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const tenantId = '8c0d61b8-7cf9-44e0-9e17-96832f3848b6'
 const allowed = new Set([
-  'https://integracao-de-canais-de-pedido.vercel.app',
+  'https://loyolaslanchespinda.vercel.app','https://integracao-de-canais-de-pedido.vercel.app',
   'https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente-git-feat-supab-9fd0ee-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente.vercel.app',

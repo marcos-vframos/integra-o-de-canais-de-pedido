@@ -1,5 +1,5 @@
 import {normalizeGoogleProfile} from '../_shared/googleBusinessProfile.ts'
-const origins=new Set(['https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app','https://loyolas-gestao-independente-git-feat-supab-9fd0ee-sync-squad-hq.vercel.app','https://integracao-de-canais-de-pedido.vercel.app','https://loyolas-gestao-independente.vercel.app'])
+const origins=new Set(['https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app','https://loyolas-gestao-independente-git-feat-supab-9fd0ee-sync-squad-hq.vercel.app','https://loyolaslanchespinda.vercel.app','https://integracao-de-canais-de-pedido.vercel.app','https://loyolas-gestao-independente.vercel.app'])
 const snapshots=new Map<string,{profile:ReturnType<typeof normalizeGoogleProfile>;until:number}>()
 const pending=new Map<string,Promise<ReturnType<typeof normalizeGoogleProfile>>>()
 Deno.serve(async(req:Request)=>{
