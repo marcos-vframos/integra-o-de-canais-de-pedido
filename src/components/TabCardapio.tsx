@@ -627,7 +627,7 @@ export const TabCardapio: React.FC<TabCardapioProps> = ({
                         </button>
                       </div>
 
-                      <ProductMediaEditor key={item.id} productId={item.id}/>
+                      <ProductMediaEditor key={item.id} productId={item.id} item={item}/>
                       <div className="sc-field">
                         <label className="sc-label">Nome do produto</label>
                         <input

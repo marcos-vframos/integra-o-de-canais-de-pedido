@@ -1493,6 +1493,10 @@ div:has(> a[href*='goskip.dev']) {
 .order-sheet .sandwich-photo-sauce .sandwich-photo-piece > .food-layer-image { transform: translateY(-50%) scaleY(.16); }
 .order-sheet .sandwich-photo-condiment { margin: 0 5%; width: 90%; height: 4px; position: absolute; top: 50%; transform: translateY(-50%); }
 .order-sheet .sandwich-photo-name { top: 50%; transform: translateY(-50%); }
+.sandwich-bread-sauces { display:flex; align-items:center; justify-content:center; gap:2px; min-height:5px; width:94%; margin-inline:auto; }
+.sandwich-bread-sauce { display:block; flex:1; height:3px; border-radius:50%; background:#f2e4c9; }
+.sandwich-bread-sauce.ing-ketchup { background:#bd3424; }
+.sandwich-bread-sauce.ing-mostarda { background:#d7aa25; }
 @media(min-width:900px) {
   .order-sheet .order-sheet-header { grid-template-columns: minmax(0,1.3fr) minmax(0,.95fr) 160px; }
   .order-sheet .order-sheet-header:not(.order-sheet-has-preview) { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }

@@ -138,6 +138,6 @@ export function salesReportCsv(report:SalesReport){
  rows.push([],['Projeção anual de 12 meses'])
  if(report.annual){rows.push(['Meses observados',report.annual.months],['Produto','Unidades estimadas','Receita estimada','Gasto estimado','Resultado estimado']);for(const p of report.annual.products)rows.push([p.name,p.qty,p.revenue,p.cost,p.profit]);rows.push(['TOTAL',report.annual.qty,report.annual.revenue,report.annual.cost,report.annual.profit])}else rows.push(['Pendente: são necessários ao menos dois meses anteriores com movimento registrado.'])
  rows.push([],['Critérios e limites'],...report.notes.map(note=>[note]))
- const cell=(value:string|number|null)=>{if(value===null)return '"Pendente"';let text=typeof value==='number'?String(value).replace('.',','):value;if(typeof value==='string'&&/^\s*[=+@\-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'}
+ const cell=(value:string|number|null)=>{if(value===null)return '"Pendente"';let text=typeof value==='number'?String(value).replace('.',','):value;if(typeof value==='string'&&/^\s*[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"'}
  return '\uFEFF'+rows.map(row=>row.map(cell).join(';')).join('\r\n')
 }

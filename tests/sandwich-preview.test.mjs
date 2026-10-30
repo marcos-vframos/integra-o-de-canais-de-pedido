@@ -29,3 +29,32 @@ test('fractional stock portions remain part of the visual composition',()=>{
  const result=sandwichPreviewLayers({recipe:[{ingredientId:'mass',qty:.15}]},{},{},id=>id==='mass'?part:undefined)
  assert.equal(result[0].qty,.15);assert.equal(result[0].unit,'kg')
 })
+
+test('approved assembly puts protein under egg, ham, extras and mozzarella in every line',()=>{
+ for(const code of ['c-xtudo','c-xmaxtudo','c-xcontrafiletudo','f-xfiletudo','f-xcarijotudo','g-xtudogourmet']){
+  const item=menu.find(p=>p.code===code)
+  assert.ok(item,code)
+  const layers=sandwichPreviewLayers(item,{}, {},resolve)
+  const pos=c=>layers.findIndex(l=>l.code===c)
+  const main=item.recipe.find(r=>['ing-hamburguer','ing-contrafile','ing-file-frango','ing-frango-desfiado','ing-carne-gourmet'].includes(r.ingredientId)).ingredientId
+  const topDown=['ing-batata-palha','ing-alface','ing-tomate','ing-cebola','ing-milho','ing-queijo','ing-bacon','ing-calabresa','ing-apresuntado','ing-ovo',main]
+  for(let i=1;i<topDown.length;i++)assert.ok(pos(topDown[i-1])<pos(topDown[i]),`${code}: ${topDown[i-1]} above ${topDown[i]}`)
+  const withCreams=sandwichPreviewLayers(item,{}, {'ing-catupiry':1,'ing-cheddar':1},resolve)
+  const creamPos=c=>withCreams.findIndex(l=>l.code===c)
+  for(const cream of ['ing-catupiry','ing-cheddar'])assert.ok(creamPos('ing-apresuntado')<creamPos(cream)&&creamPos(cream)<creamPos('ing-ovo'))
+ }
+})
+test('special recipes omit absent layers and keep linguiça, sausage or broccoli at the base',()=>{
+ for(const [code,main] of [['h-paolinguica','ing-linguica'],['h-xhotdogtudo','ing-salsicha'],['e-xbrocolis','ing-brocolis']]){
+  const item=menu.find(p=>p.code===code), layers=sandwichPreviewLayers(item,{}, {},resolve)
+  const filling=layers.filter(l=>!['ing-maionese','ing-maionese-casa','ing-ketchup','ing-mostarda'].includes(l.code))
+  assert.equal(filling.at(-1).code,main)
+  assert.equal(layers.some(l=>l.code==='ing-apresuntado'),false)
+ }
+})
+test('adding a different meat keeps the original main protein at the base',()=>{
+ const item=menu.find(p=>p.code==='f-xfiletudo')
+ const layers=sandwichPreviewLayers(item,{}, {'ing-hamburguer':1,'ing-brocolis':1},resolve).filter(l=>!['ing-maionese','ing-ketchup','ing-mostarda'].includes(l.code))
+ assert.equal(layers.at(-1).code,'ing-file-frango')
+ assert.equal(layers.find(l=>l.code==='ing-hamburguer').qty,1)
+})

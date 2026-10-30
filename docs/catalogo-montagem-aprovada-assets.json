@@ -1,0 +1,1058 @@
+[
+  {
+    "code": "bread-top-plain",
+    "name": "Topo do pão sem gergelim",
+    "category": "Helper",
+    "path": "public/images/catalog/bread-top-plain-montagem-v2.webp",
+    "src": "/images/catalog/bread-top-plain-montagem-v2.webp",
+    "bytes": 134900,
+    "dimensions": [
+      960,
+      640
+    ]
+  },
+  {
+    "code": "c-americano",
+    "name": "Americano",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-americano-montagem-v2.webp",
+    "src": "/images/catalog/c-americano-montagem-v2.webp",
+    "bytes": 158602,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "bread-base-plain",
+    "name": "Base do pão sem gergelim",
+    "category": "Helper",
+    "path": "public/images/catalog/bread-base-plain-montagem-v2.webp",
+    "src": "/images/catalog/bread-base-plain-montagem-v2.webp",
+    "bytes": 100054,
+    "dimensions": [
+      960,
+      640
+    ]
+  },
+  {
+    "code": "layer-frango-desfiado",
+    "name": "Frango desfiado",
+    "category": "Helper",
+    "path": "public/images/catalog/layer-frango-desfiado-montagem-v2.webp",
+    "src": "/images/catalog/layer-frango-desfiado-montagem-v2.webp",
+    "bytes": 85538,
+    "dimensions": [
+      960,
+      400
+    ]
+  },
+  {
+    "code": "c-contrafile",
+    "name": "Contra-Filé",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-contrafile-montagem-v2.webp",
+    "src": "/images/catalog/c-contrafile-montagem-v2.webp",
+    "bytes": 204646,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "layer-salsicha",
+    "name": "Salsicha",
+    "category": "Helper",
+    "path": "public/images/catalog/layer-salsicha-montagem-v2.webp",
+    "src": "/images/catalog/layer-salsicha-montagem-v2.webp",
+    "bytes": 80152,
+    "dimensions": [
+      960,
+      480
+    ]
+  },
+  {
+    "code": "c-bauru",
+    "name": "Bauru",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-bauru-montagem-v2.webp",
+    "src": "/images/catalog/c-bauru-montagem-v2.webp",
+    "bytes": 170400,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-hamburguer",
+    "name": "Hambúrguer",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-hamburguer-montagem-v2.webp",
+    "src": "/images/catalog/c-hamburguer-montagem-v2.webp",
+    "bytes": 196978,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "layer-linguica",
+    "name": "Linguiça",
+    "category": "Helper",
+    "path": "public/images/catalog/layer-linguica-montagem-v2.webp",
+    "src": "/images/catalog/layer-linguica-montagem-v2.webp",
+    "bytes": 95050,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "layer-brocolis",
+    "name": "Brócolis",
+    "category": "Helper",
+    "path": "public/images/catalog/layer-brocolis-montagem-v2.webp",
+    "src": "/images/catalog/layer-brocolis-montagem-v2.webp",
+    "bytes": 99182,
+    "dimensions": [
+      960,
+      480
+    ]
+  },
+  {
+    "code": "c-xmax",
+    "name": "X Max",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmax-montagem-v2.webp",
+    "src": "/images/catalog/c-xmax-montagem-v2.webp",
+    "bytes": 179974,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-max",
+    "name": "Max",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-max-montagem-v2.webp",
+    "src": "/images/catalog/c-max-montagem-v2.webp",
+    "bytes": 183604,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxbaconegg",
+    "name": "X Max Bacon Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxbaconegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxbaconegg-montagem-v2.webp",
+    "bytes": 182264,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-misto",
+    "name": "Misto Quente",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-misto-montagem-v2.webp",
+    "src": "/images/catalog/c-misto-montagem-v2.webp",
+    "bytes": 143920,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxcalabresaegg",
+    "name": "X Max Calabresa Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxcalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxcalabresaegg-montagem-v2.webp",
+    "bytes": 191480,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxegg",
+    "name": "X Max Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxegg-montagem-v2.webp",
+    "bytes": 184626,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xbaconegg",
+    "name": "X-Bacon Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xbaconegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xbaconegg-montagem-v2.webp",
+    "bytes": 174600,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xburguer",
+    "name": "X-Burguer",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xburguer-montagem-v2.webp",
+    "src": "/images/catalog/c-xburguer-montagem-v2.webp",
+    "bytes": 147284,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxtudo",
+    "name": "X Max Tudo",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxtudo-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxtudo-montagem-v2.webp",
+    "bytes": 183384,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xbacon",
+    "name": "X-Bacon",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xbacon-montagem-v2.webp",
+    "src": "/images/catalog/c-xbacon-montagem-v2.webp",
+    "bytes": 180584,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxcalabresa",
+    "name": "X Max Calabresa",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxcalabresa-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxcalabresa-montagem-v2.webp",
+    "bytes": 172088,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xmaxbacon",
+    "name": "X Max Bacon",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xmaxbacon-montagem-v2.webp",
+    "src": "/images/catalog/c-xmaxbacon-montagem-v2.webp",
+    "bytes": 194694,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafile",
+    "name": "X-Contra-Filé",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafile-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafile-montagem-v2.webp",
+    "bytes": 186690,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafilebaconegg",
+    "name": "X-Contra-Filé Bacon Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafilebaconegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafilebaconegg-montagem-v2.webp",
+    "bytes": 177482,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcalabresa",
+    "name": "X-Calabresa",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcalabresa-montagem-v2.webp",
+    "src": "/images/catalog/c-xcalabresa-montagem-v2.webp",
+    "bytes": 176606,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafilebacon",
+    "name": "X-Contra-Filé Bacon",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafilebacon-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafilebacon-montagem-v2.webp",
+    "bytes": 192942,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafilecalabresa",
+    "name": "X-Contra-Filé Calabresa",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafilecalabresa-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafilecalabresa-montagem-v2.webp",
+    "bytes": 188218,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcalabresaegg",
+    "name": "X-Calabresa Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xcalabresaegg-montagem-v2.webp",
+    "bytes": 190958,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafileegg",
+    "name": "X-Contra-Filé Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafileegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafileegg-montagem-v2.webp",
+    "bytes": 196738,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafiletudo",
+    "name": "X-Contra-Filé Tudo",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafiletudo-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafiletudo-montagem-v2.webp",
+    "bytes": 168876,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "combo-casal2",
+    "name": "Combo Casal 02 — 2 X-Bacon + Batata + Refri 1L",
+    "category": "Combos",
+    "path": "public/images/catalog/combo-casal2-montagem-v2.webp",
+    "src": "/images/catalog/combo-casal2-montagem-v2.webp",
+    "bytes": 175972,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xegg",
+    "name": "X-Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xegg-montagem-v2.webp",
+    "bytes": 181886,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xsalada",
+    "name": "X-Salada",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xsalada-montagem-v2.webp",
+    "src": "/images/catalog/c-xsalada-montagem-v2.webp",
+    "bytes": 173076,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "combo-infantil",
+    "name": "Combo Infantil — X-Burguer + Batata + Refri 200ml",
+    "category": "Combos",
+    "path": "public/images/catalog/combo-infantil-montagem-v2.webp",
+    "src": "/images/catalog/combo-infantil-montagem-v2.webp",
+    "bytes": 133528,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xtudo",
+    "name": "X-Tudo",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xtudo-montagem-v2.webp",
+    "src": "/images/catalog/c-xtudo-montagem-v2.webp",
+    "bytes": 178926,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "combo-ind1",
+    "name": "Combo Individual 01 — X-Tudo + Batata + Refri Lata",
+    "category": "Combos",
+    "path": "public/images/catalog/combo-ind1-montagem-v2.webp",
+    "src": "/images/catalog/combo-ind1-montagem-v2.webp",
+    "bytes": 169466,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "combo-ind2",
+    "name": "Combo Individual 02 — X-Bacon + Batata + Refri Lata",
+    "category": "Combos",
+    "path": "public/images/catalog/combo-ind2-montagem-v2.webp",
+    "src": "/images/catalog/combo-ind2-montagem-v2.webp",
+    "bytes": 177656,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "c-xcontrafilecalabresaegg",
+    "name": "X-Contra-Filé Calabresa Egg",
+    "category": "Carnes",
+    "path": "public/images/catalog/c-xcontrafilecalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/c-xcontrafilecalabresaegg-montagem-v2.webp",
+    "bytes": 179888,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-carnegourmet",
+    "name": "Carne Gourmet (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-carnegourmet-montagem-v2.webp",
+    "src": "/images/catalog/x-carnegourmet-montagem-v2.webp",
+    "bytes": 184310,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "combo-casal1",
+    "name": "Combo Casal 01 — 2 X-Tudo + Batata + Refri 1L",
+    "category": "Combos",
+    "path": "public/images/catalog/combo-casal1-montagem-v2.webp",
+    "src": "/images/catalog/combo-casal1-montagem-v2.webp",
+    "bytes": 202896,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-bacon",
+    "name": "Bacon (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-bacon-montagem-v2.webp",
+    "src": "/images/catalog/x-bacon-montagem-v2.webp",
+    "bytes": 170054,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-catupiry",
+    "name": "Catupiry (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-catupiry-montagem-v2.webp",
+    "src": "/images/catalog/x-catupiry-montagem-v2.webp",
+    "bytes": 35140,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-filefrango",
+    "name": "Filé de Frango (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-filefrango-montagem-v2.webp",
+    "src": "/images/catalog/x-filefrango-montagem-v2.webp",
+    "bytes": 155584,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-calabresa",
+    "name": "Calabresa (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-calabresa-montagem-v2.webp",
+    "src": "/images/catalog/x-calabresa-montagem-v2.webp",
+    "bytes": 195352,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-contrafile",
+    "name": "Contra-Filé (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-contrafile-montagem-v2.webp",
+    "src": "/images/catalog/x-contrafile-montagem-v2.webp",
+    "bytes": 172952,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-cheddar",
+    "name": "Cheddar (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-cheddar-montagem-v2.webp",
+    "src": "/images/catalog/x-cheddar-montagem-v2.webp",
+    "bytes": 54724,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-ovo",
+    "name": "Ovo (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-ovo-montagem-v2.webp",
+    "src": "/images/catalog/x-ovo-montagem-v2.webp",
+    "bytes": 102404,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-frangodesf",
+    "name": "Frango Desfiado (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-frangodesf-montagem-v2.webp",
+    "src": "/images/catalog/x-frangodesf-montagem-v2.webp",
+    "bytes": 128468,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-paofrances",
+    "name": "Pão Francês (unidade)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-paofrances-montagem-v2.webp",
+    "src": "/images/catalog/x-paofrances-montagem-v2.webp",
+    "bytes": 149154,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-presunto",
+    "name": "Presunto (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-presunto-montagem-v2.webp",
+    "src": "/images/catalog/x-presunto-montagem-v2.webp",
+    "bytes": 82540,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-carne",
+    "name": "Carne (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-carne-montagem-v2.webp",
+    "src": "/images/catalog/x-carne-montagem-v2.webp",
+    "bytes": 198212,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-paolinguica",
+    "name": "Pão c/ Linguiça",
+    "category": "Especial",
+    "path": "public/images/catalog/h-paolinguica-montagem-v2.webp",
+    "src": "/images/catalog/h-paolinguica-montagem-v2.webp",
+    "bytes": 188002,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "e-xbrocolis",
+    "name": "X-Brócolis (com Bacon)",
+    "category": "Especial",
+    "path": "public/images/catalog/e-xbrocolis-montagem-v2.webp",
+    "src": "/images/catalog/e-xbrocolis-montagem-v2.webp",
+    "bytes": 192676,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "x-queijo",
+    "name": "Queijo (adicional)",
+    "category": "Complementos",
+    "path": "public/images/catalog/x-queijo-montagem-v2.webp",
+    "src": "/images/catalog/x-queijo-montagem-v2.webp",
+    "bytes": 56628,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-carijo",
+    "name": "Carijó",
+    "category": "Frango",
+    "path": "public/images/catalog/f-carijo-montagem-v2.webp",
+    "src": "/images/catalog/f-carijo-montagem-v2.webp",
+    "bytes": 191302,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijobacon",
+    "name": "X-Carijó Bacon",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijobacon-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijobacon-montagem-v2.webp",
+    "bytes": 164974,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-file",
+    "name": "Filé",
+    "category": "Frango",
+    "path": "public/images/catalog/f-file-montagem-v2.webp",
+    "src": "/images/catalog/f-file-montagem-v2.webp",
+    "bytes": 179966,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijocalabresaegg",
+    "name": "X-Carijó Calabresa Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijocalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijocalabresaegg-montagem-v2.webp",
+    "bytes": 183970,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijobaconegg",
+    "name": "X-Carijó Bacon Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijobaconegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijobaconegg-montagem-v2.webp",
+    "bytes": 179824,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijo",
+    "name": "X-Carijó",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijo-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijo-montagem-v2.webp",
+    "bytes": 183802,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfile",
+    "name": "X-Filé",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfile-montagem-v2.webp",
+    "src": "/images/catalog/f-xfile-montagem-v2.webp",
+    "bytes": 169130,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfilebacon",
+    "name": "X-Filé Bacon",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfilebacon-montagem-v2.webp",
+    "src": "/images/catalog/f-xfilebacon-montagem-v2.webp",
+    "bytes": 178124,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijoegg",
+    "name": "X-Carijó Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijoegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijoegg-montagem-v2.webp",
+    "bytes": 189982,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfilebaconegg",
+    "name": "X-Filé Bacon Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfilebaconegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xfilebaconegg-montagem-v2.webp",
+    "bytes": 174304,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijocalabresa",
+    "name": "X-Carijó Calabresa",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijocalabresa-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijocalabresa-montagem-v2.webp",
+    "bytes": 193578,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xcarijotudo",
+    "name": "X-Carijó Tudo",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xcarijotudo-montagem-v2.webp",
+    "src": "/images/catalog/f-xcarijotudo-montagem-v2.webp",
+    "bytes": 173048,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfilecalabresaegg",
+    "name": "X-Filé Calabresa Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfilecalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xfilecalabresaegg-montagem-v2.webp",
+    "bytes": 180508,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfiletudo",
+    "name": "X-Filé Tudo",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfiletudo-montagem-v2.webp",
+    "src": "/images/catalog/f-xfiletudo-montagem-v2.webp",
+    "bytes": 169470,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "f-xfilecalabresa",
+    "name": "X-Filé Calabresa",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfilecalabresa-montagem-v2.webp",
+    "src": "/images/catalog/f-xfilecalabresa-montagem-v2.webp",
+    "bytes": 184608,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "e-especialgourmet",
+    "name": "Especial Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/e-especialgourmet-montagem-v2.webp",
+    "src": "/images/catalog/e-especialgourmet-montagem-v2.webp",
+    "bytes": 253194,
+    "dimensions": [
+      960,
+      877
+    ]
+  },
+  {
+    "code": "f-xfileegg",
+    "name": "X-Filé Egg",
+    "category": "Frango",
+    "path": "public/images/catalog/f-xfileegg-montagem-v2.webp",
+    "src": "/images/catalog/f-xfileegg-montagem-v2.webp",
+    "bytes": 154046,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xbaconegggourmet",
+    "name": "X-Bacon Egg Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xbaconegggourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xbaconegggourmet-montagem-v2.webp",
+    "bytes": 182530,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xcalabresaegggourmet",
+    "name": "X-Calabresa Egg Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xcalabresaegggourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xcalabresaegggourmet-montagem-v2.webp",
+    "bytes": 186600,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-hamburguergourmet",
+    "name": "Hambúrguer Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-hamburguergourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-hamburguergourmet-montagem-v2.webp",
+    "bytes": 194150,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xburguergourmet",
+    "name": "X-Burguer Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xburguergourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xburguergourmet-montagem-v2.webp",
+    "bytes": 187358,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xbacongourmet",
+    "name": "X-Bacon Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xbacongourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xbacongourmet-montagem-v2.webp",
+    "bytes": 188680,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xtudogourmet",
+    "name": "X-Tudo Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xtudogourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xtudogourmet-montagem-v2.webp",
+    "bytes": 197594,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xegggourmet",
+    "name": "X-Egg Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xegggourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xegggourmet-montagem-v2.webp",
+    "bytes": 180238,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xsaladagourmet",
+    "name": "X-Salada Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xsaladagourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xsaladagourmet-montagem-v2.webp",
+    "bytes": 192476,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-hotdog",
+    "name": "Hotdog",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-hotdog-montagem-v2.webp",
+    "src": "/images/catalog/h-hotdog-montagem-v2.webp",
+    "bytes": 178910,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdog",
+    "name": "X-Hotdog",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdog-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdog-montagem-v2.webp",
+    "bytes": 173254,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "g-xcalabresagourmet",
+    "name": "X-Calabresa Gourmet",
+    "category": "Gourmet",
+    "path": "public/images/catalog/g-xcalabresagourmet-montagem-v2.webp",
+    "src": "/images/catalog/g-xcalabresagourmet-montagem-v2.webp",
+    "bytes": 183850,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogbacon",
+    "name": "X-Hotdog Bacon",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogbacon-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogbacon-montagem-v2.webp",
+    "bytes": 171826,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogcalabresa",
+    "name": "X-Hotdog Calabresa",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogcalabresa-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogcalabresa-montagem-v2.webp",
+    "bytes": 179496,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogbaconegg",
+    "name": "X-Hotdog Bacon Egg",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogbaconegg-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogbaconegg-montagem-v2.webp",
+    "bytes": 170148,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogtudo",
+    "name": "X-Hotdog Tudo",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogtudo-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogtudo-montagem-v2.webp",
+    "bytes": 174310,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogegg",
+    "name": "X-Hotdog Egg",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogegg-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogegg-montagem-v2.webp",
+    "bytes": 186514,
+    "dimensions": [
+      960,
+      720
+    ]
+  },
+  {
+    "code": "h-xhotdogcalabresaegg",
+    "name": "X-Hotdog Calabresa Egg",
+    "category": "Hot-Dog",
+    "path": "public/images/catalog/h-xhotdogcalabresaegg-montagem-v2.webp",
+    "src": "/images/catalog/h-xhotdogcalabresaegg-montagem-v2.webp",
+    "bytes": 183956,
+    "dimensions": [
+      960,
+      720
+    ]
+  }
+]

@@ -46,7 +46,7 @@ export interface LandingThemePreset {
 }
 
 export interface LandingContentState {
-  productMedia?: Record<string,{images:string[];carousel:boolean}>
+  productMedia?: Record<string,{images:string[];carousel:boolean;library?:string[]}>
   // Hero
   traditionBadge: string
   headlines: LandingHeadline[]
@@ -389,7 +389,8 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
 
           if (String(section).startsWith('product_media_')) {
             const productId = String(section).slice('product_media_'.length)
-            next.productMedia = {...next.productMedia,[productId]:{images:Array.isArray(data.images)?data.images.filter((u:unknown)=>typeof u==='string'&&/^https?:\/\//.test(u)).slice(0,3):[],carousel:data.carousel===true}}
+            const safeImage=(u:unknown):u is string=>typeof u==='string'&&(/^https?:\/\//.test(u)||/^\/images\/catalog\/[a-z0-9-]+\.webp$/.test(u))
+            next.productMedia = {...next.productMedia,[productId]:{images:Array.isArray(data.images)?data.images.filter(safeImage).slice(0,3):[],carousel:data.carousel===true,library:Array.isArray(data.library)?data.library.filter(safeImage).slice(-24):[]}}
           } else if (section === 'hero') {
             if (data.traditionBadge) next.traditionBadge = data.traditionBadge
             if (Array.isArray(data.headlines) && data.headlines.length > 0) {
