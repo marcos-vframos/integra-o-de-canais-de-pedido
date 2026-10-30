@@ -1,7 +1,9 @@
-import { backendConfigured, backendConfigMessage, integrationTestMode } from '@/lib/pocketbase/client'
+import {usePilotRuntime} from '@/context/PilotRuntimeContext'
+import { backendConfigured, backendConfigMessage } from '@/lib/pocketbase/client'
 
 /** Fail-closed notice: no customer checkout or admin login should silently use a legacy service. */
 export default function BackendStatusNotice() {
+  const {integrationTest:integrationTestMode}=usePilotRuntime()
   if (backendConfigured && !integrationTestMode) return null
   if (backendConfigured) return (
     <div role="status" className="relative z-[100] border-b border-amber-500/40 bg-[#261a08] px-4 py-2 text-center text-xs font-semibold text-amber-100">

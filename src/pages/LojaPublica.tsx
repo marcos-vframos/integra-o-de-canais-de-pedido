@@ -1,3 +1,4 @@
+import {usePilotRuntime} from '@/context/PilotRuntimeContext'
 import {useBusinessProfile} from '@/context/BusinessProfileContext'
 import {useLandingContent} from '@/context/LandingContentContext'
 import {whatsappContactUrl} from '@/lib/landingCommunications'
@@ -10,7 +11,7 @@ import { isBeverage, hasDrinkFlavor, validDrinkFlavor, flavorQuantityLines } fro
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingBag, Search, Plus, Minus, Trash2, CheckCircle2, MapPin, Store, Phone, User, AlertCircle, X, CreditCard, Banknote, QrCode, SlidersHorizontal, ArrowLeft, Share2, Copy, Check, Compass } from 'lucide-react'
-import pb, { backendConfigured, integrationTestMode } from '@/lib/pocketbase/client'
+import pb, { backendConfigured } from '@/lib/pocketbase/client'
 import useRealtime from '@/hooks/use-realtime'
 import type { MenuItem, InventoryItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL, padTicket, seedMenu, seedStock } from '@/lib/seeds'
@@ -55,6 +56,7 @@ interface LojaPublicaProps {
 }
 
 export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
+  const {integrationTest:integrationTestMode}=usePilotRuntime()
   const {content}=useLandingContent()
   const business=useBusinessProfile()
   const contactPhone=business.profile?.phone||content.phoneText||BUSINESS_INFO.phoneDisplay

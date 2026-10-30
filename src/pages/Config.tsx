@@ -1,3 +1,4 @@
+import PilotActivationCard from '@/components/PilotActivationCard'
 import SourceCodeDownload from '@/components/SourceCodeDownload'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -640,6 +641,7 @@ export default function Config({panel=false}:{panel?:boolean}) {
           <p className="mt-2 text-xs text-[var(--muted)]">A sessão é mantida neste navegador e renovada automaticamente enquanto disponível. Você pode fechar a página após confirmar o salvamento.</p>
         </div>
 
+        <PilotActivationCard />
         <SourceCodeDownload />
 
         <StoreCloseChoiceModal

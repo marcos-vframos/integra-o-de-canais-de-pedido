@@ -1,3 +1,4 @@
+import {PilotRuntimeProvider} from '@/context/PilotRuntimeContext'
 import {lazy,Suspense} from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
@@ -11,6 +12,7 @@ import BackendStatusNotice from '@/components/BackendStatusNotice'
 import Layout from '@/components/Layout'
 const Gestao=lazy(()=>import('@/pages/Gestao'))
 const ControlPanel=lazy(()=>import('@/pages/ControlPanel'))
+const ActivatePilotPage=lazy(()=>import('@/pages/ActivatePilot'))
 const Config=lazy(()=>import('@/pages/Config'))
 const AdmLanding=lazy(()=>import('@/pages/AdmLanding'))
 import Login from '@/pages/Login'
@@ -22,7 +24,7 @@ const ConfirmEmailChange=lazy(()=>import('@/pages/ConfirmEmailChange'))
 /** Dedicated administrator PWA. This output must be deployed on its own domain. */
 export default function GestaoApp() {
   return <BrowserRouter>
-    <AuthProvider>
+    <AuthProvider><PilotRuntimeProvider>
       <ThemeProvider>
         <LandingProvider>
           <TooltipProvider>
@@ -37,6 +39,7 @@ export default function GestaoApp() {
               <Route path="/confirm-email-change" element={<ConfirmEmailChange />} />
               <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/gestao" element={<Gestao />} />
+                <Route path="/ativar-piloto" element={<ActivatePilotPage />} />
                 <Route path="/config" element={<Config />} />
                 <Route path="/painel-de-controle" element={<ControlPanel />} />
                 <Route path="/painel-de-controle/configuracoes" element={<Config panel />} />
@@ -47,6 +50,6 @@ export default function GestaoApp() {
           </TooltipProvider>
         </LandingProvider>
       </ThemeProvider>
-    </AuthProvider>
+    </PilotRuntimeProvider></AuthProvider>
   </BrowserRouter>
 }

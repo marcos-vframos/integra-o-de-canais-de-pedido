@@ -1,3 +1,4 @@
+import {PilotRuntimeProvider,PublicPilotGate} from '@/context/PilotRuntimeContext'
 import {lazy,Suspense} from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
@@ -12,19 +13,19 @@ const LojaPublica=lazy(()=>import('@/pages/LojaPublica'))
 /** Public client-only application. No administrative route or module is exposed here. */
 export default function App() {
   return <BrowserRouter>
-    <ThemeProvider>
+    <PilotRuntimeProvider><ThemeProvider>
     <LandingProvider>
       <TooltipProvider>
         <BackendStatusNotice />
         <Toaster />
         <Sonner />
-        <Routes>
+        <PublicPilotGate><Routes>
           <Route path="/" element={<Index />} />
           <Route path="/loja" element={<Suspense fallback={<p role="status">Carregando loja…</p>}><LojaPublica /></Suspense>} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        </Routes></PublicPilotGate>
       </TooltipProvider>
     </LandingProvider>
-    </ThemeProvider>
+    </ThemeProvider></PilotRuntimeProvider>
   </BrowserRouter>
 }

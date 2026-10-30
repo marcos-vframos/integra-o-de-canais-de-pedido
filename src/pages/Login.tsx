@@ -8,7 +8,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const requested=searchParams.get('returnTo')
-  const next = ['/config','/adm-landing','/gestao','/painel-de-controle','/painel-de-controle/configuracoes'].includes(requested || '') ? requested! : '/gestao'
+  const next = ['/ativar-piloto','/config','/adm-landing','/gestao','/painel-de-controle','/painel-de-controle/configuracoes'].includes(requested || '') ? requested! : '/gestao'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')

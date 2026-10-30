@@ -401,6 +401,13 @@ const pb={
     return ''
   }},
   async send<T=any>(path:string,opts:{method?:string;body?:unknown}={}):Promise<T>{
+    if(path==='/backend/v1/pilot/status'){
+      return request('/rest/v1/rpc/store_pilot_status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p_tenant:tenantId})},false) as Promise<T>
+    }
+    if(path==='/backend/v1/pilot/activate'){
+      await ensureOperatorSession()
+      return request('/rest/v1/rpc/activate_store_pilot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p_tenant:tenantId})},true) as Promise<T>
+    }
     const controlRpc:Record<string,string>={'/backend/v1/control/access':'control_access','/backend/v1/control/save':'save_control_record','/backend/v1/control/source-key':'control_source_key'}
     if(controlRpc[path]){
       await ensureOperatorSession()
