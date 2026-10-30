@@ -7,7 +7,7 @@ import { IngredientImage } from './IngredientImage'
 
 const portionUnits = new Set(['g', 'kg', 'ml', 'l', 'porção', 'porcao'])
 const label = (layer: SandwichLayer) => `${layer.qty.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}${layer.unit && layer.unit !== 'un' ? ' ' + layer.unit : ' ×'} ${layer.name}`
-const shortNames: Record<string, string> = { 'ing-apresuntado': 'Presunto', 'ing-queijo': 'Mussarela', 'ing-batata-palha': 'Batata palha', 'ing-contrafile': 'Contra-filé', 'ing-maionese-casa': 'Maionese', 'ing-frango-desfiado': 'Frango desfiado', 'ing-carne-gourmet': 'Carne gourmet' }
+const shortNames: Record<string, string> = { 'ing-apresuntado': 'Presunto', 'ing-queijo': 'Mussarela', 'ing-batata-palha': 'Batata palha', 'ing-contrafile': 'Contra-filé', 'ing-maionese-casa': 'Maionese', 'ing-frango-desfiado': 'Frango desfiado', 'ing-carne-gourmet': 'Gourmet', 'ing-hamburguer': 'Hambúrguer', 'ing-carne-max': 'Hambúrguer' }
 
 /** Photographic layers follow the actual recipe, removals, extras and courtesy. */
 export default function SandwichPreview({ layers, bread }: { layers: SandwichLayer[]; bread: BreadChoice }) {

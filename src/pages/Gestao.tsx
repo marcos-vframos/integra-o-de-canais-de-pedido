@@ -1215,7 +1215,7 @@ export default function Gestao() {
     { id: 'motoboys', label: 'Motoboys', icon: Bike },
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'promocoes', label: 'Promoções', icon: Tag },
-    { id: 'stories', label: 'Stories da Landing', icon: Tag },
+    { id: 'stories', label: 'Stories', icon: Tag },
   ]
 
   return (

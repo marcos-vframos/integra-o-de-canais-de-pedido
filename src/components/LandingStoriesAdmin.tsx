@@ -61,8 +61,8 @@ export default function LandingStoriesAdmin() {
       setMessage('Ordem salva na Landing.')
     } catch(e) { await load();throw e }
   }
-  return <section aria-label="Stories da Landing" className="space-y-5 rounded-2xl border border-white/10 bg-[#12141c] p-5 text-white">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-bold"><CirclePlay size={20}/>Stories da Landing</h2>
+  return <section aria-label="Stories" className="space-y-5 rounded-2xl border border-white/10 bg-[#12141c] p-5 text-white">
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-bold"><CirclePlay size={20}/>Stories</h2>
       <p className="mt-1 text-xs text-zinc-400">Fotos e vídeos até 15 MB. Publicação manual ou agendada, por 24 horas. Conteúdos expirados ficam disponíveis para republicação.</p></div>
       <button disabled={busy} onClick={()=>edit(null)} className="flex items-center gap-1 text-xs"><Plus size={15}/>Novo story</button></div>
     {!pb.authStore.hasSession && <p className="text-sm text-amber-200">Para carregar e publicar, <Link className="underline" to="/login?returnTo=/adm-landing">entre no Gestor</Link>.</p>}

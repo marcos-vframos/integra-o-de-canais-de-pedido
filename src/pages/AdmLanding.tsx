@@ -566,7 +566,7 @@ export default function AdmLanding() {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setActiveTab('stories')} className={'rounded-lg px-4 py-2 text-xs font-semibold ' + (activeTab === 'stories' ? 'bg-[#8F0F1B] text-white' : 'bg-zinc-900 text-zinc-400')}>Stories da Landing</button>
+            <button type="button" onClick={() => setActiveTab('stories')} className={'rounded-lg px-4 py-2 text-xs font-semibold ' + (activeTab === 'stories' ? 'bg-[#8F0F1B] text-white' : 'bg-zinc-900 text-zinc-400')}>Stories</button>
             <button
               type="button"
               onClick={() => setActiveTab('textos')}

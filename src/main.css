@@ -1443,3 +1443,59 @@ div:has(> a[href*='goskip.dev']) {
 .order-sheet-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #756955 transparent; }
 .order-sheet-scroll > .order-sheet-body { flex: none; overflow: visible; }
 .order-sheet > .order-sheet-close { z-index: 5; }
+
+/* Public typography follows the product card; administrative screens stay independent. */
+.landing-scope, .landing-scope *, .order-sheet, .order-sheet * {
+  font-family: Georgia, 'Times New Roman', serif !important;
+}
+/* Ordering surfaces consume the same six theme tokens as the landing. */
+.order-sheet {
+  --surface: var(--landing-bg-card, #0D1A11);
+  --order-gold: var(--landing-silver, #C4C4C4);
+  --line: color-mix(in srgb, var(--landing-silver, #C4C4C4) 22%, transparent);
+  background: var(--surface);
+}
+.order-sheet .order-sheet-header { background: var(--landing-bg-secondary, #0A150D); }
+.order-sheet .order-sheet-title,
+.order-sheet .order-sheet-price,
+.order-sheet .order-sheet-total strong,
+.order-sheet .sc-label,
+.order-sheet .sandwich-preview-photo figcaption,
+.order-sheet .sandwich-photo-name { color: var(--landing-silver, #C4C4C4); }
+.order-sheet .order-sheet-footer { background: var(--landing-bg-secondary, #0A150D); }
+.order-sheet .order-sheet-close { background: var(--surface); }
+.order-sheet .order-ingredient-row { background: color-mix(in srgb,var(--surface) 96%,var(--landing-silver, #C4C4C4)); border-color: var(--line); }
+.order-sheet .customize-bread .order-bread-option[aria-checked='true'] {
+  border-color: var(--red); background: color-mix(in srgb,var(--red) 14%,var(--surface));
+}
+.order-sheet .sandwich-photo-count { background: var(--surface); border-color: var(--line); color: var(--landing-silver, #C4C4C4); }
+.order-sheet .order-sheet-quantity .sc-round-btn { color: var(--landing-silver, #C4C4C4); }
+.order-sheet .order-sheet-scroll { scrollbar-color: color-mix(in srgb,var(--landing-silver, #C4C4C4) 50%,transparent) transparent; }
+/* Each photographic piece owns a box tall enough for its transformed image. */
+.order-sheet .sandwich-photo-stack { display: flex; flex-direction: column; gap: 3px; }
+.order-sheet .sandwich-photo-bread { height: auto; position: relative; aspect-ratio: 1.6; }
+.order-sheet .sandwich-photo-bread .food-layer-image { position: static; display: block; transform: none; }
+.order-sheet .sandwich-photo-bottom { aspect-ratio: 4; }
+.order-sheet .sandwich-photo-bottom .food-layer-image {
+  position: absolute; inset: 50% auto auto 0; transform: translateY(-50%) scaleY(.35);
+}
+.order-sheet .sandwich-photo-layer { height: auto; display: flex; flex-direction: column; gap: 3px; }
+.order-sheet .sandwich-photo-piece {
+  position: relative; left: 3%; top: auto; width: 94%; height: auto;
+  aspect-ratio: 4; transform: none;
+}
+.order-sheet .sandwich-photo-piece > .food-layer-image,
+.order-sheet .sandwich-photo-piece > .ingredient-image {
+  position: absolute; inset: 50% auto auto 0; width: 100%; height: auto;
+  aspect-ratio: 1.6; transform: translateY(-50%) scaleY(.35);
+}
+.order-sheet .sandwich-photo-sauce .sandwich-photo-piece { aspect-ratio: 8; }
+.order-sheet .sandwich-photo-sauce .sandwich-photo-piece > .food-layer-image { transform: translateY(-50%) scaleY(.16); }
+.order-sheet .sandwich-photo-condiment { margin: 0 5%; width: 90%; height: 4px; position: absolute; top: 50%; transform: translateY(-50%); }
+.order-sheet .sandwich-photo-name { top: 50%; transform: translateY(-50%); }
+@media(min-width:900px) {
+  .order-sheet .order-sheet-header { grid-template-columns: minmax(0,1.3fr) minmax(0,.95fr) 160px; }
+  .order-sheet .order-sheet-header:not(.order-sheet-has-preview) { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }
+  .order-sheet .sandwich-preview-photo { padding-right: 68px; }
+  .order-sheet .sandwich-photo-name { width: 62px; font-size: 9px; }
+}
