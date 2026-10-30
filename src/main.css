@@ -1438,3 +1438,8 @@ div:has(> a[href*='goskip.dev']) {
   .order-sheet-image { height: 150px; }
   .sandwich-preview-photo { max-height: none; overflow: visible; }
 }
+
+/* Let the cover and options share the available scroll area, even in landscape. */
+.order-sheet-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #756955 transparent; }
+.order-sheet-scroll > .order-sheet-body { flex: none; overflow: visible; }
+.order-sheet > .order-sheet-close { z-index: 5; }

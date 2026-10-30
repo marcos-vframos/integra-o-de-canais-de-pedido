@@ -21,12 +21,14 @@ export function OrderSheet({ title, price, image, preview, children, footer, onC
         <Dialog.Content className="order-sheet" onOpenAutoFocus={(event) => {
           event.preventDefault()
           previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-          heading.current?.focus()
+          heading.current?.focus({ preventScroll: true })
         }} onCloseAutoFocus={(event) => {
           event.preventDefault()
           if (previousFocus.current?.isConnected) previousFocus.current.focus({ preventScroll: true })
         }}>
           <div className="order-sheet-handle" aria-hidden="true"><span /></div>
+          <Dialog.Close className="order-sheet-close" aria-label="Fechar personalização"><X size={18} /></Dialog.Close>
+          <div className="order-sheet-scroll">
           <header className={'order-sheet-header' + (preview ? ' order-sheet-has-preview' : '')}>
             <div className="order-sheet-image">{image}</div>
             <div className="order-sheet-heading">
@@ -35,9 +37,9 @@ export function OrderSheet({ title, price, image, preview, children, footer, onC
               <Dialog.Description className="sr-only">Confira os ingredientes, personalize o produto e adicione ao carrinho.</Dialog.Description>
             </div>
             {preview}
-            <Dialog.Close className="order-sheet-close" aria-label="Fechar personalização"><X size={18} /></Dialog.Close>
           </header>
           <div className="order-sheet-body">{children}</div>
+          </div>
           <footer className="order-sheet-footer">{footer}</footer>
         </Dialog.Content>
       </Dialog.Portal>
