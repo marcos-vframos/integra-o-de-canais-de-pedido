@@ -545,12 +545,12 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       amount: finalTotal,
       txid: `PED${Date.now().toString().slice(-6)}`,
     })
-  }, [pixKey, storeName, finalTotal])
+  }, [pixKey, storeName, finalTotal, integrationTestMode])
 
   const pixQrCodeUrl = useMemo(() => {
     if (integrationTestMode) return ''
     return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(pixEMV)}`
-  }, [pixEMV])
+  }, [pixEMV, integrationTestMode])
 
   // Geolocalização do navegador
   const handleGetBrowserLocation = () => {
@@ -767,7 +767,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     // Preserve the same high-entropy key on a retry of an unchanged checkout.
     // A changed cart/address regenerates the key; the server guarantees idempotency.
     const signature = JSON.stringify({
-      cart, customerName: cleanName, customerPhone: cleanPhone,
+      cart, integrationTestMode, customerName: cleanName, customerPhone: cleanPhone,
       deliveryType, customerAddress, deliveryLat, deliveryLng,
       payment, appliedCampaign: appliedCampaign?.id, invoiceDocument, wantsInvoice,
     })
