@@ -3,6 +3,7 @@ import {useAuth} from '@/context/AuthContext'
 import {usePilotRuntime} from '@/context/PilotRuntimeContext'
 import {activatePilot} from '@/lib/pilotRuntime'
 import {CalendarClock,Power,ShieldCheck} from 'lucide-react'
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog'
 
 const localTime=(value?:string|null)=>value?new Date(value).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'short'}):'Ainda não definido'
 
@@ -11,6 +12,7 @@ export default function PilotActivationCard() {
  const {status,loading,error,expired,refresh,receive}=usePilotRuntime()
  const [confirmed,setConfirmed]=useState([false,false,false])
  const [busy,setBusy]=useState(false)
+ const [reviewOpen,setReviewOpen]=useState(false)
  const [failure,setFailure]=useState('')
  const submitting=useRef(false)
  const owner=user?.role==='owner'
@@ -18,7 +20,7 @@ export default function PilotActivationCard() {
  const activate=async()=>{
   if(submitting.current || !prepared || !owner || !confirmed.every(Boolean))return
   submitting.current=true;setBusy(true);setFailure('')
-  try {receive(await activatePilot());await refresh()}
+  try {receive(await activatePilot());setReviewOpen(false);await refresh()}
   catch(e:unknown){setFailure(e instanceof Error?e.message:'Não foi possível confirmar a ativação. Verifique o status antes de tentar novamente.');await refresh()}
   finally {submitting.current=false;setBusy(false)}
  }
@@ -32,14 +34,19 @@ export default function PilotActivationCard() {
   </dl>
   <p className="text-xs text-[var(--muted)]">Horário de Brasília. Ao vencer o prazo, a landing fica indisponível e o servidor bloqueia novos pedidos. O Gestor permanece acessível para consultar pedidos, concluir atendimento e fechar o caixa. Dados preservados.</p>
   {prepared && <>
+   <button type="button" disabled={busy || loading || !owner || !!error} onClick={()=>setReviewOpen(true)} className="sc-btn-primary w-full inline-flex items-center justify-center gap-2 disabled:opacity-40"><Power size={18}/>Ativar READY e iniciar meus 7 dias</button>
+   <Dialog open={reviewOpen} onOpenChange={value=>{if(!busy)setReviewOpen(value)}}><DialogContent className="sc-card max-h-[90dvh] overflow-y-auto"><DialogHeader><DialogTitle>Confirmar início dos sete dias</DialogTitle><DialogDescription>A confirmação final libera pedidos reais e inicia 168 horas corridas. Confira os três itens abaixo antes de continuar.</DialogDescription></DialogHeader>
    <fieldset className="space-y-3 rounded-xl border border-[var(--line)] p-4" disabled={busy || !owner}>
     <legend className="px-2 text-sm">Conferência antes de ativar</legend>
     {['Conferi cardápio, preços, adicionais e estoque físico.','Conferi horários, formas de pagamento e taxas dos bairros atendidos.','Estou pronto para receber pedidos reais e testar impressão, entrega e fechamento de caixa.'].map((label,index)=><label key={label} className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={confirmed[index]} onChange={e=>setConfirmed(previous=>previous.map((v,i)=>i===index?e.target.checked:v))}/><span>{label}</span></label>)}
    </fieldset>
    <button type="button" disabled={busy || !owner || !confirmed.every(Boolean) || !!error}
     onClick={()=>void activate()} className="sc-btn-primary w-full inline-flex items-center justify-center gap-2 disabled:opacity-40">
-    <Power size={18}/>{busy?'Confirmando no servidor…':'Ativar READY e iniciar meus 7 dias'}
+    <Power size={18}/>{busy?'Confirmando no servidor…':'Confirmar e iniciar agora'}
    </button>
+   <button type="button" className="sc-btn-ghost" disabled={busy} onClick={()=>setReviewOpen(false)}>Ainda não, voltar</button>
+   {(failure||error)&&<p role="alert" className="text-sm text-red-400">{failure||error}</p>}
+   </DialogContent></Dialog>
    {!owner && <p className="text-sm">Entre com a conta de proprietário para ativar.</p>}
    <p className="text-xs text-[var(--muted)]">A ativação encerra o modo de simulação. Um novo clique não reinicia nem estende o prazo. Ela não configura automaticamente contas de pagamento, taxas ou equipamentos.</p>
   </>}

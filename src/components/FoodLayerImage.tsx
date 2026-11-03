@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 
 const isolated:Record<string,string>={
- 'ing-pao':'bread-top-plain','bread-base':'bread-base-plain',
+ 'ing-pao':'bun-square-top','bread-base':'bun-square-base','ing-tomate':'tomato-diced','ing-cebola':'onion-white-diced',
  'ing-frango-desfiado':'layer-frango-desfiado','ing-linguica':'layer-linguica',
  'ing-salsicha':'layer-salsicha','ing-brocolis':'layer-brocolis',
  'ing-carne-gourmet':'x-carnegourmet',
@@ -20,7 +20,7 @@ export const hasFoodLayerImage = (code: string) => cells[code] !== undefined || 
 
 export function FoodLayerImage({ code, name, className = '' }: { code: string; name: string; className?: string }) {
   const cell = cells[code]
-  if(isolated[code])return <span role="img" aria-label={'Imagem ilustrativa de '+name} className={'food-layer-image food-layer-isolated '+className} style={{backgroundImage:`url('/images/catalog/${isolated[code]}-montagem-v2-thumb.webp')`,backgroundSize:'contain',backgroundPosition:'center'}}/>
+  if(isolated[code])return <span role="img" aria-label={'Imagem ilustrativa de '+name} className={'food-layer-image food-layer-isolated '+className} style={{backgroundImage:`url('/images/catalog/${isolated[code]}${['ing-pao','bread-base','ing-tomate','ing-cebola'].includes(code)?'-v3':'-montagem-v2'}-thumb.webp')`,backgroundSize:'contain',backgroundPosition:'center'}}/>
   if (cell === undefined) return null
   return <span role="img" aria-label={'Imagem ilustrativa de ' + name} className={'food-layer-image ' + className} style={{
     '--food-x': `${(cell % 5) * 25}%`, '--food-y': `${Math.floor(cell / 5) * 100 / 3}%`,
