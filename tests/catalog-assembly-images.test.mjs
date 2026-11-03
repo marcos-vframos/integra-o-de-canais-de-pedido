@@ -39,3 +39,8 @@ test('plain bread and distinct Carijó, linguiça, sausage and broccoli layer as
   webp('/images/catalog/'+code+'-montagem-v2-thumb.webp')
  }
 })
+test('approved square bread and diced tomato and white onion include full assets and thumbnails',()=>{
+ for(const code of ['bun-square-top','bun-square-base','tomato-diced','onion-white-diced']){
+  assert.ok(webp('/images/catalog/'+code+'-v3.webp')>webp('/images/catalog/'+code+'-v3-thumb.webp'))
+ }
+})

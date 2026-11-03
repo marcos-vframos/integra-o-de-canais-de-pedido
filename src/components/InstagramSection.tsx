@@ -1,3 +1,4 @@
+import {approvedLandingImages} from '@/lib/approvedLandingImages'
 import { ArrowUpRight } from 'lucide-react'
 import { BUSINESS_INFO } from '@/data/loyolasData'
 
@@ -55,7 +56,7 @@ export default function InstagramSection() {
   const instagramSubtitle =
     content.instagramSubtitle ||
     'Acompanhe os bastidores da nossa cozinha, os lanches da noite e novidades no Instagram oficial.'
-  const posts = content.instagramPosts?.length > 0 ? content.instagramPosts : FEED_POSTS
+  const posts = approvedLandingImages(content.instagramPosts?.length > 0 ? content.instagramPosts : FEED_POSTS)
 
   return (
     <section
@@ -99,7 +100,7 @@ export default function InstagramSection() {
               <img
                 src={post.image}
                 alt={post.alt}
-                className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 filter contrast-[1.02]"
+                className={`w-full h-full ${(typeof post.image==='string' && post.image.startsWith('/images/catalog/'))?'object-contain p-2':'object-cover'} object-center group-hover:scale-[1.03] transition-transform duration-500 filter contrast-[1.02]`}
                 loading="lazy"
               />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end text-left" style={{ background: 'color-mix(in srgb, var(--landing-bg-card) 85%, transparent)' }}>
