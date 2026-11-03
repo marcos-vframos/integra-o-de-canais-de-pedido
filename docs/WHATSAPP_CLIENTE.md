@@ -33,3 +33,7 @@ Aplique a migração `customer_whatsapp_automation`, publique `customer-whatsapp
 Execute os testes do frontend e `supabase/tests/customer_whatsapp.sql` em transação com rollback. Verifique em dois navegadores a separação entre clientes e entre tenants, repetição/expiração do OTP, revogação do aceite, validade/uso único do voucher, despacho e contabilidade do motoboy. Teste envio e webhook com credenciais reais somente depois de conectar a conta Meta.
 
 Imagens do pão sem gergelim, cebola branca e tomate em cubos e as 30 opções do selo são prévias para aprovação. Nenhuma opção foi aplicada automaticamente ao catálogo.
+
+## Verificação em 03/11/2026
+
+Migração e correções aplicadas no Supabase; testes transacionais concluídos e revertidos, sem mensagens nem registros fictícios persistentes. Os 144 testes da aplicação e os builds de cliente e gestão passaram. Serviços publicados: customer-whatsapp, finalize-order, delivery-routing e google-business-profile. A conta Meta segue desativada até ser conectada e validada pelo proprietário. A entrega real no WhatsApp e os webhooks da Meta permanecem pendentes de teste com as credenciais da loja. O período de sete dias não foi ativado por esta alteração.
