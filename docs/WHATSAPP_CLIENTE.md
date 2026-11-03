@@ -28,7 +28,7 @@ Timeouts e respostas ambíguas ficam como `uncertain`, sem repetição automáti
 
 ## Publicação e validação
 
-Aplique a migração `customer_whatsapp_automation`, publique `customer-whatsapp` com `verify_jwt=false` (autenticação própria por sessão/segredo de worker ou HMAC) e atualize as origens permitidas das outras funções. A RPC interna é exclusiva de `service_role`; tabelas privadas têm RLS sem políticas públicas. O cron executa uma vez por minuto e não envia nada enquanto a conexão estiver desativada. Nenhuma credencial é pré-preenchida e nenhum cliente antigo recebe aceite presumido.
+Aplique a migração `customer_whatsapp_automation`, publique `customer-whatsapp` com `verify_jwt=false` (autenticação própria por sessão/segredo de worker ou HMAC) e atualize as origens permitidas das outras funções. A RPC interna é exclusiva de `service_role`; tabelas privadas têm RLS sem políticas públicas. As notificações de pedido acionam o worker após a confirmação da transação; o cron executa uma vez por minuto para aniversários e recuperação de pendências. Não há envio enquanto a conexão estiver desativada. Nenhuma credencial é pré-preenchida e nenhum cliente antigo recebe aceite presumido.
 
 Execute os testes do frontend e `supabase/tests/customer_whatsapp.sql` em transação com rollback. Verifique em dois navegadores a separação entre clientes e entre tenants, repetição/expiração do OTP, revogação do aceite, validade/uso único do voucher, despacho e contabilidade do motoboy. Teste envio e webhook com credenciais reais somente depois de conectar a conta Meta.
 
