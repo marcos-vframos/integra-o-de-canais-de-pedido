@@ -1,3 +1,4 @@
+import {approvedLandingImages} from '@/lib/approvedLandingImages'
 import { marqueeBlocks, selectedMessages, type MarqueeBlock } from '@/lib/landingCommunications'
 import { savedFieldsMatch } from '@/lib/persistence'
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
@@ -359,7 +360,7 @@ interface LandingContextValue {
 const LandingContext = createContext<LandingContextValue | null>(null)
 
 export function LandingProvider({ children }: { children: React.ReactNode }) {
-  const [content, setContent] = useState<LandingContentState>(DEFAULT_LANDING_CONTENT)
+  const [content, setContent] = useState<LandingContentState>(()=>approvedLandingImages(DEFAULT_LANDING_CONTENT))
   const [loading, setLoading] = useState(true)
 
   const getFileUrl = (record: any, filename: string) => {
@@ -484,7 +485,7 @@ export function LandingProvider({ children }: { children: React.ReactNode }) {
         })
         if (slides.length) next.heroSlides = slides
 
-        return next
+        return approvedLandingImages(next)
       })
     } catch (err) {
       console.warn('Erro ao carregar landing_content:', err)

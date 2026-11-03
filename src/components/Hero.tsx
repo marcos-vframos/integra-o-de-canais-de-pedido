@@ -1,3 +1,4 @@
+import {approvedLandingImages} from '@/lib/approvedLandingImages'
 import React, { useState, useEffect } from 'react'
 
 import { ArrowRight, Star, Sparkles, ChevronDown } from 'lucide-react'
@@ -71,7 +72,7 @@ import { useLandingContent } from '@/context/LandingContentContext'
 export default function Hero() {
   const { content } = useLandingContent()
   const headlines = content.headlines?.length > 0 ? content.headlines : HERO_HEADLINES
-  const slides = content.heroSlides?.length > 0 ? content.heroSlides : HERO_SLIDES
+  const slides = approvedLandingImages(content.heroSlides?.length > 0 ? content.heroSlides : HERO_SLIDES)
   const chips =
     content.heroSubtitleChips?.length > 0
       ? content.heroSubtitleChips

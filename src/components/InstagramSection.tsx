@@ -1,3 +1,4 @@
+import {approvedLandingImages} from '@/lib/approvedLandingImages'
 import { ArrowUpRight } from 'lucide-react'
 import { BUSINESS_INFO } from '@/data/loyolasData'
 
@@ -55,7 +56,7 @@ export default function InstagramSection() {
   const instagramSubtitle =
     content.instagramSubtitle ||
     'Acompanhe os bastidores da nossa cozinha, os lanches da noite e novidades no Instagram oficial.'
-  const posts = content.instagramPosts?.length > 0 ? content.instagramPosts : FEED_POSTS
+  const posts = approvedLandingImages(content.instagramPosts?.length > 0 ? content.instagramPosts : FEED_POSTS)
 
   return (
     <section
