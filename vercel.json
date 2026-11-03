@@ -72,5 +72,10 @@
       ]
     }
   ],
-  "installCommand": "pnpm install --frozen-lockfile"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "git": {
+    "deploymentEnabled": {
+      "assets/square-bread-v3": false
+    }
+  }
 }
