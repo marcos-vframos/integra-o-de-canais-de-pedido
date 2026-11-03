@@ -34,13 +34,21 @@ begin
  perform public.customer_whatsapp_api(t,'ack',jsonb_build_object('id',v->0->>'id','providerId','wamid.rollback-test'));
  if (select expires_at from public.campaigns where id=birthday)<>expires then raise exception 'FAIL: retry extends voucher';end if;
  -- State transitions are queued once each; a driver assignment means sent without changing accounting semantics.
- insert into public.orders(tenant_id,ticket_number,items,total,subtotal,discount,delivery_fee,payment,status,origin,customer_id,customer_name,customer_phone,delivery_type,customer_address,idempotency_key) values(t,987654321,'[]',1,1,0,0,'Dinheiro','pendente','online',c,'Teste rollback','11999999888','retirada','','ord-'||gen_random_uuid()) returning id into oid;
- update public.orders set status='aceito' where id=oid;update public.orders set status='em preparo' where id=oid;update public.orders set status='pronto' where id=oid;update public.orders set status='aceito' where id=oid;
- if (select count(*) from app_private.wa_outbox where dedupe like 'order:'||oid||':%')<>3 then raise exception 'FAIL: duplicate/missing transitions';end if;
+ insert into public.orders(tenant_id,ticket_number,items,total,subtotal,discount,delivery_fee,payment,status,origin,customer_id,customer_name,customer_phone,delivery_type,customer_address,idempotency_key) values(t,987654321,'[]',1,1,0,0,'Dinheiro','pendente','online',c,'Teste rollback','11999999888','entrega','','ord-'||gen_random_uuid()) returning id into oid;
+ perform set_config('request.jwt.claim.sub','a3ce96c4-41bb-480b-af73-9b05cbb413fc',true);
+ perform public.manage_store_operation(t,'order_status',oid,'{"status":"aceito"}');
+ perform public.manage_store_operation(t,'order_status',oid,'{"status":"em preparo"}');
+ perform public.manage_store_operation(t,'order_status',oid,'{"status":"pronto"}');
+ if (select motoboy_assigned_at from public.orders where id=oid) is not null then raise exception 'FAIL: preparation must not create a dispatch timestamp';end if;
+ insert into public.motoboys(tenant_id,name) values(t,'Teste rollback courier') returning id into did;
+ perform public.manage_store_operation(t,'order_status',oid,jsonb_build_object('status','pronto','motoboyId',did));
+ if (select motoboy_assigned_at from public.orders where id=oid) is null then raise exception 'FAIL: actual dispatch needs a timestamp';end if;
+ perform public.manage_store_operation(t,'order_status',oid,'{"status":"pronto"}');
+ if (select count(*) from app_private.wa_outbox where dedupe like 'order:'||oid||':%')<>4 then raise exception 'FAIL: duplicate/missing operational transitions';end if;
  if app_private.wa_phase('pronto',gen_random_uuid())<>'enviado' then raise exception 'FAIL: dispatched phase';end if;
  r:=public.customer_whatsapp_api(t,'account','{}',token);if jsonb_array_length(r->'orders')<>1 then raise exception 'FAIL: own order not available';end if;
  blocked:=false;begin perform public.customer_whatsapp_api(t,'delete','{}',token);exception when others then blocked:=true;end;if not blocked then raise exception 'FAIL: deletion with active order';end if;
- update public.orders set status='concluído' where id=oid;
+ perform public.manage_store_operation(t,'order_status',oid,'{"status":"concluído"}');
  perform public.customer_whatsapp_api(t,'delete','{}',token);
  if exists(select 1 from app_private.wa_sessions where customer_id=c) or exists(select 1 from public.campaigns where id=birthday and active) then raise exception 'FAIL: deletion must revoke sessions and coupons';end if;
  if (select total from public.orders where id=oid)<>1 or (select customer_phone from public.orders where id=oid)<>'' then raise exception 'FAIL: retain financial record but remove phone';end if;

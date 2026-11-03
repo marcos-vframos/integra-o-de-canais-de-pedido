@@ -242,18 +242,8 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
     if (!rawPhone) return '#'
     const phoneWithCountry = rawPhone.length <= 11 ? `55${rawPhone}` : rawPhone
 
-    const statusText =
-      order.status === 'aceito'
-        ? 'foi aceito!'
-        : order.status === 'pronto'
-          ? order.deliveryType === 'entrega'
-            ? 'está pronto e saindo para entrega!'
-            : 'está pronto para retirada no balcão!'
-          : order.status === 'concluído'
-            ? 'foi concluído com sucesso. Bom apetite!'
-            : order.status === 'recusado'
-              ? 'não pôde ser aceito no momento.'
-              : 'foi recebido e está sendo analisado!'
+    const phase=customerOrderStatus(order)
+    const statusText=phase==='aceito'?'foi aceito!':phase==='em preparo'?'está em preparo!':phase==='enviado'?'saiu para entrega!':phase==='pronto'?(order.deliveryType==='entrega'?'está pronto, aguardando o entregador!':'está pronto para retirada no balcão!'):phase==='concluído'?'foi concluído com sucesso. Bom apetite!':phase==='recusado'?'não pôde ser aceito no momento.':'foi recebido e está sendo analisado!'
 
     const msg = `Olá, ${order.customerName || 'cliente'}! Seu pedido #${padTicket(
       order.ticketNumber,
@@ -276,10 +266,11 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
       return (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1">
           <CheckCircle2 size={12} />
-          Em Preparo
+          Aceito
         </span>
       )
     }
+    if(s==='em preparo'||s==='enviado')return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">{s==='enviado'?'Enviado':'Em preparo'}</span>
     if (s === 'pronto') {
       return (
         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
