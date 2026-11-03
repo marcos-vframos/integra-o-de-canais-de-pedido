@@ -1,3 +1,4 @@
+import {customerOrderStatus} from '@/lib/customerPortal'
 import React, { useState, useEffect } from 'react'
 import {
   Inbox,
@@ -32,7 +33,7 @@ interface TabPedidosOnlineProps {
   onOrderUpdated?: (confirmedOrder?: OrderRecord) => void
 }
 
-type OnlineFilterStatus = 'todos' | 'pendente' | 'aceito' | 'pronto' | 'concluído' | 'recusado'
+type OnlineFilterStatus = 'todos' | 'pendente' | 'aceito' | 'em preparo' | 'enviado' | 'pronto' | 'concluído' | 'recusado'
 
 export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
   orders,
@@ -70,13 +71,13 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
 
   // Filtragem
   const filteredOrders = onlineOrders.filter((order) => {
-    const s = (order.status || 'pendente').toLowerCase()
+    const s = customerOrderStatus(order)
     const matchesStatus =
       filterStatus === 'todos'
         ? true
         : filterStatus === 'pendente'
           ? s === 'pendente'
-          : filterStatus === 'aceito'
+          : filterStatus === 'em preparo' ? s === 'em preparo' : filterStatus === 'enviado' ? s === 'enviado' : filterStatus === 'aceito'
             ? s === 'aceito'
             : filterStatus === 'pronto'
               ? s === 'pronto'
@@ -243,7 +244,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
 
     const statusText =
       order.status === 'aceito'
-        ? 'foi aceito e já está em preparo!'
+        ? 'foi aceito!'
         : order.status === 'pronto'
           ? order.deliveryType === 'entrega'
             ? 'está pronto e saindo para entrega!'
@@ -371,7 +372,9 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
               [
                 { id: 'todos', label: 'Todos' },
                 { id: 'pendente', label: 'Pendentes' },
-                { id: 'aceito', label: 'Em Preparo' },
+                { id: 'aceito', label: 'Aceitos' },
+                { id: 'em preparo', label: 'Em preparo' },
+                { id: 'enviado', label: 'Enviados' },
                 { id: 'pronto', label: 'Prontos' },
                 { id: 'concluído', label: 'Concluídos' },
                 { id: 'recusado', label: 'Recusados' },
@@ -421,6 +424,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
             const currentStatus = (order.status || 'pendente').toLowerCase()
             const isPendente = currentStatus === 'pendente'
             const isAceito = currentStatus === 'aceito'
+            const isPreparo = currentStatus === 'em preparo'
             const isPronto = currentStatus === 'pronto'
             const isConcluido =
               currentStatus === 'concluído' ||
@@ -487,7 +491,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2 self-start sm:self-center">
-                    {getStatusBadge(order.status)}
+                    {getStatusBadge(customerOrderStatus(order))}
 
                     {order.customerPhone && (
                       <a
@@ -635,19 +639,18 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                       </>
                     )}
 
-                    {isAceito && (
+                    {isAceito&&<button type="button" disabled={isProcessing===order.id} className="sc-btn" onClick={()=>handleUpdateStatus(order.id,'em preparo')}>Iniciar preparo</button>}
+                    {isPreparo && (
                       <>
                         <button
                           type="button"
                           disabled={isProcessing === order.id}
-                          onClick={() => handleTriggerPronto(order)}
+                          onClick={() => handleUpdateStatus(order.id,'pronto')}
                           className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm cursor-pointer"
                         >
                           <CheckCircle2 size={13} />
                           <span>
-                            {order.deliveryType === 'entrega'
-                              ? 'Pronto (Despachar Motoboy)'
-                              : 'Marcar Pronto'}
+                            Marcar Pronto
                           </span>
                         </button>
 
@@ -661,7 +664,8 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                         </button>
                       </>
                     )}
-                    {isPronto && (
+                    {isPronto&&isDelivery&&!order.motoboyId&&<button type="button" disabled={isProcessing===order.id} className="sc-btn" onClick={()=>handleTriggerPronto(order)}>Despachar com motoboy</button>}
+                    {isPronto && (!isDelivery||!!order.motoboyId) && (
                       <button
                         type="button"
                         disabled={isProcessing === order.id}
@@ -815,7 +819,7 @@ export const TabPedidosOnline: React.FC<TabPedidosOnlineProps> = ({
                     ? 'Salvando…'
                     : assignmentOnly
                       ? 'Salvar vínculo'
-                      : 'Confirmar & Marcar Pronto'}
+                      : 'Confirmar despacho'}
                 </span>
               </button>
               <button

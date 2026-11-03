@@ -1,0 +1,10 @@
+import {test} from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+import {templateMessage,validConnection} from '../supabase/functions/customer-whatsapp/messages.ts'
+const config={apiVersion:'v23.0',phoneNumberId:'123456789',accessToken:'x'.repeat(40),otpTemplate:'codigo',orderTemplate:'pedido',birthdayTemplate:'aniversario'}
+test('provider connection rejects unsafe URL segments and incomplete templates',()=>{assert.equal(validConnection(config),true);for(const c of [{...config,phoneNumberId:'../evil'},{...config,apiVersion:'https://evil'},{...config,orderTemplate:''},{...config,accessToken:''}])assert.equal(validConnection(c),false)})
+test('transactional messages contain the canonical status and ticket, without promotion',()=>{for(const phase of ['aceito','em preparo','pronto','enviado']){const m=templateMessage(config,{kind:'order',phone:'5512999999999',payload:{name:'Maria',ticket:42,phase}});assert.equal(m.to,'5512999999999');assert.equal(m.template.name,'pedido');assert.deepEqual(m.template.components[0].parameters.map(p=>p.text),['Maria','42',phase])}})
+test('OTP template repeats the same code in body and copy-code button',()=>{const m=templateMessage(config,{kind:'otp',phone:'5512999999999',payload:{code:'012345'}});assert.equal(m.template.components[0].parameters[0].text,'012345');assert.equal(m.template.components[1].parameters[0].text,'012345')})
+test('birthday templates use the real private voucher code and 72-hour promise',()=>{const m=templateMessage(config,{kind:'birthday',phone:'5512999999999',payload:{name:'Ana',code:'LOY-A123B456C7'}});assert.equal(m.template.name,'aniversario');assert.deepEqual(m.template.components[0].parameters.map(p=>p.text),['Ana','LOY-A123B456C7','72 horas'])})
+test('public checkout cannot redeem personal coupons based only on typed phone',()=>{const s=readFileSync(new URL('../supabase/functions/finalize-order/index.ts',import.meta.url),'utf8');assert.ok(s.includes('p_token:String(payload.customerToken'));assert.ok(s.includes('Confirme seu WhatsApp para usar este voucher pessoal.'));assert.ok(s.includes('normalizePhone(account.customer.phone)'))})

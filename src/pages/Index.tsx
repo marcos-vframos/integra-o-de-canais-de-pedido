@@ -18,36 +18,14 @@ export default function Index() {
   const [activeSection, setActiveSection] = useState('inicio')
 
   useEffect(() => {
-    const sectionIds = ['inicio', 'historia', 'cardapio', 'avaliacoes', 'instagram', 'localizacao']
-    const container = document.getElementById('landing-container')
-
-    const handleScroll = () => {
-      const scrollPosition = (container ? container.scrollTop : window.scrollY) + 260
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        const id = sectionIds[i]
-        const element = document.getElementById(id)
-        if (element) {
-          const top = element.offsetTop
-          if (scrollPosition >= top) {
-            setActiveSection(id)
-            break
-          }
-        }
-      }
-    }
-
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true })
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll)
-      }
-      window.removeEventListener('scroll', handleScroll)
-    }
+    const ids=['inicio','historia','cardapio','avaliacoes','instagram','localizacao']
+    let frame=0
+    const measure=()=>{frame=0;let active='inicio';for(const id of ids){const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<=160)active=id}setActiveSection(active)}
+    const update=()=>{if(!frame)frame=requestAnimationFrame(measure)}
+    // Capture nested scroll containers as well as the document; offsetTop is not a viewport coordinate.
+    document.addEventListener('scroll',update,true);window.addEventListener('resize',update)
+    measure()
+    return()=>{document.removeEventListener('scroll',update,true);window.removeEventListener('resize',update);cancelAnimationFrame(frame)}
   }, [])
 
   return (

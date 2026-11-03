@@ -4,9 +4,10 @@ import {roadRoute,validRoadPoint} from '../_shared/roadRouting.ts'
 import {selectFeeReference} from '../_shared/deliveryQuote.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
+const normalizePhone=(value:unknown)=>{const digits=String(value||'').replace(/\D/g,'');return digits.length===10||digits.length===11?'55'+digits:digits}
 const tenantId = '8c0d61b8-7cf9-44e0-9e17-96832f3848b6'
 const allowed = new Set([
-  'https://loyolaslanchespinda.vercel.app','https://integracao-de-canais-de-pedido.vercel.app',
+  'https://loyolaslanchespinda.vercel.app','https://loyolasgestao.vercel.app','https://integracao-de-canais-de-pedido.vercel.app',
   'https://integracao-de-canais-de-pedido-git-feat-su-4e4eaa-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente-git-feat-supab-9fd0ee-sync-squad-hq.vercel.app',
   'https://loyolas-gestao-independente.vercel.app',
@@ -72,7 +73,11 @@ Deno.serve(async(request: Request) => {
   if(payload.action==='lookupVoucher') {
     const code=String(payload.code||'').trim().toUpperCase()
     if(!/^LOY-[A-F0-9]{6,10}$/.test(code))return reply(request,422,{error:'Código inválido'})
-    const {data:v,error}=await admin.from('campaigns').select('id,title,description,type,discount_percent,discount_amount,target_product_id,target_product_name,customer_phone,expires_at').eq('tenant_id',tenantId).eq('voucher_code',code).eq('active',true).eq('used',false).maybeSingle()
+    const {data:v,error}=await admin.from('campaigns').select('id,title,description,type,discount_percent,discount_amount,target_product_id,target_product_name,customer_phone,customer_id,birthday_voucher,expires_at').eq('tenant_id',tenantId).eq('voucher_code',code).eq('active',true).eq('used',false).maybeSingle()
+    if(v?.customer_id||v?.customer_phone){
+      const {data:account,error:accountError}=await admin.rpc('customer_whatsapp_api',{p_tenant:tenantId,p_action:'account',p_token:String(payload.customerToken||'')})
+      if(accountError||!account?.customer||(v.customer_id?account.customer.id!==v.customer_id:normalizePhone(account.customer.phone)!==normalizePhone(v.customer_phone)))return reply(request,403,{error:'Confirme seu WhatsApp para usar este voucher pessoal.'})
+    }
     const phone=String(payload.customerPhone||'').replace(/\D/g,'')
     if(v?.customer_phone&&!phone)return reply(request,422,{error:'Preencha o telefone do cliente antes de aplicar este voucher pessoal.'})
     if(error||!v||(v.expires_at&&new Date(v.expires_at).getTime()<=Date.now())||(v.customer_phone&&v.customer_phone.replace(/\D/g,'')!==phone))return reply(request,422,{error:'Código inválido, expirado ou indisponível para este telefone'})
@@ -80,6 +85,13 @@ Deno.serve(async(request: Request) => {
   }
   delete payload.serverDeliveryRoute // Never accept a route attestation from the browser.
   const origin=payload.origin==='balcao'?'balcao':'online'
+  if(origin==='online'&&payload.campaignId){
+    const {data:campaign}=await admin.from('campaigns').select('customer_id,customer_phone').eq('tenant_id',tenantId).eq('id',payload.campaignId).maybeSingle()
+    if(campaign?.customer_id||campaign?.customer_phone){
+      const {data:account,error:accountError}=await admin.rpc('customer_whatsapp_api',{p_tenant:tenantId,p_action:'account',p_token:String(payload.customerToken||'')})
+      if(accountError||!account?.customer||(campaign.customer_id?account.customer.id!==campaign.customer_id:normalizePhone(account.customer.phone)!==normalizePhone(campaign.customer_phone)))return reply(request,403,{error:'Confirme seu WhatsApp para usar este voucher pessoal.'})
+    }
+  }
   let operatorId: string|null=null
   if (origin==='balcao') {
     const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'').trim()

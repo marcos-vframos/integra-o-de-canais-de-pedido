@@ -98,7 +98,7 @@ const fieldAliases:Record<string,Record<string,string>>={
     campaignId:'campaign_id',paymentDetails:'payment_details',clientRequestId:'idempotency_key',
     invoiceRequested:'invoice_requested',invoiceDocument:'invoice_document',invoiceStatus:'invoice_status',
   },
-  customers:{crmProfile:'crm_profile',lastOrderAt:'last_order_at',totalOrders:'total_orders',totalSpent:'total_spent',favoriteItems:'favorite_items'},
+  customers:{birthDate:'birth_date',crmProfile:'crm_profile',lastOrderAt:'last_order_at',totalOrders:'total_orders',totalSpent:'total_spent',favoriteItems:'favorite_items'},
   motoboys:{feePerDelivery:'fee_per_delivery',dailyRate:'daily_rate'},
   delivery_fees:{areaGeojson:'area_geojson'},
   campaigns:{voucherCode:'voucher_code',
@@ -438,3 +438,9 @@ const pb={
 }
 export default pb
 
+
+/** Customer sessions are independent from operator Auth; no staff JWT is replaced. */
+export async function customerPortalRequest<T=any>(action:string,data:Record<string,unknown>={},token='',operator=false):Promise<T>{
+ if(operator)await ensureOperatorSession()
+ return request('/functions/v1/customer-whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenantId,action,data,token})},operator)
+}

@@ -21,6 +21,8 @@ const navLinks = [
 
 export default function Header({ activeSection = 'inicio' }: HeaderProps) {
   const business = useBusinessProfile()
+  const [selectedSection,setSelectedSection]=useState(activeSection)
+  useEffect(()=>setSelectedSection(activeSection),[activeSection])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [status, setStatus] = useState(() => checkIsOpenNow())
   const [isOpenSetting, setIsOpenSetting] = useState<boolean>(true)
@@ -82,6 +84,8 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault()
     setMobileMenuOpen(false)
+    setSelectedSection(href.slice(1))
+    window.history.replaceState(null,'',window.location.pathname+window.location.search+href)
     const target = document.querySelector(href)
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -121,14 +125,15 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
             className="hidden lg:flex items-center gap-7 text-xs tracking-wider uppercase font-medium"
           >
             {navLinks.map((link) => {
-              const isActive = activeSection === link.id
+              const isActive = selectedSection === link.id
               return (
                 <a
                   key={link.id}
+                  aria-current={isActive?'location':undefined}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={`transition-colors py-1 ${
-                    isActive ? 'text-white font-semibold' : 'text-[#C4C4C4] hover:text-white'
+                    isActive ? 'text-white font-bold border-b-2 border-[var(--red)]' : 'text-[#C4C4C4] hover:text-white border-b-2 border-transparent'
                   }`}
                 >
                   {link.label}
@@ -180,10 +185,11 @@ export default function Header({ activeSection = 'inicio' }: HeaderProps) {
           <div className="flex flex-col space-y-1">
             <span className="editorial-tag mb-3 block">Navegação</span>
             {navLinks.map((link) => {
-              const isActive = activeSection === link.id
+              const isActive = selectedSection === link.id
               return (
                 <a
                   key={link.id}
+                  aria-current={isActive?'location':undefined}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={`text-base font-heading py-3 border-b border-white/[0.06] flex items-center justify-between ${

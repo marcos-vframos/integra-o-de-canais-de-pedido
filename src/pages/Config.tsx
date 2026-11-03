@@ -1,3 +1,4 @@
+import WhatsAppSettings from '@/components/WhatsAppSettings'
 import PilotActivationCard from '@/components/PilotActivationCard'
 import SourceCodeDownload from '@/components/SourceCodeDownload'
 import React, { useState, useEffect } from 'react'
@@ -314,6 +315,7 @@ export default function Config({panel=false}:{panel?:boolean}) {
           </div>
         </div>
 
+        <WhatsAppSettings/>
         {/* Instalação integrada dentro da área acessada pela engrenagem */}
         <div className="sc-card space-y-4">
           <PWAInstallBanner variant="settings" />

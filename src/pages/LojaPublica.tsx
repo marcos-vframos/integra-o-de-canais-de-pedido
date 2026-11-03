@@ -1,3 +1,4 @@
+import {getCustomerToken,rememberTrackedOrder} from '@/lib/customerPortal'
 import {usePilotRuntime} from '@/context/PilotRuntimeContext'
 import {useBusinessProfile} from '@/context/BusinessProfileContext'
 import {useLandingContent} from '@/context/LandingContentContext'
@@ -649,7 +650,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     const code = voucherCode.trim().toUpperCase()
     if (!code) return
     try {
-      const match=await pb.send<CampaignVoucher>('/backend/v1/vouchers/lookup',{body:{code,customerPhone:customerPhone.trim()||currentCustomer?.phone||''}})
+      const match=await pb.send<CampaignVoucher>('/backend/v1/vouchers/lookup',{body:{code,customerToken:getCustomerToken(),customerPhone:customerPhone.trim()||currentCustomer?.phone||''}})
       setAppliedCampaign(match)
       setVoucherMessage(match.targetProductId && !cart.some(line=>menuById(line.itemId)?.id===match.targetProductId) ? `Voucher validado. Adicione ${match.targetProductName || 'o produto participante'} ao carrinho para receber o desconto.` : `Voucher ${code} aplicado.`)
     } catch (error: any) { setAppliedCampaign(null); setVoucherMessage(error?.message || 'Não foi possível validar o código agora.') }
@@ -780,6 +781,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
     }
     const payload = {
       clientRequestId: checkoutRequestRef.current.key,
+      customerToken:getCustomerToken(),
       invoiceRequested: wantsInvoice,
       invoiceDocument: invoiceDocument.trim(),
       origin: 'online',
@@ -820,6 +822,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       })
 
       if (res && res.order) {
+        rememberTrackedOrder(res.order.id,checkoutRequestRef.current.key)
         setConfirmedOrder(res.order)
         setCart([])
         setAppliedCampaign(null)
@@ -1758,9 +1761,7 @@ export default function LojaPublica({ embedded = false }: LojaPublicaProps) {
       <CustomerAuthDrawer
         isOpen={authDrawerOpen}
         onClose={() => setAuthDrawerOpen(false)}
-        authUnavailableReason={backendConfigured
-          ? 'O histórico, vouchers pessoais e exclusão de conta serão ativados após adicionar verificação segura do WhatsApp. Apenas o telefone não comprova a identidade do cliente.'
-          : 'Modo demonstração: conecte o PocketBase independente para habilitar os cadastros. O acesso ao histórico também exigirá verificação do WhatsApp.'}
+        onVerified={p=>{setCurrentCustomer(p);setCustomerName(p.name);setCustomerPhone(p.phone);if(p.address)setCustomerAddress(p.address)}}
         currentCustomer={currentCustomer}
         orders={customerOrders}
         campaigns={customerCampaigns}

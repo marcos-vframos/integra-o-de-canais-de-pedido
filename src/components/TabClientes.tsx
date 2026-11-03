@@ -7,6 +7,7 @@ import { MenuItem, OrderRecord } from '@/types/loyolas'
 import { fmtBRL } from '@/lib/seeds'
 
 interface CustomerItem {
+  birthDate?:string
   id: string
   name: string
   phone: string
@@ -309,6 +310,7 @@ export const TabClientes: React.FC<TabClientesProps> = ({ menu }) => {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={()=>setDetailCustomer(null)}>
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#121215] border border-[#27272A] rounded-2xl p-6 space-y-5" onClick={e=>e.stopPropagation()}>
             <div className="flex justify-between gap-4"><div><h3 className="text-lg font-bold text-white">{detailCustomer.name}</h3><p className="text-xs text-zinc-400">{detailCustomer.phone} {detailCustomer.address ? ' • '+detailCustomer.address : ''}</p></div><button onClick={()=>setDetailCustomer(null)} className="text-zinc-400">✕</button></div>
+            <form key={detailCustomer.id} onSubmit={async e=>{e.preventDefault();const date=String(new FormData(e.currentTarget).get('birthDate')||'');try{await pb.collection('customers').update(detailCustomer.id,{birthDate:date||null});setDetailCustomer(c=>c?{...c,birthDate:date}:c);await loadData();alert('Aniversário salvo. O envio automático depende da confirmação do WhatsApp e do aceite do cliente.')}catch(err:any){alert(err.message||'Não foi possível salvar')}}} className="flex flex-wrap items-end gap-2"><label className="text-xs text-zinc-300">Data de aniversário<input name="birthDate" type="date" defaultValue={detailCustomer.birthDate||''} max={new Date().toISOString().slice(0,10)} className="sc-input mt-1 block"/></label><button className="sc-btn" type="submit">Salvar aniversário</button></form>
             {(() => {
               const now=new Date(), month=detailOrders.filter(o=>{const d=new Date(o.created||'');return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()})
               const valid=detailOrders.filter(o=>o.status!=='recusado'), cancelled=detailOrders.filter(o=>o.status==='recusado')
